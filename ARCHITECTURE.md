@@ -102,6 +102,16 @@ free anymore.
   once the popup exists.
 - Clicking the toolbar button now fires `action.onClicked` (there's no
   `default_popup` anymore) and opens the same window in "move" mode.
+  **`action.onClicked` hands the listener the clicked tab directly as
+  an argument — use that.** An early version of this code ignored it
+  and ran an independent `getActiveTab()`/`currentWindow: true` query
+  instead, which didn't reliably resolve to the mail tab from inside
+  that callback; the result was `tabId` silently coming back
+  `undefined`, which `performMove`/`performJump`'s early-return guard
+  then turned into "click button, pick a folder, nothing happens, no
+  error" — the guard now also logs via `console.error` specifically so
+  a regression like this shows up in the console instead of just
+  looking like nothing happened.
 - A second command fired while a search window is already open closes
   the old one first (`searchWindowId` tracked in `background.js`,
   cleared via `windows.onRemoved`) rather than piling up windows.

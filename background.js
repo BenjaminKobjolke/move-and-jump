@@ -42,7 +42,10 @@ async function getActiveTab() {
 }
 
 async function performMove(folderId, tabId) {
-  if (tabId === undefined) return;
+  if (tabId === undefined) {
+    console.error("Move and Jump: performMove called with no tabId, nothing to move");
+    return;
+  }
   const { messages } = await messenger.mailTabs.getSelectedMessages(tabId);
   if (messages.length === 0) return;
   await messenger.messages.move(
@@ -53,7 +56,10 @@ async function performMove(folderId, tabId) {
 }
 
 async function performJump(folderId, tabId) {
-  if (tabId === undefined) return;
+  if (tabId === undefined) {
+    console.error("Move and Jump: performJump called with no tabId, nothing to jump in");
+    return;
+  }
   await messenger.mailTabs.update(tabId, { displayedFolderId: folderId });
 }
 
@@ -100,6 +106,9 @@ const SEARCH_WINDOW_HEIGHT = 420;
  */
 async function openSearchWindow(mode, tabId) {
   const resolvedTabId = tabId ?? (await getActiveTab())?.id;
+  if (resolvedTabId === undefined) {
+    console.error("Move and Jump: openSearchWindow could not resolve a target mail tab");
+  }
 
   if (searchWindowId !== null) {
     await messenger.windows.remove(searchWindowId).catch(() => {});
@@ -158,7 +167,10 @@ messenger.commands.onCommand.addListener((command) => {
   }
 });
 
-messenger.action.onClicked.addListener(() => openSearchWindow("move"));
+// action.onClicked hands us the clicked tab directly — use that
+// rather than an independent currentWindow query, which is not
+// guaranteed to resolve the same way from this callback.
+messenger.action.onClicked.addListener((tab) => openSearchWindow("move", tab.id));
 
 messenger.runtime.onMessage.addListener((message) => {
   if (message?.type === "select") {
