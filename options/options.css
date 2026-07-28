@@ -1,13 +1,33 @@
+:root {
+  color-scheme: light dark;
+  --fg: #1a1a1a;
+  --bg: #ffffff;
+  --border: #d0d0d0;
+  --muted: #666666;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e8e8e8;
+    --bg: #2b2b2b;
+    --border: #4a4a4a;
+    --muted: #a0a0a0;
+  }
+}
+
 body {
   font: message-box;
   font-size: 13px;
   padding: 8px;
   max-width: 480px;
+  color: var(--fg);
+  background: var(--bg);
 }
 
 #intro {
   margin: 0 0 12px;
   line-height: 1.4;
+  color: var(--muted);
 }
 
 h2 {
@@ -22,10 +42,12 @@ table#shortcuts {
 
 #shortcuts td {
   padding: 2px 12px 2px 0;
+  border-bottom: 1px solid var(--border);
 }
 
 #shortcuts td:last-child {
   font-family: monospace;
+  color: var(--muted);
 }
 
 label {

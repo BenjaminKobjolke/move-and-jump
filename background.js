@@ -92,8 +92,8 @@ async function handleSelection(mode, folderId, tabId) {
   }
 }
 
-const SEARCH_WINDOW_WIDTH = 420;
-const SEARCH_WINDOW_HEIGHT = 420;
+const SEARCH_WINDOW_WIDTH = 560;
+const SEARCH_WINDOW_HEIGHT = 440;
 
 /**
  * Open the search UI as a real top-level popup window rather than the
