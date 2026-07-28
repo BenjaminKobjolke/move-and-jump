@@ -38,6 +38,21 @@
   "optionsSearchAllAccounts": {
     "message": "Buscar en todas las cuentas"
   },
+  "optionsIntro": {
+    "message": "Move and Jump permite mover el correo seleccionado a una carpeta, o saltar a una carpeta, mediante búsqueda incremental. Haga clic en el botón de la barra de herramientas, o use uno de los atajos siguientes — puede reasignarlos en cualquier momento desde el Administrador de complementos → icono de engranaje → Gestionar atajos de extensiones."
+  },
+  "optionsShortcutsHeading": {
+    "message": "Atajos de teclado"
+  },
+  "buttonMove": {
+    "message": "Mover"
+  },
+  "buttonJump": {
+    "message": "Saltar"
+  },
+  "buttonCancel": {
+    "message": "Cancelar"
+  },
   "tooltipLastFolder": {
     "message": "Move and Jump — Última: $FOLDER$",
     "placeholders": {

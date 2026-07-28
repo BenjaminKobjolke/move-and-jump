@@ -38,6 +38,21 @@
   "optionsSearchAllAccounts": {
     "message": "Rechercher dans tous les comptes"
   },
+  "optionsIntro": {
+    "message": "Move and Jump permet de déplacer le courriel sélectionné vers un dossier, ou d'accéder à un dossier, grâce à une recherche incrémentale. Cliquez sur le bouton de la barre d'outils, ou utilisez l'un des raccourcis ci-dessous — modifiables à tout moment depuis le gestionnaire de modules complémentaires → icône d'engrenage → Gérer les raccourcis des extensions."
+  },
+  "optionsShortcutsHeading": {
+    "message": "Raccourcis clavier"
+  },
+  "buttonMove": {
+    "message": "Déplacer"
+  },
+  "buttonJump": {
+    "message": "Accéder"
+  },
+  "buttonCancel": {
+    "message": "Annuler"
+  },
   "tooltipLastFolder": {
     "message": "Move and Jump — Dernier dossier : $FOLDER$",
     "placeholders": {

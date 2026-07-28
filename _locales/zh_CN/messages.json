@@ -38,6 +38,21 @@
   "optionsSearchAllAccounts": {
     "message": "搜索所有账户"
   },
+  "optionsIntro": {
+    "message": "Move and Jump 可通过输入实时搜索，将选中的邮件移动到某个文件夹，或跳转到某个文件夹。点击工具栏按钮，或使用下面的快捷键——可随时在附加组件管理器 → 齿轮图标 → 管理扩展快捷键中重新设置。"
+  },
+  "optionsShortcutsHeading": {
+    "message": "键盘快捷键"
+  },
+  "buttonMove": {
+    "message": "移动"
+  },
+  "buttonJump": {
+    "message": "跳转"
+  },
+  "buttonCancel": {
+    "message": "取消"
+  },
   "tooltipLastFolder": {
     "message": "Move and Jump — 最近：$FOLDER$",
     "placeholders": {

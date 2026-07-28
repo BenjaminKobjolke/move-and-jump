@@ -17,7 +17,16 @@ at least one modifier key, so bare-letter shortcuts like Nostalgy's
 plain <kbd>s</kbd>/<kbd>g</kbd> aren't available without falling back
 to legacy, privileged code. The defaults below can be changed to
 whatever you like under *Add-ons Manager → gear icon → Manage
-Extension Shortcuts*.
+Extension Shortcuts* (the same page also lists them, under
+*Options*).
+
+The search window always shows explicit **Move**, **Jump**, and
+**Cancel** buttons, whichever way it was opened — the one matching
+how you opened it is highlighted as the default (what <kbd>ENTER</kbd>
+does), but you can click the other action button at any time to do
+that instead for the currently highlighted folder. If the same folder
+name exists in more than one account, results are prefixed with the
+account name to tell them apart.
 
 ### Move an email to a folder
 
@@ -51,7 +60,9 @@ the most recent folder, shown in the toolbar button's tooltip.
 
 ## Options
 
-There currently is only a limited set of user preferences:
+The options page (Add-ons Manager → Move and Jump → *Preferences*)
+opens with a short explanation of the add-on and a live table of the
+current keyboard shortcuts, followed by the actual preferences:
 
 Preference                | Default
 --------------------------|----------

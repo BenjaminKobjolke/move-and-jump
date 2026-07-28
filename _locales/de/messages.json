@@ -38,6 +38,21 @@
   "optionsSearchAllAccounts": {
     "message": "In allen Konten suchen"
   },
+  "optionsIntro": {
+    "message": "Mit Move and Jump können Sie die ausgewählte E-Mail per Schnellsuche in einen Ordner verschieben oder zu einem Ordner springen. Klicken Sie auf die Symbolleisten-Schaltfläche, oder verwenden Sie einen der unten stehenden Tastenkombinationen — anpassbar unter Add-on-Verwaltung → Zahnrad-Symbol → Erweiterungs-Tastenkombinationen verwalten."
+  },
+  "optionsShortcutsHeading": {
+    "message": "Tastenkombinationen"
+  },
+  "buttonMove": {
+    "message": "Verschieben"
+  },
+  "buttonJump": {
+    "message": "Springen"
+  },
+  "buttonCancel": {
+    "message": "Abbrechen"
+  },
   "tooltipLastFolder": {
     "message": "Move and Jump — Zuletzt: $FOLDER$",
     "placeholders": {

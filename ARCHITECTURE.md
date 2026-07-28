@@ -148,6 +148,37 @@ The lesson, if you're touching this again: don't move back to
 Linux first. It's tempting because of the native anchoring, but it's
 what caused both bugs above.
 
+## Move/Jump/Cancel buttons and account-name disambiguation
+
+Two related UI additions on top of the design above:
+
+- **Explicit action buttons.** The search window always shows Move,
+  Jump, and Cancel buttons rather than being locked into whichever
+  mode it was opened in. `select()` in `search.js` now takes an
+  explicit `actionMode` parameter instead of reading the module-level
+  `mode` constant directly — Enter and clicking a list item still use
+  `mode` (whichever the window opened in), but the two buttons pass
+  `"move"`/`"jump"` directly, acting on `visible[activeIndex]`, the
+  same folder Enter would act on. The button matching the window's
+  `mode` gets the `.primary` CSS class (visually emphasized, matching
+  what Enter does); this was a judgment call, not an explicit spec —
+  the alternative (Move always primary regardless of how the window
+  was opened) would be inconsistent with the heading text and the
+  Enter key, so this seemed like the more coherent choice.
+- **Account-name disambiguation.** Folder names commonly repeat across
+  accounts ("Inbox", "Sent", …), which was ambiguous in the folder
+  list. `search.js` now fetches `messenger.accounts.list()` alongside
+  `folders.query()` and attaches each folder's account name as an
+  `accountName` field. Two consequences: `lib/match.js` gained a
+  fourth (lowest-priority) ranking tier that matches against
+  `accountName`, so typing part of an account name helps narrow
+  things down; and the rendered label becomes `"<Account>: <path>"`
+  instead of just `<path>`, but *only* when more than one distinct
+  `accountId` is actually present among the currently-scoped folders
+  (`showAccountPrefix` in `search.js`) — with `searchAllAccounts`
+  turned off, or with only one account configured, there's no
+  ambiguity to resolve, so the prefix would just be noise.
+
 ## Data flow
 
 ```mermaid
@@ -218,7 +249,17 @@ rounds of guessing specifically because the first version didn't.
   maintenance. Deliberately thin: it calls into `lib/*.js` for any
   actual logic.
 - `popup/` — `search.html`/`search.css`/`search.js`, the type-ahead UI.
-- `options/` — `options.html`/`options.js`, the two-checkbox options page.
+- `options/` — `options.html`/`options.js`, the two-checkbox options
+  page. Also renders a short explanatory intro and a live table of
+  the current keyboard shortcuts, built from `messenger.commands.getAll()`
+  rather than hardcoded — it reflects whatever the user has actually
+  rebound them to, not just the shipped defaults. This is also the
+  practical answer to "add explanatory text to the Add-ons Manager
+  detail view": that view itself only renders the manifest's one-line
+  `description`, with no field for anything longer for a
+  locally-installed (non-ATN-listed) extension — the options page,
+  one click away via the *Preferences* button, is where a fuller
+  explanation can actually live.
 - `lib/` — pure, dependency-free logic shared by `background.js`,
   `popup/search.js`, and `options/options.js`:
   - `match.js` — filter/rank folders against a query.

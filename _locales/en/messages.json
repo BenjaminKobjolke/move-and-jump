@@ -51,6 +51,26 @@
     "message": "Search in all accounts",
     "description": "Options page checkbox label"
   },
+  "optionsIntro": {
+    "message": "Move and Jump lets you move the selected email to a folder, or jump to a folder, using type-ahead search. Click the toolbar button, or use one of the shortcuts below — rebind them any time from Add-ons Manager → gear icon → Manage Extension Shortcuts.",
+    "description": "Options page introductory paragraph"
+  },
+  "optionsShortcutsHeading": {
+    "message": "Keyboard shortcuts",
+    "description": "Options page section heading"
+  },
+  "buttonMove": {
+    "message": "Move",
+    "description": "Search window button: move the selected email to the highlighted folder"
+  },
+  "buttonJump": {
+    "message": "Jump",
+    "description": "Search window button: jump to the highlighted folder"
+  },
+  "buttonCancel": {
+    "message": "Cancel",
+    "description": "Search window button: close without doing anything"
+  },
   "tooltipLastFolder": {
     "message": "Move and Jump — Last: $FOLDER$",
     "description": "Toolbar button tooltip after a move/jump",

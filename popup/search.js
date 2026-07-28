@@ -6,6 +6,9 @@ const heading = document.getElementById("heading");
 const input = document.getElementById("query");
 const list = document.getElementById("results");
 const empty = document.getElementById("empty");
+const moveButton = document.getElementById("moveButton");
+const jumpButton = document.getElementById("jumpButton");
+const cancelButton = document.getElementById("cancelButton");
 
 // Passed via the window URL (see background.js's openSearchWindow),
 // not storage, so both are available synchronously with no risk of a
@@ -22,6 +25,7 @@ let allFolders = [];
 let recentFolders = [];
 let visible = [];
 let activeIndex = 0;
+let showAccountPrefix = false;
 
 // Set text and grab focus immediately, synchronously, before any
 // async work below: Thunderbird only autofocuses the popup document
@@ -36,26 +40,49 @@ input.placeholder = messenger.i18n.getMessage(
   mode === "move" ? "popupPlaceholderMove" : "popupPlaceholderJump",
 );
 empty.textContent = messenger.i18n.getMessage("popupNoMatches");
+moveButton.textContent = messenger.i18n.getMessage("buttonMove");
+jumpButton.textContent = messenger.i18n.getMessage("buttonJump");
+cancelButton.textContent = messenger.i18n.getMessage("buttonCancel");
+moveButton.classList.toggle("primary", mode === "move");
+jumpButton.classList.toggle("primary", mode === "jump");
 input.focus();
 
 async function init() {
-  const [folders, opts, { recentFolders: recentIds = [] }, activeTab] = await Promise.all([
-    messenger.folders.query({}),
-    getOptions(messenger.storage.local),
-    messenger.storage.local.get("recentFolders"),
-    tabId === undefined ? undefined : messenger.mailTabs.get(tabId),
-  ]);
+  const [folders, accounts, opts, { recentFolders: recentIds = [] }, activeTab] =
+    await Promise.all([
+      messenger.folders.query({}),
+      messenger.accounts.list(),
+      getOptions(messenger.storage.local),
+      messenger.storage.local.get("recentFolders"),
+      tabId === undefined ? undefined : messenger.mailTabs.get(tabId),
+    ]);
 
   options = opts;
-  allFolders = options.searchAllAccounts
+  const scopedFolders = options.searchAllAccounts
     ? folders
     : filterByAccount(folders, activeTab?.displayedFolder?.accountId);
+
+  // Folder names commonly repeat across accounts ("Inbox", "Sent", …);
+  // attach each folder's account name so the list — and the search
+  // ranking in lib/match.js — can disambiguate them. Only bother
+  // showing the prefix in the UI when more than one account is
+  // actually present in the current scope.
+  const accountNameById = new Map(accounts.map((account) => [account.id, account.name]));
+  allFolders = scopedFolders.map((folder) => ({
+    ...folder,
+    accountName: accountNameById.get(folder.accountId) ?? "",
+  }));
+  showAccountPrefix = new Set(allFolders.map((folder) => folder.accountId)).size > 1;
 
   const byId = new Map(allFolders.map((folder) => [folder.id, folder]));
   recentFolders = recentIds.map((id) => byId.get(id)).filter(Boolean);
 
   render("");
   input.focus();
+}
+
+function folderLabel(folder) {
+  return showAccountPrefix ? `${folder.accountName}: ${folder.path}` : folder.path;
 }
 
 function render(query) {
@@ -68,16 +95,17 @@ function render(query) {
   list.innerHTML = "";
   for (const folder of visible) {
     const item = document.createElement("li");
-    item.textContent = folder.path;
+    item.textContent = folderLabel(folder);
     item.addEventListener("mousedown", (event) => {
       event.preventDefault();
-      select(folder);
+      select(mode, folder);
     });
     list.appendChild(item);
   }
   highlight();
 
   empty.hidden = !(trimmed && visible.length === 0);
+  moveButton.disabled = jumpButton.disabled = visible.length === 0;
 }
 
 function highlight() {
@@ -101,7 +129,7 @@ function moveActive(delta) {
 // close on purpose, further blur events are a no-op.
 let closing = false;
 
-async function select(folder) {
+async function select(actionMode, folder) {
   if (!folder) {
     console.error("Move and Jump: select() called with no folder", {
       activeIndex,
@@ -111,7 +139,12 @@ async function select(folder) {
   }
   closing = true;
   try {
-    await messenger.runtime.sendMessage({ type: "select", mode, folderId: folder.id, tabId });
+    await messenger.runtime.sendMessage({
+      type: "select",
+      mode: actionMode,
+      folderId: folder.id,
+      tabId,
+    });
   } catch (error) {
     console.error("Move and Jump: sendMessage failed", error);
   }
@@ -132,7 +165,7 @@ input.addEventListener("keydown", (event) => {
       break;
     case "Enter":
       event.preventDefault();
-      select(visible[activeIndex]);
+      select(mode, visible[activeIndex]);
       break;
     case "Escape":
       event.preventDefault();
@@ -142,6 +175,13 @@ input.addEventListener("keydown", (event) => {
     default:
       break;
   }
+});
+
+moveButton.addEventListener("click", () => select("move", visible[activeIndex]));
+jumpButton.addEventListener("click", () => select("jump", visible[activeIndex]));
+cancelButton.addEventListener("click", () => {
+  closing = true;
+  window.close();
 });
 
 // This is a real top-level window rather than an anchored toolbar

@@ -2,6 +2,30 @@ body {
   font: message-box;
   font-size: 13px;
   padding: 8px;
+  max-width: 480px;
+}
+
+#intro {
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+
+h2 {
+  font-size: 13px;
+  margin: 0 0 6px;
+}
+
+table#shortcuts {
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+#shortcuts td {
+  padding: 2px 12px 2px 0;
+}
+
+#shortcuts td:last-child {
+  font-family: monospace;
 }
 
 label {

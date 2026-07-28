@@ -50,3 +50,24 @@ test("caseSensitive option respects case", () => {
 test("query with no matches returns an empty array", () => {
   assert.deepEqual(filterFolders(folders, "zzz"), []);
 });
+
+const foldersWithAccounts = [
+  { id: "1", name: "Inbox", path: "/Inbox", accountId: "a1", accountName: "Personal" },
+  { id: "2", name: "Inbox", path: "/Inbox", accountId: "a2", accountName: "Work" },
+];
+
+test("account-name matches rank below name and path matches", () => {
+  const result = filterFolders(foldersWithAccounts, "work");
+  assert.deepEqual(
+    result.map((f) => f.id),
+    ["2"],
+  );
+});
+
+test("account name does not affect matches that already hit on name/path", () => {
+  const result = filterFolders(foldersWithAccounts, "inbox");
+  assert.deepEqual(
+    result.map((f) => f.id),
+    ["1", "2"],
+  );
+});
