@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Move and Jump",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "author": "Daniel Kraus",
@@ -33,19 +33,19 @@
   },
   "commands": {
     "move-search": {
-      "suggested_key": { "default": "Ctrl+Shift+S" },
+      "suggested_key": { "default": "Ctrl+Shift+N" },
       "description": "__MSG_commandMoveSearchDescription__"
     },
     "move-last": {
-      "suggested_key": { "default": "Ctrl+Alt+S" },
+      "suggested_key": { "default": "Ctrl+Alt+N" },
       "description": "__MSG_commandMoveLastDescription__"
     },
     "jump-search": {
-      "suggested_key": { "default": "Ctrl+Shift+G" },
+      "suggested_key": { "default": "Ctrl+Shift+H" },
       "description": "__MSG_commandJumpSearchDescription__"
     },
     "jump-last": {
-      "suggested_key": { "default": "Ctrl+Alt+G" },
+      "suggested_key": { "default": "Ctrl+Alt+H" },
       "description": "__MSG_commandJumpLastDescription__"
     }
   },

@@ -24,9 +24,16 @@ requires at least one modifier key — bare-letter shortcuts would
 require a privileged "Experiment" API that hooks into the mail
 window's internal DOM, i.e. exactly the fragile, chrome-coupled
 legacy code this project is meant to leave behind. Instead, Move and
-Jump ships modifier-based defaults (`Ctrl+Shift+S`, `Ctrl+Alt+S`,
-`Ctrl+Shift+G`, `Ctrl+Alt+G`) that any user can rebind from
+Jump ships modifier-based defaults (`Ctrl+Shift+N`, `Ctrl+Alt+N`,
+`Ctrl+Shift+H`, `Ctrl+Alt+H`) that any user can rebind from
 `about:addons` → gear icon → *Manage Extension Shortcuts*.
+The original `S`/`G`-based defaults were dropped after real-world
+testing found both unusable: `Ctrl+Shift+S` collides with something
+outside Thunderbird (exact cause unconfirmed — likely an OS/desktop
+binding, e.g. a screenshot tool), and `Ctrl+Shift+G` is already a
+built-in Thunderbird shortcut (as, incidentally, is `Ctrl+Shift+M` —
+Thunderbird's own "move again" — which is why the `N`/`H` scheme
+avoids `M` too).
 
 **There is no status-bar text.** The "last used folder" indicator
 described for Nostalgy relied on Thunderbird's legacy XUL status bar,
@@ -140,7 +147,7 @@ sequenceDiagram
     participant Popup as popup/search.js
     participant TB as Thunderbird APIs
 
-    User->>BG: Ctrl+Shift+S (move-search command)
+    User->>BG: Ctrl+Shift+N (move-search command)
     BG->>TB: mailTabs.query({active:true, currentWindow:true}) — resolve target tab
     BG->>TB: windows.create({type:"popup", url:"search.html?mode=move&tabId=…"})
     Popup->>Popup: read mode/tabId from location.search, focus() input
@@ -175,6 +182,25 @@ that mutates `storage.local` and the toolbar tooltip.
   }
 }
 ```
+
+## Diagnostic logging
+
+The keyboard-driven select path (Enter, whether on the default top MRU
+entry or after arrow-key navigation) went through several
+plausible-but-unconfirmed fixes (the user-gesture issue, the
+`action.onClicked` tab argument, the blur-race guard) without fully
+resolving on the developer's actual test system, so `background.js`
+and `popup/search.js` currently carry deliberate `console.log`/
+`console.error` statements bracketing the whole chain — keydown →
+`select()` → `runtime.sendMessage` → `handleSelection` →
+`performMove`/`performJump` — all prefixed `Move and Jump:` for easy
+filtering in the Browser Console. `select()` also now wraps
+`sendMessage` in try/catch and always calls `window.close()`
+afterward, whereas before an uncaught rejection there would have
+silently left the window open with nothing visibly wrong. Once the
+underlying issue is confirmed and fixed, trim this logging back down
+to just the error paths (matching the rest of the codebase's very
+sparse-logging style) rather than leaving it all in permanently.
 
 ## File layout
 

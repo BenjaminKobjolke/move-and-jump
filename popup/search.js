@@ -103,14 +103,25 @@ let closing = false;
 
 async function select(folder) {
   if (!folder) {
-    console.error("Move and Jump: Enter pressed with no folder selected", {
+    console.error("Move and Jump: select() called with no folder", {
       activeIndex,
       visibleCount: visible.length,
     });
     return;
   }
+  console.log("Move and Jump: select() sending", { mode, folderId: folder.id, tabId });
   closing = true;
-  await messenger.runtime.sendMessage({ type: "select", mode, folderId: folder.id, tabId });
+  try {
+    const response = await messenger.runtime.sendMessage({
+      type: "select",
+      mode,
+      folderId: folder.id,
+      tabId,
+    });
+    console.log("Move and Jump: select() got response", response);
+  } catch (error) {
+    console.error("Move and Jump: sendMessage failed", error);
+  }
   window.close();
 }
 
@@ -128,6 +139,11 @@ input.addEventListener("keydown", (event) => {
       break;
     case "Enter":
       event.preventDefault();
+      console.log("Move and Jump: Enter pressed", {
+        activeIndex,
+        visibleCount: visible.length,
+        folder: visible[activeIndex],
+      });
       select(visible[activeIndex]);
       break;
     case "Escape":

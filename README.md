@@ -21,7 +21,7 @@ Extension Shortcuts*.
 
 ### Move an email to a folder
 
-Press <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>S</kbd> to open a search
+Press <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>N</kbd> to open a search
 box. Begin typing the desired folder name or parts of it. A list of
 search results updates automatically as you type. Press
 <kbd>ENTER</kbd> to accept the selected folder and move the email.
@@ -31,13 +31,13 @@ move the email to the first of the 10 most recent target folders, or
 navigate the list using the <kbd>UP</kbd> and <kbd>DOWN</kbd> keys to
 select one of those folders.
 
-Press <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>S</kbd> to move the email to
+Press <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>N</kbd> to move the email to
 the last used folder directly, without opening the search box. This
 last used folder is shown in the toolbar button's tooltip.
 
 ### Jump to a specific folder
 
-Press <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>G</kbd> to open the search
+Press <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>H</kbd> to open the search
 box, and start typing the name (or parts of the name) of the desired
 folder. Hit <kbd>ENTER</kbd> to accept the folder and go to it.
 
@@ -46,7 +46,7 @@ The list of the 10 most recent folders is shared between the
 recent one, or navigate the list in the same way as when
 moving an email.
 
-Press <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>G</kbd> to jump directly to
+Press <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>H</kbd> to jump directly to
 the most recent folder, shown in the toolbar button's tooltip.
 
 ## Options

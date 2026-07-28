@@ -42,25 +42,30 @@ async function getActiveTab() {
 }
 
 async function performMove(folderId, tabId) {
+  console.log("Move and Jump: performMove", { folderId, tabId });
   if (tabId === undefined) {
     console.error("Move and Jump: performMove called with no tabId, nothing to move");
     return;
   }
   const { messages } = await messenger.mailTabs.getSelectedMessages(tabId);
+  console.log("Move and Jump: selected messages", messages.length);
   if (messages.length === 0) return;
   await messenger.messages.move(
     messages.map((message) => message.id),
     folderId,
     { isUserAction: true },
   );
+  console.log("Move and Jump: messages.move done");
 }
 
 async function performJump(folderId, tabId) {
+  console.log("Move and Jump: performJump", { folderId, tabId });
   if (tabId === undefined) {
     console.error("Move and Jump: performJump called with no tabId, nothing to jump in");
     return;
   }
   await messenger.mailTabs.update(tabId, { displayedFolderId: folderId });
+  console.log("Move and Jump: mailTabs.update done");
 }
 
 async function recordUsage(folderId) {
@@ -81,9 +86,16 @@ async function recordUsage(folderId) {
 }
 
 async function handleSelection(mode, folderId, tabId) {
-  if (mode === "move") await performMove(folderId, tabId);
-  else if (mode === "jump") await performJump(folderId, tabId);
-  await recordUsage(folderId);
+  console.log("Move and Jump: handleSelection", { mode, folderId, tabId });
+  try {
+    if (mode === "move") await performMove(folderId, tabId);
+    else if (mode === "jump") await performJump(folderId, tabId);
+    await recordUsage(folderId);
+    return { ok: true };
+  } catch (error) {
+    console.error("Move and Jump: handleSelection failed", error);
+    return { ok: false, error: String(error) };
+  }
 }
 
 const SEARCH_WINDOW_WIDTH = 420;
