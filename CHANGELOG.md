@@ -4,6 +4,16 @@ All notable changes to this project are documented here. Versions
 follow [semantic versioning](https://semver.org/) — see
 [ARCHITECTURE.md](ARCHITECTURE.md#versioning) for the project's policy.
 
+## [0.2.3] - 2026-07-28
+
+### Fixed
+
+- Folder names with non-ASCII characters (e.g. umlauts) on IMAP
+  accounts displayed as garbled text like `M&APw-nchen` instead of
+  `München` — Thunderbird's `folders` API returns raw, undecoded IMAP
+  "modified UTF-7" for such names. Added a decoder (`lib/imapUtf7.js`)
+  applied wherever folder names are displayed or searched.
+
 ## [0.2.2] - 2026-07-28
 
 ### Fixed

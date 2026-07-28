@@ -1,6 +1,7 @@
 import { filterFolders } from "../lib/match.js";
 import { filterByAccount } from "../lib/folders.js";
 import { getOptions } from "../lib/options.js";
+import { decodeImapUtf7 } from "../lib/imapUtf7.js";
 
 const heading = document.getElementById("heading");
 const input = document.getElementById("query");
@@ -77,6 +78,13 @@ async function init() {
   const accountNameById = new Map(accounts.map((account) => [account.id, account.name]));
   allFolders = scopedFolders.map((folder) => ({
     ...folder,
+    // IMAP folder names/paths come back as raw, undecoded modified
+    // UTF-7 (RFC 3501) for anything containing non-ASCII characters —
+    // e.g. "M&APw-nchen" instead of "München". Decode for display and
+    // search matching; `id`/`accountId` are left untouched, since
+    // those are opaque identifiers passed straight back to Thunderbird.
+    name: decodeImapUtf7(folder.name ?? ""),
+    path: decodeImapUtf7(folder.path ?? ""),
     accountName: accountNameById.get(folder.accountId) ?? "",
   }));
   showAccountPrefix = new Set(allFolders.map((folder) => folder.accountId)).size > 1;

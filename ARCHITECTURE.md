@@ -190,6 +190,30 @@ Two related UI additions on top of the design above:
   kind of "nothing happens, no error" failure mode this project has
   already lost real debugging time to twice.
 
+## IMAP folder name decoding
+
+IMAP mailbox names containing non-ASCII characters are transmitted
+on the wire as "modified UTF-7" (RFC 3501 — a UTF-7 variant using `&`
+instead of `+` as the shift character, and a base64 alphabet with `,`
+instead of `/`). Thunderbird's `folders` WebExtension API returns that
+raw, still-encoded name for IMAP accounts rather than decoding it
+first — a folder named "München" comes back as the literal string
+`"M&APw-nchen"`. Left alone, that's exactly what users saw in the
+search results and the toolbar tooltip.
+
+`lib/imapUtf7.js` decodes it back to plain Unicode, dependency-free
+(no external base64/text-decoding library — just `atob`, which is a
+standard global in both Node's test runner and WebExtension pages).
+It's applied in exactly two places: `popup/search.js` decodes
+`folder.name`/`folder.path` once, right when building `allFolders` in
+`init()` (so display, search ranking, and the recent-folders list all
+see the decoded form transparently, no changes needed anywhere else);
+`background.js` decodes `folder.path` when building the toolbar
+tooltip. **`folder.id`/`folder.accountId` are never touched** —
+those are opaque identifiers Thunderbird itself assigns and expects
+back unmodified for the actual move/jump calls; only the
+human-readable `name`/`path` fields need decoding.
+
 ## Data flow
 
 ```mermaid
@@ -277,6 +301,8 @@ rounds of guessing specifically because the first version didn't.
   - `recent.js` — MRU list maintenance (push-to-front, dedupe, cap).
   - `folders.js` — restrict a folder list to one account.
   - `options.js` — merge stored options over defaults.
+  - `imapUtf7.js` — decode IMAP "modified UTF-7" (RFC 3501) mailbox
+    names into plain Unicode.
 - `test/` — unit tests for everything in `lib/`, using Node's
   built-in `node:test` (see below).
 - `icons/` — `icon.svg` source plus generated PNGs (via `rsvg-convert`).

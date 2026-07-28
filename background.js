@@ -1,5 +1,6 @@
 import { pushRecent } from "./lib/recent.js";
 import { DEFAULT_OPTIONS } from "./lib/options.js";
+import { decodeImapUtf7 } from "./lib/imapUtf7.js";
 
 /**
  * In-memory mirror of storage.local's lastUsedFolderId, kept in sync so
@@ -75,7 +76,7 @@ async function recordUsage(folderId) {
   });
   if (folder) {
     await messenger.action.setTitle({
-      title: messenger.i18n.getMessage("tooltipLastFolder", [folder.path]),
+      title: messenger.i18n.getMessage("tooltipLastFolder", [decodeImapUtf7(folder.path)]),
     });
   }
 }
