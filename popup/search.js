@@ -7,24 +7,40 @@ const input = document.getElementById("query");
 const list = document.getElementById("results");
 const empty = document.getElementById("empty");
 
-let mode = "move";
+// Passed via the popup URL (see background.js's openSearchPopup),
+// not storage, so it's available synchronously — no risk of reading
+// it before background.js has finished writing it.
+const mode = new URLSearchParams(window.location.search).get("mode") === "jump" ? "jump" : "move";
+
 let options;
 let allFolders = [];
 let recentFolders = [];
 let visible = [];
 let activeIndex = 0;
 
-async function init() {
-  const [{ mode: storedMode }, folders, opts, { recentFolders: recentIds = [] }, [activeTab]] =
-    await Promise.all([
-      messenger.storage.session.get("mode"),
-      messenger.folders.query({}),
-      getOptions(messenger.storage.local),
-      messenger.storage.local.get("recentFolders"),
-      messenger.mailTabs.query({ active: true, currentWindow: true }),
-    ]);
+// Set text and grab focus immediately, synchronously, before any
+// async work below: Thunderbird only autofocuses the popup document
+// itself, not a specific element, and focus() calls made after an
+// await are prone to lose the race against the popup's own initial
+// focus handling. The `autofocus` attribute in search.html is a
+// second line of defense; render()'s repeat call below is a third.
+heading.textContent = messenger.i18n.getMessage(
+  mode === "move" ? "popupHeadingMove" : "popupHeadingJump",
+);
+input.placeholder = messenger.i18n.getMessage(
+  mode === "move" ? "popupPlaceholderMove" : "popupPlaceholderJump",
+);
+empty.textContent = messenger.i18n.getMessage("popupNoMatches");
+input.focus();
 
-  mode = storedMode ?? "move";
+async function init() {
+  const [folders, opts, { recentFolders: recentIds = [] }, [activeTab]] = await Promise.all([
+    messenger.folders.query({}),
+    getOptions(messenger.storage.local),
+    messenger.storage.local.get("recentFolders"),
+    messenger.mailTabs.query({ active: true, currentWindow: true }),
+  ]);
+
   options = opts;
   allFolders = options.searchAllAccounts
     ? folders
@@ -32,14 +48,6 @@ async function init() {
 
   const byId = new Map(allFolders.map((folder) => [folder.id, folder]));
   recentFolders = recentIds.map((id) => byId.get(id)).filter(Boolean);
-
-  heading.textContent = messenger.i18n.getMessage(
-    mode === "move" ? "popupHeadingMove" : "popupHeadingJump",
-  );
-  input.placeholder = messenger.i18n.getMessage(
-    mode === "move" ? "popupPlaceholderMove" : "popupPlaceholderJump",
-  );
-  empty.textContent = messenger.i18n.getMessage("popupNoMatches");
 
   render("");
   input.focus();

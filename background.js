@@ -2,6 +2,20 @@ import { pushRecent } from "./lib/recent.js";
 import { DEFAULT_OPTIONS } from "./lib/options.js";
 
 /**
+ * In-memory mirror of storage.local's lastUsedFolderId, kept in sync so
+ * the move-last/jump-last commands can decide synchronously whether to
+ * act directly or fall back to the search popup. This matters because
+ * any `await` before `messenger.action.openPopup()` — even one that
+ * resolves near-instantly, like a storage read — drops the "user
+ * gesture" status that call requires when invoked from a command
+ * shortcut, and openPopup() then fails silently (see ARCHITECTURE.md).
+ */
+let cachedLastUsedFolderId = null;
+messenger.storage.local.get("lastUsedFolderId").then(({ lastUsedFolderId }) => {
+  cachedLastUsedFolderId = lastUsedFolderId ?? null;
+});
+
+/**
  * Look up a single folder by id. Thunderbird's folders API has no
  * get-by-id call, so this does a linear scan of the (typically small)
  * folder list.
@@ -35,6 +49,7 @@ async function performJump(folderId) {
 }
 
 async function recordUsage(folderId) {
+  cachedLastUsedFolderId = folderId;
   const [{ recentFolders = [] }, folder] = await Promise.all([
     messenger.storage.local.get("recentFolders"),
     getFolderById(folderId),
@@ -56,21 +71,29 @@ async function handleSelection(mode, folderId) {
   await recordUsage(folderId);
 }
 
-async function openSearchPopup(mode) {
-  await messenger.storage.session.set({ mode });
-  await messenger.action.openPopup();
+/**
+ * Open the search popup in the given mode. Must stay synchronous up to
+ * (and including) the openPopup() call itself — see the comment on
+ * `cachedLastUsedFolderId` above for why.
+ */
+function openSearchPopup(mode) {
+  messenger.action.setPopup({ popup: `popup/search.html?mode=${mode}` });
+  messenger.action.openPopup().then(() => {
+    // Reset so a plain toolbar-button click (which opens the
+    // manifest's default_popup directly, bypassing this function)
+    // always starts in "move" mode.
+    messenger.action.setPopup({ popup: "popup/search.html" });
+  });
 }
 
-async function actOnLastFolder(mode) {
-  const { lastUsedFolderId } = await messenger.storage.local.get("lastUsedFolderId");
-  if (!lastUsedFolderId) {
-    // Nothing to repeat yet — fall back to the search popup.
-    await openSearchPopup(mode);
+function actOnLastFolder(mode) {
+  if (!cachedLastUsedFolderId) {
+    openSearchPopup(mode);
     return;
   }
-  if (mode === "move") await performMove(lastUsedFolderId);
-  else await performJump(lastUsedFolderId);
-  await recordUsage(lastUsedFolderId);
+  const folderId = cachedLastUsedFolderId;
+  const action = mode === "move" ? performMove(folderId) : performJump(folderId);
+  action.then(() => recordUsage(folderId));
 }
 
 messenger.commands.onCommand.addListener((command) => {

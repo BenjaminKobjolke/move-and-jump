@@ -56,11 +56,54 @@ instead:
 | `jump-search` | `Ctrl+Shift+G` | Open the popup in "jump" mode |
 | `jump-last` | `Ctrl+Alt+G` | Jump to the last-used folder, no popup |
 
-`background.js`'s `commands.onCommand` handler writes the mode
-(`"move"` or `"jump"`) to `storage.session` — memory-only, cleared on
-restart, exactly matching the popup's lifetime — and then calls
-`action.openPopup()`. `popup/search.js` reads that flag on load to
-configure its heading and its eventual action.
+`background.js`'s `commands.onCommand` handler passes the mode
+(`"move"` or `"jump"`) to the popup via a **query string on the popup
+URL** (`action.setPopup({popup: "popup/search.html?mode=move"})`
+immediately followed by `action.openPopup()`, then reset back to the
+plain URL once the popup has opened so a plain toolbar-button click
+always starts in "move" mode). `popup/search.js` reads `?mode=` from
+`window.location.search` synchronously on load.
+
+### The user-gesture pitfall
+
+This *has* to be a URL parameter rather than something written to
+`storage.session` first and read back by the popup, because of a real
+bug we hit during testing: **any `await` before
+`messenger.action.openPopup()` — even one that resolves near-instantly,
+like a storage write — drops the "user gesture" status that call
+requires when it's invoked from a command shortcut** (this is a
+known, if under-documented, WebExtension quirk — see
+[Bugzilla 1800401](https://bugzilla.mozilla.org/show_bug.cgi?id=1800401)).
+`openPopup()` doesn't throw in that case; it just silently does
+nothing, which is exactly what made the Ctrl+Shift+S/G shortcuts
+appear completely dead. The fix has two parts:
+
+- `openSearchPopup()` in `background.js` is a **plain, non-`async`
+  function** that calls `action.setPopup()` and `action.openPopup()`
+  back-to-back with no `await` in between, preserving the gesture from
+  the triggering keypress.
+- `move-last`/`jump-last` keep an in-memory `cachedLastUsedFolderId`
+  (populated once at startup, updated on every use) instead of reading
+  `storage.local` at command time, so their fallback-to-search-popup
+  path (first use, before any folder has been used yet) doesn't lose
+  the gesture to an `await` either.
+
+If you're ever tempted to add an `await` ahead of an `openPopup()`
+call reachable from a command handler, don't — restructure so
+anything async happens after that call, or in a `.then()`.
+
+### Grabbing focus
+
+Separately, the search `<input>` wasn't reliably getting keyboard
+focus when the popup opened — keystrokes fell through to
+Thunderbird's own single-letter shortcuts underneath. Popups only
+auto-focus *some* element, not necessarily the one you want, and a
+`.focus()` call made after `await`ing data (as the original code did)
+frequently loses that race. The fix is three redundant layers, since
+none of them is 100% reliable alone: the `autofocus` attribute in
+`search.html`, an immediate synchronous `input.focus()` call at the
+top of `search.js` (before any `await`), and a repeat `input.focus()`
+once the async data load in `init()` finishes.
 
 ## Data flow
 
@@ -72,8 +115,9 @@ sequenceDiagram
     participant TB as Thunderbird APIs
 
     User->>BG: Ctrl+Shift+S (move-search command)
-    BG->>BG: storage.session.set({mode: "move"})
+    BG->>TB: action.setPopup({popup: "search.html?mode=move"})
     BG->>TB: action.openPopup()
+    Popup->>Popup: read ?mode= from location.search, focus() input
     Popup->>TB: folders.query(), storage.local.get(...), mailTabs.query(...)
     TB-->>Popup: folder list, recent list, options, active tab
     User->>Popup: types query, arrows, Enter
@@ -105,9 +149,6 @@ that mutates `storage.local` and the toolbar tooltip.
   }
 }
 ```
-
-`storage.session` holds only the transient `{ mode }` flag used to
-tell the popup why it was opened.
 
 ## File layout
 
