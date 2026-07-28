@@ -79,7 +79,17 @@ free anymore.
 - **Anchoring/sizing**: gone; `openSearchWindow()` in `background.js`
   computes a centered position from `windows.getCurrent()` instead.
 - **Dismiss-on-blur**: reimplemented via `window.addEventListener("blur",
-  () => window.close())` in `search.js`.
+  () => window.close())` in `search.js`. This turned out to have a
+  sharp edge: selecting a folder with **Enter** appeared to do nothing
+  (no move, no error), while clicking the exact same list item worked
+  fine. Working theory: Enter — unlike the arrow keys — causes this
+  window to lose focus as a side effect, firing the blur handler while
+  `select()`'s `sendMessage` call was still in flight and closing (and
+  destroying the JS context of) the window before the move/jump could
+  actually happen; a plain click never blurs the window, so it was
+  unaffected. Fixed with a `closing` flag set the moment a selection
+  or Escape is confirmed, which the blur handler checks before acting
+  — once we're closing on purpose, a racing blur is a no-op.
 - **`window.close()` from content script**: real popup windows block
   script-initiated close by default; `windows.create()` is called with
   `allowScriptsToClose: true` to allow it.

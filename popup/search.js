@@ -93,8 +93,23 @@ function moveActive(delta) {
   highlight();
 }
 
+// Guards against our own dismiss-on-blur handler below racing a
+// deliberate selection closed: if Enter (unlike the arrow keys)
+// causes this window to lose focus as a side effect, blur would fire
+// while select()'s sendMessage is still in flight and close the
+// window before the move/jump actually happens. Once we've decided to
+// close on purpose, further blur events are a no-op.
+let closing = false;
+
 async function select(folder) {
-  if (!folder) return;
+  if (!folder) {
+    console.error("Move and Jump: Enter pressed with no folder selected", {
+      activeIndex,
+      visibleCount: visible.length,
+    });
+    return;
+  }
+  closing = true;
   await messenger.runtime.sendMessage({ type: "select", mode, folderId: folder.id, tabId });
   window.close();
 }
@@ -117,6 +132,7 @@ input.addEventListener("keydown", (event) => {
       break;
     case "Escape":
       event.preventDefault();
+      closing = true;
       window.close();
       break;
     default:
@@ -126,7 +142,9 @@ input.addEventListener("keydown", (event) => {
 
 // This is a real top-level window rather than an anchored toolbar
 // popup, so nothing dismisses it automatically when the user clicks
-// elsewhere — do that ourselves.
-window.addEventListener("blur", () => window.close());
+// elsewhere — do that ourselves. Guarded by `closing` (see above).
+window.addEventListener("blur", () => {
+  if (!closing) window.close();
+});
 
 init();
