@@ -33,8 +33,13 @@ async function init() {
   const byId = new Map(allFolders.map((folder) => [folder.id, folder]));
   recentFolders = recentIds.map((id) => byId.get(id)).filter(Boolean);
 
-  heading.textContent = mode === "move" ? "Move to…" : "Jump to…";
-  input.placeholder = mode === "move" ? "Move to folder…" : "Jump to folder…";
+  heading.textContent = messenger.i18n.getMessage(
+    mode === "move" ? "popupHeadingMove" : "popupHeadingJump",
+  );
+  input.placeholder = messenger.i18n.getMessage(
+    mode === "move" ? "popupPlaceholderMove" : "popupPlaceholderJump",
+  );
+  empty.textContent = messenger.i18n.getMessage("popupNoMatches");
 
   render("");
   input.focus();

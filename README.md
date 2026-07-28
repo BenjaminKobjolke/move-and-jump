@@ -58,6 +58,37 @@ Preference                | Default
 Case-sensitive search     | off (search is case-insensitive)
 Search in all accounts    | on (folders from all accounts are being listed)
 
+## Installation
+
+This add-on isn't published on [addons.thunderbird.net](https://addons.thunderbird.net)
+yet, so install it from a locally built package:
+
+```sh
+npm install
+npm run build   # produces web-ext-artifacts/move-and-jump-<version>.xpi
+```
+
+Then in Thunderbird: *Add-ons Manager* (hamburger menu → Add-ons and
+Themes) → gear icon → **Install Add-on From File…** → select the
+`.xpi`. Unlike Firefox, stock Thunderbird ships with add-on signature
+enforcement **off** by default, so this works without touching
+`about:config`. (If your build/distro has it turned on and installation
+is refused, set `xpinstall.signatures.required` to `false` in
+`about:config`, restart, and try again.)
+
+This installs it as a regular, persistent add-on — it survives
+restarts and updates like any other, it just won't auto-update itself;
+building and reinstalling a new `.xpi` is how you pick up new versions
+for now.
+
+## Localization
+
+The UI is available in English (default), French, German, Spanish, and
+Simplified Chinese, matching Thunderbird's own display-language
+setting automatically. The non-English strings (`_locales/*/messages.json`)
+were translated by Claude and haven't been reviewed by native speakers —
+corrections via PR are welcome.
+
 ## Development
 
 This is a dependency-free WebExtension (Manifest V3); the only
@@ -74,7 +105,9 @@ npm run build  # packages a .xpi into web-ext-artifacts/
 ```
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for how the add-on is put
-together and why.
+together and why. A GitHub Actions workflow
+([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same
+three commands (test, lint, build) on every push and pull request.
 
 ## Contributing to developement
 

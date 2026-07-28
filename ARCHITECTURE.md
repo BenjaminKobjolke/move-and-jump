@@ -127,6 +127,12 @@ tell the popup why it was opened.
 - `test/` — unit tests for everything in `lib/`, using Node's
   built-in `node:test` (see below).
 - `icons/` — `icon.svg` source plus generated PNGs (via `rsvg-convert`).
+- `_locales/` — standard WebExtension i18n: `en` (default), `fr`, `de`,
+  `es`, `zh_CN`. Manifest strings use `__MSG_key__`; UI scripts call
+  `messenger.i18n.getMessage(key)` directly (there's no HTML-level
+  substitution outside `manifest.json`). The non-English translations
+  were produced by Claude, not reviewed by native speakers — treat
+  them as a solid starting point and open an issue/PR for corrections.
 
 ## Testing strategy
 
@@ -141,6 +147,21 @@ added dependencies** via Node's built-in test runner (`npm test`).
 functions plus direct `messenger.*` calls, and are verified manually
 via `npm start` (loads the add-on into a real, locally-installed
 Thunderbird).
+
+## Packaging
+
+`web-ext build` packages the extension for distribution. By default
+it would include everything in the repo (tests, docs, `package.json`,
+the SVG icon source) — `web-ext-config.cjs` sets `ignoreFiles` to
+strip all of that so the shipped `.xpi` only contains what Thunderbird
+actually needs to run: `manifest.json`, `background.js`, `lib/`,
+`popup/`, `options/`, the PNG icons, and `_locales/`. Both
+`npm run build` and `npm run lint` load this config via `-c
+web-ext-config.cjs` so they stay in sync. Note that `web-ext build`'s
+default output is a `.zip` (an XPI *is* a zip, just with a different
+extension) — the `--filename` flag in the `build` script names it
+`.xpi` directly since that's what Thunderbird's "Install Add-on From
+File" dialog expects to see.
 
 ## A note on `web-ext lint`
 

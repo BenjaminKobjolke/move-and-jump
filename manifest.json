@@ -2,7 +2,8 @@
   "manifest_version": 3,
   "name": "Move and Jump",
   "version": "0.1.0",
-  "description": "Type-ahead search to move emails to a folder, or jump to one.",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
   "author": "Daniel Kraus",
   "browser_specific_settings": {
     "gecko": {
@@ -16,7 +17,7 @@
     "type": "module"
   },
   "action": {
-    "default_title": "Move and Jump",
+    "default_title": "__MSG_actionTitle__",
     "default_icon": {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png",
@@ -34,19 +35,19 @@
   "commands": {
     "move-search": {
       "suggested_key": { "default": "Ctrl+Shift+S" },
-      "description": "Move email: open folder search"
+      "description": "__MSG_commandMoveSearchDescription__"
     },
     "move-last": {
       "suggested_key": { "default": "Ctrl+Alt+S" },
-      "description": "Move email to last-used folder"
+      "description": "__MSG_commandMoveLastDescription__"
     },
     "jump-search": {
       "suggested_key": { "default": "Ctrl+Shift+G" },
-      "description": "Jump to folder: open folder search"
+      "description": "__MSG_commandJumpSearchDescription__"
     },
     "jump-last": {
       "suggested_key": { "default": "Ctrl+Alt+G" },
-      "description": "Jump to last-used folder"
+      "description": "__MSG_commandJumpLastDescription__"
     }
   },
   "options_ui": {

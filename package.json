@@ -6,9 +6,9 @@
   "description": "Thunderbird add-on: type-ahead search to move emails to a folder, or jump to one.",
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
-    "start": "web-ext run --firefox-binary thunderbird",
-    "build": "web-ext build",
-    "lint": "web-ext lint",
+    "start": "web-ext run -c web-ext-config.cjs --firefox-binary thunderbird",
+    "build": "web-ext build -c web-ext-config.cjs --filename \"move-and-jump-{version}.xpi\"",
+    "lint": "web-ext lint -c web-ext-config.cjs",
     "test": "node --test \"test/*.test.js\""
   },
   "devDependencies": {

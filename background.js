@@ -44,7 +44,9 @@ async function recordUsage(folderId) {
     lastUsedFolderId: folderId,
   });
   if (folder) {
-    await messenger.action.setTitle({ title: `Move and Jump — Last: ${folder.path}` });
+    await messenger.action.setTitle({
+      title: messenger.i18n.getMessage("tooltipLastFolder", [folder.path]),
+    });
   }
 }
 

@@ -1,0 +1,47 @@
+{
+  "extensionDescription": {
+    "message": "Schnellsuche, um E-Mails in einen Ordner zu verschieben oder direkt zu einem Ordner zu springen."
+  },
+  "commandMoveSearchDescription": {
+    "message": "E-Mail verschieben: Ordnersuche öffnen"
+  },
+  "commandMoveLastDescription": {
+    "message": "E-Mail in zuletzt verwendeten Ordner verschieben"
+  },
+  "commandJumpSearchDescription": {
+    "message": "Zu Ordner springen: Ordnersuche öffnen"
+  },
+  "commandJumpLastDescription": {
+    "message": "Zum zuletzt verwendeten Ordner springen"
+  },
+  "actionTitle": {
+    "message": "Move and Jump"
+  },
+  "popupHeadingMove": {
+    "message": "Verschieben nach…"
+  },
+  "popupHeadingJump": {
+    "message": "Springen zu…"
+  },
+  "popupPlaceholderMove": {
+    "message": "In Ordner verschieben…"
+  },
+  "popupPlaceholderJump": {
+    "message": "Zu Ordner springen…"
+  },
+  "popupNoMatches": {
+    "message": "Keine passenden Ordner"
+  },
+  "optionsCaseSensitiveSearch": {
+    "message": "Groß-/Kleinschreibung beachten"
+  },
+  "optionsSearchAllAccounts": {
+    "message": "In allen Konten suchen"
+  },
+  "tooltipLastFolder": {
+    "message": "Move and Jump — Zuletzt: $FOLDER$",
+    "placeholders": {
+      "folder": { "content": "$1", "example": "Posteingang/Archiv" }
+    }
+  }
+}

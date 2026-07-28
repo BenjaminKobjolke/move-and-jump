@@ -1,0 +1,47 @@
+{
+  "extensionDescription": {
+    "message": "Recherche incrémentale pour déplacer des courriels vers un dossier, ou y accéder directement."
+  },
+  "commandMoveSearchDescription": {
+    "message": "Déplacer le courriel : ouvrir la recherche de dossier"
+  },
+  "commandMoveLastDescription": {
+    "message": "Déplacer le courriel vers le dernier dossier utilisé"
+  },
+  "commandJumpSearchDescription": {
+    "message": "Accéder à un dossier : ouvrir la recherche de dossier"
+  },
+  "commandJumpLastDescription": {
+    "message": "Accéder au dernier dossier utilisé"
+  },
+  "actionTitle": {
+    "message": "Move and Jump"
+  },
+  "popupHeadingMove": {
+    "message": "Déplacer vers…"
+  },
+  "popupHeadingJump": {
+    "message": "Accéder à…"
+  },
+  "popupPlaceholderMove": {
+    "message": "Déplacer vers un dossier…"
+  },
+  "popupPlaceholderJump": {
+    "message": "Accéder à un dossier…"
+  },
+  "popupNoMatches": {
+    "message": "Aucun dossier correspondant"
+  },
+  "optionsCaseSensitiveSearch": {
+    "message": "Recherche sensible à la casse"
+  },
+  "optionsSearchAllAccounts": {
+    "message": "Rechercher dans tous les comptes"
+  },
+  "tooltipLastFolder": {
+    "message": "Move and Jump — Dernier dossier : $FOLDER$",
+    "placeholders": {
+      "folder": { "content": "$1", "example": "Boîte de réception/Archive" }
+    }
+  }
+}

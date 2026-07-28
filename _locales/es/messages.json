@@ -1,0 +1,47 @@
+{
+  "extensionDescription": {
+    "message": "Búsqueda incremental para mover correos a una carpeta o saltar directamente a ella."
+  },
+  "commandMoveSearchDescription": {
+    "message": "Mover correo: abrir búsqueda de carpetas"
+  },
+  "commandMoveLastDescription": {
+    "message": "Mover correo a la última carpeta usada"
+  },
+  "commandJumpSearchDescription": {
+    "message": "Saltar a carpeta: abrir búsqueda de carpetas"
+  },
+  "commandJumpLastDescription": {
+    "message": "Saltar a la última carpeta usada"
+  },
+  "actionTitle": {
+    "message": "Move and Jump"
+  },
+  "popupHeadingMove": {
+    "message": "Mover a…"
+  },
+  "popupHeadingJump": {
+    "message": "Saltar a…"
+  },
+  "popupPlaceholderMove": {
+    "message": "Mover a la carpeta…"
+  },
+  "popupPlaceholderJump": {
+    "message": "Saltar a la carpeta…"
+  },
+  "popupNoMatches": {
+    "message": "No hay carpetas coincidentes"
+  },
+  "optionsCaseSensitiveSearch": {
+    "message": "Búsqueda sensible a mayúsculas"
+  },
+  "optionsSearchAllAccounts": {
+    "message": "Buscar en todas las cuentas"
+  },
+  "tooltipLastFolder": {
+    "message": "Move and Jump — Última: $FOLDER$",
+    "placeholders": {
+      "folder": { "content": "$1", "example": "Bandeja de entrada/Archivo" }
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "extensionDescription": {
+    "message": "通过输入实时搜索，将邮件移动到文件夹，或直接跳转到文件夹。"
+  },
+  "commandMoveSearchDescription": {
+    "message": "移动邮件：打开文件夹搜索"
+  },
+  "commandMoveLastDescription": {
+    "message": "将邮件移动到最近使用的文件夹"
+  },
+  "commandJumpSearchDescription": {
+    "message": "跳转到文件夹：打开文件夹搜索"
+  },
+  "commandJumpLastDescription": {
+    "message": "跳转到最近使用的文件夹"
+  },
+  "actionTitle": {
+    "message": "Move and Jump"
+  },
+  "popupHeadingMove": {
+    "message": "移动到…"
+  },
+  "popupHeadingJump": {
+    "message": "跳转到…"
+  },
+  "popupPlaceholderMove": {
+    "message": "移动到文件夹…"
+  },
+  "popupPlaceholderJump": {
+    "message": "跳转到文件夹…"
+  },
+  "popupNoMatches": {
+    "message": "没有匹配的文件夹"
+  },
+  "optionsCaseSensitiveSearch": {
+    "message": "区分大小写搜索"
+  },
+  "optionsSearchAllAccounts": {
+    "message": "搜索所有账户"
+  },
+  "tooltipLastFolder": {
+    "message": "Move and Jump — 最近：$FOLDER$",
+    "placeholders": {
+      "folder": { "content": "$1", "example": "收件箱/存档" }
+    }
+  }
+}

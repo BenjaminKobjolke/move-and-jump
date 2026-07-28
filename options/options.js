@@ -3,6 +3,11 @@ import { getOptions } from "../lib/options.js";
 const caseSensitiveSearch = document.getElementById("caseSensitiveSearch");
 const searchAllAccounts = document.getElementById("searchAllAccounts");
 
+document.getElementById("caseSensitiveSearchLabel").textContent =
+  messenger.i18n.getMessage("optionsCaseSensitiveSearch");
+document.getElementById("searchAllAccountsLabel").textContent =
+  messenger.i18n.getMessage("optionsSearchAllAccounts");
+
 async function load() {
   const options = await getOptions(messenger.storage.local);
   caseSensitiveSearch.checked = options.caseSensitiveSearch;
