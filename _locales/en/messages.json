@@ -43,6 +43,10 @@
     "message": "No matching folders",
     "description": "Shown when a search query has no results"
   },
+  "popupError": {
+    "message": "Something went wrong — see the Browser Console for details.",
+    "description": "Shown when a move/jump fails"
+  },
   "optionsCaseSensitiveSearch": {
     "message": "Case-sensitive search",
     "description": "Options page checkbox label"

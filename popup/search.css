@@ -6,6 +6,7 @@
   --active-bg: #2b6cb0;
   --active-fg: #ffffff;
   --muted: #666666;
+  --error-fg: #b3261e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -16,6 +17,7 @@
     --active-bg: #3a7bd5;
     --active-fg: #ffffff;
     --muted: #a0a0a0;
+    --error-fg: #f2a29c;
   }
 }
 
@@ -89,6 +91,12 @@ li.active {
 .empty {
   margin: 10px 2px 2px;
   color: var(--muted);
+  font-size: 12px;
+}
+
+.error {
+  margin: 10px 2px 2px;
+  color: var(--error-fg);
   font-size: 12px;
 }
 

@@ -32,6 +32,9 @@
   "popupNoMatches": {
     "message": "Aucun dossier correspondant"
   },
+  "popupError": {
+    "message": "Une erreur s'est produite — consultez la console du navigateur pour plus de détails."
+  },
   "optionsCaseSensitiveSearch": {
     "message": "Recherche sensible à la casse"
   },

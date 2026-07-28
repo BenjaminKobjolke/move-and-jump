@@ -32,6 +32,9 @@
   "popupNoMatches": {
     "message": "No hay carpetas coincidentes"
   },
+  "popupError": {
+    "message": "Algo salió mal — consulte la consola del navegador para más detalles."
+  },
   "optionsCaseSensitiveSearch": {
     "message": "Búsqueda sensible a mayúsculas"
   },

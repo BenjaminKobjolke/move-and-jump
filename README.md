@@ -120,7 +120,7 @@ together and why. A GitHub Actions workflow
 ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same
 three commands (test, lint, build) on every push and pull request.
 
-## Contributing to developement
+## Contributing to development
 
 Pull requests are welcome.
 

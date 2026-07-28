@@ -32,6 +32,9 @@
   "popupNoMatches": {
     "message": "Keine passenden Ordner"
   },
+  "popupError": {
+    "message": "Etwas ist schiefgelaufen — Details in der Browser-Konsole."
+  },
   "optionsCaseSensitiveSearch": {
     "message": "Groß-/Kleinschreibung beachten"
   },

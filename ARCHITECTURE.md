@@ -178,6 +178,17 @@ Two related UI additions on top of the design above:
   (`showAccountPrefix` in `search.js`) — with `searchAllAccounts`
   turned off, or with only one account configured, there's no
   ambiguity to resolve, so the prefix would just be noise.
+- **Move/jump failures are no longer silent.** `handleSelection()` in
+  `background.js` returns `{ok: true}` or `{ok: false, error}`, and
+  `select()` in `search.js` checks that response before closing the
+  window — on failure it shows a generic `#error` message inline
+  (`popupError`) and leaves the window open (via the same `closing`
+  flag the blur-race guard uses, reset back to `false`) instead of
+  closing regardless of outcome. A pre-1.0 review flagged the earlier
+  behavior — close unconditionally whether `sendMessage` succeeded,
+  rejected, or the background handler itself failed — as exactly the
+  kind of "nothing happens, no error" failure mode this project has
+  already lost real debugging time to twice.
 
 ## Data flow
 

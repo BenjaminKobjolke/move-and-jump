@@ -6,6 +6,7 @@ const heading = document.getElementById("heading");
 const input = document.getElementById("query");
 const list = document.getElementById("results");
 const empty = document.getElementById("empty");
+const error = document.getElementById("error");
 const moveButton = document.getElementById("moveButton");
 const jumpButton = document.getElementById("jumpButton");
 const cancelButton = document.getElementById("cancelButton");
@@ -33,6 +34,7 @@ let showAccountPrefix = false;
 // await are prone to lose the race against the popup's own initial
 // focus handling. The `autofocus` attribute in search.html is a
 // second line of defense; render()'s repeat call below is a third.
+document.title = messenger.i18n.getMessage("actionTitle");
 heading.textContent = messenger.i18n.getMessage(
   mode === "move" ? "popupHeadingMove" : "popupHeadingJump",
 );
@@ -40,6 +42,7 @@ input.placeholder = messenger.i18n.getMessage(
   mode === "move" ? "popupPlaceholderMove" : "popupPlaceholderJump",
 );
 empty.textContent = messenger.i18n.getMessage("popupNoMatches");
+error.textContent = messenger.i18n.getMessage("popupError");
 moveButton.textContent = messenger.i18n.getMessage("buttonMove");
 jumpButton.textContent = messenger.i18n.getMessage("buttonJump");
 cancelButton.textContent = messenger.i18n.getMessage("buttonCancel");
@@ -54,7 +57,11 @@ async function init() {
       messenger.accounts.list(),
       getOptions(messenger.storage.local),
       messenger.storage.local.get("recentFolders"),
-      tabId === undefined ? undefined : messenger.mailTabs.get(tabId),
+      // The tab can close in the moment between background.js resolving
+      // tabId and this running; a rejection here is only used for the
+      // "search all accounts" scoping below, so fall back to unscoped
+      // rather than letting the whole Promise.all reject.
+      tabId === undefined ? undefined : messenger.mailTabs.get(tabId).catch(() => undefined),
     ]);
 
   options = opts;
@@ -137,16 +144,21 @@ async function select(actionMode, folder) {
     });
     return;
   }
+  error.hidden = true;
   closing = true;
   try {
-    await messenger.runtime.sendMessage({
+    const response = await messenger.runtime.sendMessage({
       type: "select",
       mode: actionMode,
       folderId: folder.id,
       tabId,
     });
-  } catch (error) {
-    console.error("Move and Jump: sendMessage failed", error);
+    if (response?.ok === false) throw new Error(response.error);
+  } catch (sendError) {
+    console.error("Move and Jump: select failed", sendError);
+    closing = false;
+    error.hidden = false;
+    return;
   }
   window.close();
 }

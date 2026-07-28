@@ -32,6 +32,9 @@
   "popupNoMatches": {
     "message": "没有匹配的文件夹"
   },
+  "popupError": {
+    "message": "出错了——详情请查看浏览器控制台。"
+  },
   "optionsCaseSensitiveSearch": {
     "message": "区分大小写搜索"
   },
