@@ -42,30 +42,25 @@ async function getActiveTab() {
 }
 
 async function performMove(folderId, tabId) {
-  console.log("Move and Jump: performMove", { folderId, tabId });
   if (tabId === undefined) {
     console.error("Move and Jump: performMove called with no tabId, nothing to move");
     return;
   }
   const { messages } = await messenger.mailTabs.getSelectedMessages(tabId);
-  console.log("Move and Jump: selected messages", messages.length);
   if (messages.length === 0) return;
   await messenger.messages.move(
     messages.map((message) => message.id),
     folderId,
     { isUserAction: true },
   );
-  console.log("Move and Jump: messages.move done");
 }
 
 async function performJump(folderId, tabId) {
-  console.log("Move and Jump: performJump", { folderId, tabId });
   if (tabId === undefined) {
     console.error("Move and Jump: performJump called with no tabId, nothing to jump in");
     return;
   }
   await messenger.mailTabs.update(tabId, { displayedFolderId: folderId });
-  console.log("Move and Jump: mailTabs.update done");
 }
 
 async function recordUsage(folderId) {
@@ -86,7 +81,6 @@ async function recordUsage(folderId) {
 }
 
 async function handleSelection(mode, folderId, tabId) {
-  console.log("Move and Jump: handleSelection", { mode, folderId, tabId });
   try {
     if (mode === "move") await performMove(folderId, tabId);
     else if (mode === "jump") await performJump(folderId, tabId);
@@ -152,28 +146,35 @@ async function openSearchWindow(mode, tabId) {
   searchWindowId = win.id;
 }
 
-async function actOnLastFolder(mode) {
-  const tab = await getActiveTab();
+async function actOnLastFolder(mode, tabId) {
   if (!cachedLastUsedFolderId) {
-    await openSearchWindow(mode, tab?.id);
+    await openSearchWindow(mode, tabId);
     return;
   }
   const folderId = cachedLastUsedFolderId;
-  if (mode === "move") await performMove(folderId, tab?.id);
-  else await performJump(folderId, tab?.id);
+  if (mode === "move") await performMove(folderId, tabId);
+  else await performJump(folderId, tabId);
   await recordUsage(folderId);
 }
 
-messenger.commands.onCommand.addListener((command) => {
+// commands.onCommand hands us the active tab directly as its second
+// argument (Thunderbird 106+) — use that, same as action.onClicked
+// below, rather than an independent currentWindow query. That query
+// (getActiveTab(), still used as a last-resort fallback inside
+// openSearchWindow) turned out not to reliably resolve a tab when
+// called from these event callbacks — confirmed via the
+// "could not resolve a target mail tab" diagnostic, which is what
+// silently broke the keyboard-shortcut path.
+messenger.commands.onCommand.addListener((command, tab) => {
   switch (command) {
     case "move-search":
-      return openSearchWindow("move");
+      return openSearchWindow("move", tab?.id);
     case "jump-search":
-      return openSearchWindow("jump");
+      return openSearchWindow("jump", tab?.id);
     case "move-last":
-      return actOnLastFolder("move");
+      return actOnLastFolder("move", tab?.id);
     case "jump-last":
-      return actOnLastFolder("jump");
+      return actOnLastFolder("jump", tab?.id);
     default:
       return undefined;
   }

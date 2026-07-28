@@ -109,16 +109,9 @@ async function select(folder) {
     });
     return;
   }
-  console.log("Move and Jump: select() sending", { mode, folderId: folder.id, tabId });
   closing = true;
   try {
-    const response = await messenger.runtime.sendMessage({
-      type: "select",
-      mode,
-      folderId: folder.id,
-      tabId,
-    });
-    console.log("Move and Jump: select() got response", response);
+    await messenger.runtime.sendMessage({ type: "select", mode, folderId: folder.id, tabId });
   } catch (error) {
     console.error("Move and Jump: sendMessage failed", error);
   }
@@ -139,11 +132,6 @@ input.addEventListener("keydown", (event) => {
       break;
     case "Enter":
       event.preventDefault();
-      console.log("Move and Jump: Enter pressed", {
-        activeIndex,
-        visibleCount: visible.length,
-        folder: visible[activeIndex],
-      });
       select(visible[activeIndex]);
       break;
     case "Escape":

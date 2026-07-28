@@ -105,30 +105,40 @@ free anymore.
   read synchronously from `window.location.search` — no
   `storage.session` round-trip, no race.
 - **Which mail tab to act on**: this is the one genuinely new
-  correctness concern a real window introduces. The popup used to be
+  correctness concern a real window introduces, and the source of two
+  real bugs before it was fully sorted out. The popup used to be
   implicitly associated with the mail window, so `mailTabs.query({active:
-  true, currentWindow: true})` naturally resolved to the right tab even
-  from inside the popup's own script. A separate top-level window has
-  no such association — `currentWindow: true` from *inside* the popup
-  would resolve to the popup itself, which has no mail tabs at all. Fix:
-  `background.js` resolves the target tab *before* creating the window
-  (when the mail window is still unambiguously "current") and threads
-  the tab id through explicitly — as a `tabId` URL parameter into the
-  popup, and back out again in the `runtime.sendMessage({type: "select",
-  ..., tabId})` call — rather than ever re-querying "current window"
-  once the popup exists.
+  true, currentWindow: true})` (the `getActiveTab()` helper in
+  `background.js`) naturally resolved to the right tab even from
+  inside the popup's own script. A separate top-level window has no
+  such association, and — this is the part that cost real debugging
+  time — **`currentWindow: true` turned out not to reliably resolve a
+  tab even when called from `action.onClicked` or `commands.onCommand`
+  themselves**, i.e. *before* the search window exists at all. Both of
+  those APIs hand the relevant tab directly to the listener as an
+  argument (confirmed against the Thunderbird API docs), and that's
+  the only tab source now used — `getActiveTab()`/`currentWindow` is
+  kept purely as a last-resort fallback inside `openSearchWindow()`,
+  not the primary path:
+  - `commands.onCommand.addListener((command, tab) => ...)` — `tab` is
+    "the active tab while the command occurred" (Thunderbird 106+).
+  - `action.onClicked.addListener((tab) => ...)` — `tab` is the tab
+    the click happened in.
+
+  Missing this the first time around silently broke *both* the
+  keyboard-shortcut and toolbar-button-click paths at different
+  points: `tabId` would come back `undefined`, which
+  `performMove`/`performJump`'s early-return guard turned into "do the
+  whole search UI flow, pick a folder, nothing happens, no error
+  anywhere." It was only diagnosable at all because of the
+  `console.error` calls in that guard and in `openSearchWindow()` —
+  the "could not resolve a target mail tab" message is what pinpointed
+  it. The resolved tab id is threaded through explicitly from there:
+  as a `tabId` URL parameter into the popup, and back out again in the
+  `runtime.sendMessage({type: "select", ..., tabId})` call — never
+  re-derived from "current window" once the popup exists.
 - Clicking the toolbar button now fires `action.onClicked` (there's no
   `default_popup` anymore) and opens the same window in "move" mode.
-  **`action.onClicked` hands the listener the clicked tab directly as
-  an argument — use that.** An early version of this code ignored it
-  and ran an independent `getActiveTab()`/`currentWindow: true` query
-  instead, which didn't reliably resolve to the mail tab from inside
-  that callback; the result was `tabId` silently coming back
-  `undefined`, which `performMove`/`performJump`'s early-return guard
-  then turned into "click button, pick a folder, nothing happens, no
-  error" — the guard now also logs via `console.error` specifically so
-  a regression like this shows up in the console instead of just
-  looking like nothing happened.
 - A second command fired while a search window is already open closes
   the old one first (`searchWindowId` tracked in `background.js`,
   cleared via `windows.onRemoved`) rather than piling up windows.
@@ -183,24 +193,22 @@ that mutates `storage.local` and the toolbar tooltip.
 }
 ```
 
-## Diagnostic logging
+## Error logging convention
 
-The keyboard-driven select path (Enter, whether on the default top MRU
-entry or after arrow-key navigation) went through several
-plausible-but-unconfirmed fixes (the user-gesture issue, the
-`action.onClicked` tab argument, the blur-race guard) without fully
-resolving on the developer's actual test system, so `background.js`
-and `popup/search.js` currently carry deliberate `console.log`/
-`console.error` statements bracketing the whole chain — keydown →
-`select()` → `runtime.sendMessage` → `handleSelection` →
-`performMove`/`performJump` — all prefixed `Move and Jump:` for easy
-filtering in the Browser Console. `select()` also now wraps
-`sendMessage` in try/catch and always calls `window.close()`
-afterward, whereas before an uncaught rejection there would have
-silently left the window open with nothing visibly wrong. Once the
-underlying issue is confirmed and fixed, trim this logging back down
-to just the error paths (matching the rest of the codebase's very
-sparse-logging style) rather than leaving it all in permanently.
+The tab-resolution bug above was only findable at all because of
+`console.error("Move and Jump: ...", ...)` calls at each point where a
+required value (`tabId`, a selected folder) could silently come back
+missing — those, plus a temporary round of `console.log` tracing
+through the whole select → message → move/jump chain, are what turned
+"nothing happens, no error" into an exact diagnosis from the Browser
+Console. The `console.log` tracing was removed once the bug was fixed
+(this is a small, synchronous-by-default extension — it doesn't need
+permanent verbose tracing), but the `console.error` calls at each
+"this should never be undefined" guard are staying, prefixed
+`Move and Jump:` for easy filtering. If you add a new code path with a
+similar "silently do nothing if some value is missing" guard, log it
+the same way rather than failing silently — this bug cost multiple
+rounds of guessing specifically because the first version didn't.
 
 ## File layout
 
