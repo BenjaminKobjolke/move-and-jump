@@ -34,76 +34,82 @@ which has no WebExtension equivalent in MV3. Move and Jump instead
 sets the toolbar button's tooltip (`action.setTitle()`) to
 `Move and Jump — Last: <folder path>` whenever a folder is used.
 
-## UI mechanism: the toolbar action popup
+## UI mechanism: a real popup window (not the toolbar action popup)
 
-The search UI (`popup/search.html`) is the extension's toolbar
-**`action` popup**, not a hand-rolled popup `window`. Opening it via
-`messenger.action.openPopup()` from a command handler means
-Thunderbird handles anchoring, sizing, and dismiss-on-blur/Escape
-natively — a manually created popup window would have to reimplement
-all of that.
+This went through two designs before landing here — both revisions
+are worth understanding, because the second one is a real,
+production-observed platform bug, not a hypothetical.
 
-The catch: `_execute_action`-style command shortcuts bypass
-`commands.onCommand` entirely (Thunderbird opens the popup directly,
-with no hook to tell it *why*). Since "move" and "jump" need the same
-popup in two different modes, both get their own named command
-instead:
+**Revision 1 (toolbar `action` popup panel).** The original design
+opened the search UI via `messenger.action.openPopup()` from a command
+handler, so Thunderbird would handle anchoring, sizing, and
+dismiss-on-blur/Escape natively. Two problems surfaced in real-world
+testing on Linux:
 
-| Command | Default key | Behavior |
-|---|---|---|
-| `move-search` | `Ctrl+Shift+S` | Open the popup in "move" mode |
-| `move-last` | `Ctrl+Alt+S` | Move selection to the last-used folder, no popup |
-| `jump-search` | `Ctrl+Shift+G` | Open the popup in "jump" mode |
-| `jump-last` | `Ctrl+Alt+G` | Jump to the last-used folder, no popup |
+- **The keyboard shortcuts did nothing at all.** Root cause: any
+  `await` before `messenger.action.openPopup()` — even one that
+  resolves near-instantly, like a storage write — drops the "user
+  gesture" status that call requires when invoked from a command
+  shortcut (a known, under-documented WebExtension quirk; see
+  [Bugzilla 1800401](https://bugzilla.mozilla.org/show_bug.cgi?id=1800401)).
+  `openPopup()` doesn't throw in that case, it just silently does
+  nothing. The original code awaited a `storage.session` write first,
+  which was the bug.
+- **The popup opened, but keystrokes didn't reach the search input.**
+  This one survived even after fixing the gesture issue above and
+  making the input take DOM focus (visible blinking caret) — typed
+  characters still fell through to Thunderbird's own single-letter
+  shortcuts underneath. That combination (element *has* DOM focus, but
+  keystrokes go to the window behind it) points at the anchored popup
+  panel not actually being handed real window-manager-level keyboard
+  focus on this platform — a known category of Gecko/GTK panel-focus
+  bugs on Linux, distinct from the ordinary "focus a DOM element"
+  problem the first fix addressed.
 
-`background.js`'s `commands.onCommand` handler passes the mode
-(`"move"` or `"jump"`) to the popup via a **query string on the popup
-URL** (`action.setPopup({popup: "popup/search.html?mode=move"})`
-immediately followed by `action.openPopup()`, then reset back to the
-plain URL once the popup has opened so a plain toolbar-button click
-always starts in "move" mode). `popup/search.js` reads `?mode=` from
-`window.location.search` synchronously on load.
+**Revision 2 (current): a genuine top-level window**, created with
+`messenger.windows.create({type: "popup", ...})`. This sidesteps both
+problems at once: `windows.create()` isn't gated by the user-gesture
+requirement `action.openPopup()` has, and a real top-level window is
+subject to normal window-manager focus handling instead of whatever
+special-cased handling anchored panels get.
 
-### The user-gesture pitfall
+The trade-off: none of the popup panel's native conveniences come for
+free anymore.
 
-This *has* to be a URL parameter rather than something written to
-`storage.session` first and read back by the popup, because of a real
-bug we hit during testing: **any `await` before
-`messenger.action.openPopup()` — even one that resolves near-instantly,
-like a storage write — drops the "user gesture" status that call
-requires when it's invoked from a command shortcut** (this is a
-known, if under-documented, WebExtension quirk — see
-[Bugzilla 1800401](https://bugzilla.mozilla.org/show_bug.cgi?id=1800401)).
-`openPopup()` doesn't throw in that case; it just silently does
-nothing, which is exactly what made the Ctrl+Shift+S/G shortcuts
-appear completely dead. The fix has two parts:
+- **Anchoring/sizing**: gone; `openSearchWindow()` in `background.js`
+  computes a centered position from `windows.getCurrent()` instead.
+- **Dismiss-on-blur**: reimplemented via `window.addEventListener("blur",
+  () => window.close())` in `search.js`.
+- **`window.close()` from content script**: real popup windows block
+  script-initiated close by default; `windows.create()` is called with
+  `allowScriptsToClose: true` to allow it.
+- **Passing which mode ("move"/"jump") to open in**: done via a query
+  string on the window's URL (`popup/search.html?mode=move&tabId=…`),
+  read synchronously from `window.location.search` — no
+  `storage.session` round-trip, no race.
+- **Which mail tab to act on**: this is the one genuinely new
+  correctness concern a real window introduces. The popup used to be
+  implicitly associated with the mail window, so `mailTabs.query({active:
+  true, currentWindow: true})` naturally resolved to the right tab even
+  from inside the popup's own script. A separate top-level window has
+  no such association — `currentWindow: true` from *inside* the popup
+  would resolve to the popup itself, which has no mail tabs at all. Fix:
+  `background.js` resolves the target tab *before* creating the window
+  (when the mail window is still unambiguously "current") and threads
+  the tab id through explicitly — as a `tabId` URL parameter into the
+  popup, and back out again in the `runtime.sendMessage({type: "select",
+  ..., tabId})` call — rather than ever re-querying "current window"
+  once the popup exists.
+- Clicking the toolbar button now fires `action.onClicked` (there's no
+  `default_popup` anymore) and opens the same window in "move" mode.
+- A second command fired while a search window is already open closes
+  the old one first (`searchWindowId` tracked in `background.js`,
+  cleared via `windows.onRemoved`) rather than piling up windows.
 
-- `openSearchPopup()` in `background.js` is a **plain, non-`async`
-  function** that calls `action.setPopup()` and `action.openPopup()`
-  back-to-back with no `await` in between, preserving the gesture from
-  the triggering keypress.
-- `move-last`/`jump-last` keep an in-memory `cachedLastUsedFolderId`
-  (populated once at startup, updated on every use) instead of reading
-  `storage.local` at command time, so their fallback-to-search-popup
-  path (first use, before any folder has been used yet) doesn't lose
-  the gesture to an `await` either.
-
-If you're ever tempted to add an `await` ahead of an `openPopup()`
-call reachable from a command handler, don't — restructure so
-anything async happens after that call, or in a `.then()`.
-
-### Grabbing focus
-
-Separately, the search `<input>` wasn't reliably getting keyboard
-focus when the popup opened — keystrokes fell through to
-Thunderbird's own single-letter shortcuts underneath. Popups only
-auto-focus *some* element, not necessarily the one you want, and a
-`.focus()` call made after `await`ing data (as the original code did)
-frequently loses that race. The fix is three redundant layers, since
-none of them is 100% reliable alone: the `autofocus` attribute in
-`search.html`, an immediate synchronous `input.focus()` call at the
-top of `search.js` (before any `await`), and a repeat `input.focus()`
-once the async data load in `init()` finishes.
+The lesson, if you're touching this again: don't move back to
+`action.openPopup()` for this UI without re-testing keyboard focus on
+Linux first. It's tempting because of the native anchoring, but it's
+what caused both bugs above.
 
 ## Data flow
 
@@ -115,25 +121,25 @@ sequenceDiagram
     participant TB as Thunderbird APIs
 
     User->>BG: Ctrl+Shift+S (move-search command)
-    BG->>TB: action.setPopup({popup: "search.html?mode=move"})
-    BG->>TB: action.openPopup()
-    Popup->>Popup: read ?mode= from location.search, focus() input
-    Popup->>TB: folders.query(), storage.local.get(...), mailTabs.query(...)
-    TB-->>Popup: folder list, recent list, options, active tab
+    BG->>TB: mailTabs.query({active:true, currentWindow:true}) — resolve target tab
+    BG->>TB: windows.create({type:"popup", url:"search.html?mode=move&tabId=…"})
+    Popup->>Popup: read mode/tabId from location.search, focus() input
+    Popup->>TB: folders.query(), storage.local.get(...), mailTabs.get(tabId)
+    TB-->>Popup: folder list, recent list, options, target tab's folder
     User->>Popup: types query, arrows, Enter
-    Popup->>BG: runtime.sendMessage({type: "select", mode, folderId})
+    Popup->>BG: runtime.sendMessage({type: "select", mode, folderId, tabId})
     Popup->>Popup: window.close()
-    BG->>TB: mailTabs.getSelectedMessages() + messages.move(...)
+    BG->>TB: mailTabs.getSelectedMessages(tabId) + messages.move(...)
     BG->>TB: storage.local.set(recentFolders, lastUsedFolderId)
     BG->>TB: action.setTitle(tooltip)
 ```
 
 The popup talks to the WebExtension APIs (`folders.query`,
-`mailTabs.query`, `storage.local`) directly rather than proxying
-through the background script — extension pages have full API
-access, so there's no reason to add a message round-trip just to
-fetch data. Only the *action* (perform the move/jump, which must be
-attributed to the right tab and update shared state) goes through
+`mailTabs.get`, `storage.local`) directly rather than proxying through
+the background script — extension pages have full API access, so
+there's no reason to add a message round-trip just to fetch data.
+Only the *action* (perform the move/jump, which must be attributed to
+the right tab and update shared state) goes through
 `runtime.sendMessage` to `background.js`, which is the single place
 that mutates `storage.local` and the toolbar tooltip.
 

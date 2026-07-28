@@ -7,10 +7,15 @@ const input = document.getElementById("query");
 const list = document.getElementById("results");
 const empty = document.getElementById("empty");
 
-// Passed via the popup URL (see background.js's openSearchPopup),
-// not storage, so it's available synchronously — no risk of reading
-// it before background.js has finished writing it.
-const mode = new URLSearchParams(window.location.search).get("mode") === "jump" ? "jump" : "move";
+// Passed via the window URL (see background.js's openSearchWindow),
+// not storage, so both are available synchronously with no risk of a
+// race against background.js. tabId identifies the mail tab this
+// window was opened for — this window is its own top-level window,
+// so `currentWindow: true` queries from in here would resolve to
+// *this* window, not the mail window.
+const params = new URLSearchParams(window.location.search);
+const mode = params.get("mode") === "jump" ? "jump" : "move";
+const tabId = params.has("tabId") ? Number(params.get("tabId")) : undefined;
 
 let options;
 let allFolders = [];
@@ -34,11 +39,11 @@ empty.textContent = messenger.i18n.getMessage("popupNoMatches");
 input.focus();
 
 async function init() {
-  const [folders, opts, { recentFolders: recentIds = [] }, [activeTab]] = await Promise.all([
+  const [folders, opts, { recentFolders: recentIds = [] }, activeTab] = await Promise.all([
     messenger.folders.query({}),
     getOptions(messenger.storage.local),
     messenger.storage.local.get("recentFolders"),
-    messenger.mailTabs.query({ active: true, currentWindow: true }),
+    tabId === undefined ? undefined : messenger.mailTabs.get(tabId),
   ]);
 
   options = opts;
@@ -90,7 +95,7 @@ function moveActive(delta) {
 
 async function select(folder) {
   if (!folder) return;
-  await messenger.runtime.sendMessage({ type: "select", mode, folderId: folder.id });
+  await messenger.runtime.sendMessage({ type: "select", mode, folderId: folder.id, tabId });
   window.close();
 }
 
@@ -118,5 +123,10 @@ input.addEventListener("keydown", (event) => {
       break;
   }
 });
+
+// This is a real top-level window rather than an anchored toolbar
+// popup, so nothing dismisses it automatically when the user clicks
+// elsewhere — do that ourselves.
+window.addEventListener("blur", () => window.close());
 
 init();
