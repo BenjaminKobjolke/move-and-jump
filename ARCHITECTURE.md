@@ -148,6 +148,17 @@ functions plus direct `messenger.*` calls, and are verified manually
 via `npm start` (loads the add-on into a real, locally-installed
 Thunderbird).
 
+## Versioning
+
+`manifest.json` and `package.json` versions must stay in sync and
+follow [semantic versioning](https://semver.org/): patch releases for
+fixes/translation tweaks, minor for backward-compatible features,
+major for breaking changes (storage schema changes, permission
+changes that affect users, etc.). The project starts at `0.1.0`; per
+semver's own rules that means even minor bumps may still break things
+until it graduates to `1.0.0` once the add-on is stable/complete
+enough for general use.
+
 ## Packaging
 
 `web-ext build` packages the extension for distribution. By default
