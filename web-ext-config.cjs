@@ -5,6 +5,7 @@ module.exports = {
     "package-lock.json",
     "README.md",
     "ARCHITECTURE.md",
+    "CHANGELOG.md",
     "LICENSE",
     ".github/**",
     "icons/icon.svg",
