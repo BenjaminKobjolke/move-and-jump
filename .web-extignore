@@ -1,0 +1,11 @@
+node_modules/
+test/
+web-ext-artifacts/
+package.json
+package-lock.json
+.gitignore
+.web-extignore
+README.md
+ARCHITECTURE.md
+LICENSE
+icons/icon.svg

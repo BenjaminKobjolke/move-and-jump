@@ -1,0 +1,86 @@
+:root {
+  color-scheme: light dark;
+  --fg: #1a1a1a;
+  --bg: #ffffff;
+  --border: #d0d0d0;
+  --active-bg: #2b6cb0;
+  --active-fg: #ffffff;
+  --muted: #666666;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e8e8e8;
+    --bg: #2b2b2b;
+    --border: #4a4a4a;
+    --active-bg: #3a7bd5;
+    --active-fg: #ffffff;
+    --muted: #a0a0a0;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 320px;
+  margin: 0;
+  padding: 8px;
+  font: message-box;
+  font-size: 13px;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+h1 {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 6px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+input {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+input:focus {
+  outline: 2px solid var(--active-bg);
+  outline-offset: -1px;
+}
+
+ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+li {
+  padding: 5px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+li.active {
+  background: var(--active-bg);
+  color: var(--active-fg);
+}
+
+.empty {
+  margin: 10px 2px 2px;
+  color: var(--muted);
+  font-size: 12px;
+}

@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "Move and Jump",
+  "version": "0.1.0",
+  "description": "Type-ahead search to move emails to a folder, or jump to one.",
+  "author": "Daniel Kraus",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "move-and-jump@bovender.de",
+      "strict_min_version": "128.0"
+    }
+  },
+  "permissions": ["accountsRead", "messagesRead", "messagesMove", "storage"],
+  "background": {
+    "scripts": ["background.js"],
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Move and Jump",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
+    "default_popup": "popup/search.html"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "commands": {
+    "move-search": {
+      "suggested_key": { "default": "Ctrl+Shift+S" },
+      "description": "Move email: open folder search"
+    },
+    "move-last": {
+      "suggested_key": { "default": "Ctrl+Alt+S" },
+      "description": "Move email to last-used folder"
+    },
+    "jump-search": {
+      "suggested_key": { "default": "Ctrl+Shift+G" },
+      "description": "Jump to folder: open folder search"
+    },
+    "jump-last": {
+      "suggested_key": { "default": "Ctrl+Alt+G" },
+      "description": "Jump to last-used folder"
+    }
+  },
+  "options_ui": {
+    "page": "options/options.html"
+  }
+}

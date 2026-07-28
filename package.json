@@ -1,0 +1,17 @@
+{
+  "name": "move-and-jump",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Thunderbird add-on: type-ahead search to move emails to a folder, or jump to one.",
+  "license": "SEE LICENSE IN LICENSE",
+  "scripts": {
+    "start": "web-ext run --firefox-binary thunderbird",
+    "build": "web-ext build",
+    "lint": "web-ext lint",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "devDependencies": {
+    "web-ext": "^10.5.0"
+  }
+}

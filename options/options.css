@@ -1,0 +1,10 @@
+body {
+  font: message-box;
+  font-size: 13px;
+  padding: 8px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+}
