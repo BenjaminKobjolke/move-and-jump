@@ -94,6 +94,35 @@ async function init() {
 
   render("");
   input.focus();
+
+  // Resize once, based on the initial (recent-folders) view, so up to
+  // 10 entries are visible without scrolling. Not repeated on every
+  // later render() while typing — the window keeps this size and the
+  // list scrolls internally for larger result sets, same as before.
+  messenger.runtime
+    .sendMessage({ type: "resize", height: measureRequiredWindowHeight() })
+    .catch(() => {});
+}
+
+/**
+ * How tall this window would need to be to show all of its current
+ * content without the list scrolling — measured from the real,
+ * rendered DOM rather than assumed, since font size, DPI, and OS text
+ * scaling all affect this and none of them are known ahead of time.
+ * Temporarily lifts the list's height/overflow constraints (which
+ * would otherwise clip it to whatever height it currently has) so
+ * `scrollHeight` reflects the natural, unclipped content size; then
+ * converts that content height into an outer *window* height by
+ * adding this window's current chrome overhead (title bar etc. —
+ * `outerHeight - innerHeight`), whatever that happens to be on this
+ * system.
+ */
+function measureRequiredWindowHeight() {
+  document.body.classList.add("measuring");
+  const contentHeight = document.documentElement.scrollHeight;
+  document.body.classList.remove("measuring");
+  const chromeOverhead = window.outerHeight - window.innerHeight;
+  return contentHeight + chromeOverhead;
 }
 
 function folderLabel(folder) {

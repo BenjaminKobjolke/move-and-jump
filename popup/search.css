@@ -74,6 +74,19 @@ ul {
   overflow-y: auto;
 }
 
+/* Briefly toggled by search.js to measure how tall the content
+   *naturally* wants to be (fonts/DPI/OS text scale all affect this),
+   so the window can be resized to fit instead of clipping the list —
+   see measureRequiredWindowHeight() in search.js. */
+body.measuring {
+  height: auto;
+}
+
+body.measuring ul {
+  flex: none;
+  overflow: visible;
+}
+
 li {
   padding: 5px 8px;
   border-radius: 4px;

@@ -4,6 +4,18 @@ All notable changes to this project are documented here. Versions
 follow [semantic versioning](https://semver.org/) — see
 [ARCHITECTURE.md](ARCHITECTURE.md#versioning) for the project's policy.
 
+## [0.2.4] - 2026-07-28
+
+### Fixed
+
+- The search window's fixed height could clip the recent-folders list
+  (e.g. showing only 9 of 10 entries), and by how much depended on the
+  viewer's font size, DPI, and OS text-scale settings, since the old
+  height was a hardcoded pixel guess. The window now measures its own
+  rendered content once after the initial view loads and resizes to
+  fit, which works the same way regardless of environment because it's
+  based on actual measurements rather than an assumed number.
+
 ## [0.2.3] - 2026-07-28
 
 ### Fixed

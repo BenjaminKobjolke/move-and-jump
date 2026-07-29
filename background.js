@@ -94,7 +94,8 @@ async function handleSelection(mode, folderId, tabId) {
 }
 
 const SEARCH_WINDOW_WIDTH = 560;
-const SEARCH_WINDOW_HEIGHT = 440;
+const SEARCH_WINDOW_MIN_HEIGHT = 440;
+const SEARCH_WINDOW_MAX_HEIGHT = 700;
 
 /**
  * Open the search UI as a real top-level popup window rather than the
@@ -127,7 +128,7 @@ async function openSearchWindow(mode, tabId) {
   try {
     const current = await messenger.windows.getCurrent();
     left = Math.round(current.left + (current.width - SEARCH_WINDOW_WIDTH) / 2);
-    top = Math.round(current.top + (current.height - SEARCH_WINDOW_HEIGHT) / 3);
+    top = Math.round(current.top + (current.height - SEARCH_WINDOW_MIN_HEIGHT) / 3);
   } catch {
     // Fall back to the platform's default placement.
   }
@@ -139,12 +140,32 @@ async function openSearchWindow(mode, tabId) {
     type: "popup",
     url: `popup/search.html?${params}`,
     width: SEARCH_WINDOW_WIDTH,
-    height: SEARCH_WINDOW_HEIGHT,
+    height: SEARCH_WINDOW_MIN_HEIGHT,
     left,
     top,
     allowScriptsToClose: true,
   });
   searchWindowId = win.id;
+}
+
+/**
+ * Called once the popup has measured how tall its own initial content
+ * (heading + input + up to 10 recent folders + buttons) actually
+ * rendered — fonts, DPI, and OS text-scale settings all affect how
+ * tall that really is, so no fixed pixel guess holds up across
+ * environments (see search.js's measureRequiredWindowHeight()).
+ * Clamped between the window's initial height (a sensible floor,
+ * leaving headroom for typed searches that return more than the
+ * recent-folder list's 10 entries) and a generous ceiling (guards
+ * against pathological cases on unusual systems).
+ */
+async function resizeSearchWindow(requestedHeight) {
+  if (searchWindowId === null) return;
+  const height = Math.min(
+    SEARCH_WINDOW_MAX_HEIGHT,
+    Math.max(SEARCH_WINDOW_MIN_HEIGHT, Math.round(requestedHeight)),
+  );
+  await messenger.windows.update(searchWindowId, { height });
 }
 
 async function actOnLastFolder(mode, tabId) {
@@ -189,6 +210,9 @@ messenger.action.onClicked.addListener((tab) => openSearchWindow("move", tab.id)
 messenger.runtime.onMessage.addListener((message) => {
   if (message?.type === "select") {
     return handleSelection(message.mode, message.folderId, message.tabId);
+  }
+  if (message?.type === "resize") {
+    return resizeSearchWindow(message.height);
   }
   return undefined;
 });

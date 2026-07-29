@@ -214,6 +214,38 @@ those are opaque identifiers Thunderbird itself assigns and expects
 back unmodified for the actual move/jump calls; only the
 human-readable `name`/`path` fields need decoding.
 
+## Search window height
+
+The window is created at a fixed starting height, then resized once
+the popup has actually rendered its initial (recent-folders) view,
+so up to all 10 recent-folder entries are visible without scrolling.
+This exists because a *hardcoded* pixel height inevitably breaks on
+someone else's system — font size, DPI, and OS text-scale settings
+all change how tall the same content actually renders, so no single
+guessed number holds up across environments.
+
+`measureRequiredWindowHeight()` in `search.js` measures this from the
+real, rendered DOM instead of guessing: it briefly toggles a
+`.measuring` class (see `search.css`) that lifts the folder list's
+height/overflow constraints, reads `document.documentElement.scrollHeight`
+(the content's true unclipped height), then converts that *content*
+height into an *outer window* height by adding this window's current
+chrome overhead (`window.outerHeight - window.innerHeight` — title
+bar etc., whatever that happens to be on this system). The popup sends
+that number to `background.js` (`{type: "resize", height}`), which
+clamps it between the window's initial height (a floor, so a
+first-run/empty recent-list view doesn't produce an awkwardly cramped
+window, and so typed searches returning more than 10 results still
+have some headroom before needing to scroll) and a generous ceiling
+(guards against pathological values on unusual systems), then applies
+it via `windows.update()`.
+
+This only runs once per window, right after the initial render — not
+on every keystroke while typing, which would make the window visibly
+grow and shrink as the result count changes. Later, larger result sets
+(e.g. a broad query matching many folders) just scroll within the
+already-established size, same as before this fix.
+
 ## Data flow
 
 ```mermaid
