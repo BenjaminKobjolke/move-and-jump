@@ -116,8 +116,9 @@ npm run build  # packages a .xpi into web-ext-artifacts/
 ```
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for how the add-on is put
-together and why, and [CHANGELOG.md](CHANGELOG.md) for what's changed
-between versions. A GitHub Actions workflow
+together and why, [CHANGELOG.md](CHANGELOG.md) for what's changed
+between versions, and [ROADMAP.md](ROADMAP.md) for deferred ideas.
+A GitHub Actions workflow
 ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same
 three commands (test, lint, build) on every push and pull request.
 
