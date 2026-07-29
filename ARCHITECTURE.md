@@ -365,10 +365,11 @@ Thunderbird).
 follow [semantic versioning](https://semver.org/): patch releases for
 fixes/translation tweaks, minor for backward-compatible features,
 major for breaking changes (storage schema changes, permission
-changes that affect users, etc.). The project starts at `0.1.0`; per
-semver's own rules that means even minor bumps may still break things
-until it graduates to `1.0.0` once the add-on is stable/complete
-enough for general use.
+changes that affect users, etc.). The project started at `0.1.0` and
+reached `1.0.0` on 2026-07-29, after real production use, a full
+debugging cycle (see [CHANGELOG.md](CHANGELOG.md)), and a pre-release
+review — from here on, breaking changes require a major bump rather
+than being allowed under semver's pre-1.0 "anything goes" rule.
 
 ## Packaging
 

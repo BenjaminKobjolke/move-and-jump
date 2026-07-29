@@ -4,6 +4,19 @@ All notable changes to this project are documented here. Versions
 follow [semantic versioning](https://semver.org/) — see
 [ARCHITECTURE.md](ARCHITECTURE.md#versioning) for the project's policy.
 
+## [1.0.0] - 2026-07-29
+
+First stable release. No functional changes from 0.2.4 — the add-on
+has been used in production, exercised through a real debugging cycle
+(see the entries below), and reviewed; this release just adds a
+public home for the project.
+
+### Added
+
+- `homepage_url` in the manifest, linking to
+  [github.com/bovender/move-and-jump](https://github.com/bovender/move-and-jump)
+  (now public), shown in Thunderbird's Add-ons Manager detail view.
+
 ## [0.2.4] - 2026-07-28
 
 ### Fixed

@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
   "name": "Move and Jump",
-  "version": "0.2.4",
+  "version": "1.0.0",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "author": "Daniel Kraus",
+  "homepage_url": "https://github.com/bovender/move-and-jump",
   "browser_specific_settings": {
     "gecko": {
       "id": "move-and-jump@bovender.de",
