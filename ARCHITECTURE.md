@@ -283,6 +283,7 @@ that mutates `storage.local` and the toolbar tooltip.
 ```jsonc
 {
   "recentFolders": ["folderId1", "folderId2", ...],  // MRU, capped at 10, shared by move & jump
+  "folderWeights": { "folderId1": 12, "folderId2": 3 }, // usage counts, uncapped, never pruned
   "lastUsedFolderId": "folderId1",                    // used by the *-last commands
   "options": {
     "caseSensitiveSearch": false,
@@ -290,6 +291,56 @@ that mutates `storage.local` and the toolbar tooltip.
   }
 }
 ```
+
+## Frequency-weighted search ranking and match highlighting
+
+Two small, related additions, both implemented as pure functions in
+`lib/` per the project's usual pattern (push logic out of the
+`messenger.*`-calling glue, keep it independently unit-testable):
+
+- **`lib/weights.js`**: `incrementWeight()` bumps a folder's usage
+  count by 1 (called from `recordUsage()` in `background.js`, right
+  alongside the existing `recentFolders` MRU update — same trigger,
+  different, uncapped data structure). `sortByWeight()` re-orders an
+  already-*matched* folder list, most-used first, falling back to
+  case-insensitive alphabetical for ties (including folders with no
+  weight yet, all effectively tied at zero).
+- **`lib/highlight.js`**: `findMatchRange()` finds where the query
+  appears in a folder's *displayed* label (not which internal field —
+  name, path, or account name — caused the match; simpler and always
+  correct regardless of that, since it just looks at what's on
+  screen). Returns `null` if the query is blank, or — a real edge
+  case — if a folder matched via its account name but the account
+  prefix isn't currently shown (`showAccountPrefix` is false), so the
+  query doesn't appear in the label at all; `search.js` falls back to
+  plain unhighlighted text in that case rather than forcing a highlight
+  that isn't there.
+
+Two decisions worth being explicit about, since both were genuinely
+open questions the first time this was discussed (see the git history
+around `lib/match.js` and `ROADMAP.md`):
+
+- **Weight is the primary sort key for search hits, full stop** —
+  not a tie-breaker within `lib/match.js`'s existing name/path/account
+  match-quality tiers. Those tiers still decide *which* folders match a
+  query at all (`filterFolders()` is completely unchanged); `search.js`
+  just re-sorts that result set by weight afterward
+  (`sortByWeight(filterFolders(...), folderWeights)`). A frequently-used
+  folder that only matches on path can now rank above a rarely-used
+  folder that matches on name.
+- **Only the typed-search hit list is weight-sorted.** The empty-query
+  "recent folders" view keeps using the existing recency-based MRU
+  list unchanged — a deliberate choice to leave that already-named,
+  already-working feature alone rather than conflating recency and
+  frequency into one ranking.
+
+`search.js` builds the highlighted `<li>` content with real DOM nodes
+(`document.createTextNode` for the non-matching parts, a `<mark>`
+element for the match) rather than `innerHTML`, consistent with the
+rest of the popup. `<mark>` is styled with `color: var(--active-bg)` +
+bold instead of a background, so it doesn't fight with `li.active`'s
+own background/text color when the highlighted row is also the
+currently-selected one.
 
 ## Error logging convention
 
@@ -335,6 +386,8 @@ rounds of guessing specifically because the first version didn't.
   - `options.js` — merge stored options over defaults.
   - `imapUtf7.js` — decode IMAP "modified UTF-7" (RFC 3501) mailbox
     names into plain Unicode.
+  - `weights.js` — track and sort by per-folder usage counts.
+  - `highlight.js` — find where a query matches in a displayed label.
 - `test/` — unit tests for everything in `lib/`, using Node's
   built-in `node:test` (see below).
 - `icons/` — `icon.svg` source plus generated PNGs (via `rsvg-convert`).

@@ -4,6 +4,19 @@ All notable changes to this project are documented here. Versions
 follow [semantic versioning](https://semver.org/) — see
 [ARCHITECTURE.md](ARCHITECTURE.md#versioning) for the project's policy.
 
+## [1.1.0] - 2026-08-01
+
+### Added
+
+- Search results now sort by usage frequency: each time a folder is
+  used for a move or jump, its weight goes up by 1, and the next
+  time a search matches it, that weight is now the primary sort key
+  (ties broken alphabetically) — frequently-used folders bubble to
+  the top. Applies to typed-search results only; the empty-query
+  recent-folders list is unchanged (still recency-based).
+- The part of each result matching the typed search term is now
+  highlighted (bold, accent-colored) in the results list.
+
 ## [1.0.0] - 2026-07-29
 
 First stable release. No functional changes from 0.2.4 — the add-on

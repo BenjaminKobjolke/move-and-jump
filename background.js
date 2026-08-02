@@ -1,6 +1,7 @@
 import { pushRecent } from "./lib/recent.js";
 import { DEFAULT_OPTIONS } from "./lib/options.js";
 import { decodeImapUtf7 } from "./lib/imapUtf7.js";
+import { incrementWeight } from "./lib/weights.js";
 
 /**
  * In-memory mirror of storage.local's lastUsedFolderId, kept in sync so
@@ -66,12 +67,14 @@ async function performJump(folderId, tabId) {
 
 async function recordUsage(folderId) {
   cachedLastUsedFolderId = folderId;
-  const [{ recentFolders = [] }, folder] = await Promise.all([
+  const [{ recentFolders = [] }, { folderWeights = {} }, folder] = await Promise.all([
     messenger.storage.local.get("recentFolders"),
+    messenger.storage.local.get("folderWeights"),
     getFolderById(folderId),
   ]);
   await messenger.storage.local.set({
     recentFolders: pushRecent(recentFolders, folderId),
+    folderWeights: incrementWeight(folderWeights, folderId),
     lastUsedFolderId: folderId,
   });
   if (folder) {

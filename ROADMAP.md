@@ -24,54 +24,24 @@ path segment, right after a `/`, and in unbroken runs.
 - The scoring is the actual work, not the subsequence check itself —
   a naive "does the subsequence exist" match produces noisy, hard to
   predict ordering for short strings like folder names.
-- Sequencing: land *before* search-term highlighting below, since
-  highlighting needs to know exactly which characters matched, and
-  that's a different (and more involved) shape for fuzzy/non-contiguous
-  matches than for the current contiguous-substring matches.
+- **Revisit `lib/highlight.js` when this lands.** Match highlighting
+  already shipped (1.1.0), built for today's contiguous-substring
+  matching (`findMatchRange` returns one `{start, end}` range). Fuzzy
+  subsequence matches are scattered, non-contiguous characters, so
+  highlighting will need to become "a set of matched indices" rather
+  than a single range — a real (if contained) follow-up change, not
+  just an extension of the current function.
+- Also revisit `lib/weights.js`'s `sortByWeight()`: it currently
+  re-sorts `filterFolders()`'s output by usage weight only, discarding
+  match-quality order entirely. Fuzzy search's per-result relevance
+  *score* is more informative than today's coarse tiers — worth
+  reconsidering whether weight should factor into a combined score
+  instead of overriding relevance outright, though the current
+  "weight wins, full stop" behavior was a deliberate choice (see
+  ARCHITECTURE.md) that should only change on its own merits, not as
+  a side effect of unrelated fuzzy-search work.
 
-## Frequency-weighted folder ranking
-
-Track a per-folder usage count, incremented by 1 every time a folder
-is selected for a move or jump. Search results sort primarily by that
-weight, then alphabetically, so frequently-used folders bubble to the
-top — a step beyond the current recency-based MRU list.
-
-**Design notes:**
-
-- This is a different, likely-additional data structure from the
-  existing `recentFolders` MRU array in `storage.local` (recency-
-  capped-at-10 vs. frequency-uncapped) — needs a decision on whether
-  it replaces MRU for the empty-query default view too, or only
-  affects ranking once a query is typed.
-- Open question to settle before implementing: does weight become the
-  *primary* sort key outright, or a tie-breaker within the existing
-  match-quality tiers in `lib/match.js` (name-starts-with beats
-  name-contains beats path-contains, etc.)? Sorting purely by weight
-  first could rank a frequently-used unrelated folder above a
-  better textual match, which may or may not be the desired feel —
-  worth testing both before committing.
-- Storage shape: something like `storage.local.folderWeights:
-  { [folderId]: number }`, incremented in `recordUsage()` in
-  `background.js` alongside the existing MRU update.
-
-## Highlight the matched search term in results
-
-Render the matching portion of each folder's label in bold/a
-different color, like most fuzzy-finder UIs do.
-
-**Design notes:**
-
-- Needs match *position*, not just a rank tier — `lib/match.js`
-  currently returns which folder matched and why (tier), not *where*
-  in the string. Either recompute the position at render time
-  (case-insensitive `indexOf`) or have `filterFolders` return
-  start/end indices alongside each result.
-- Build highlighted markup with real DOM nodes (`textContent` for the
-  non-matching parts, a separate element for the matched part) rather
-  than string-concatenated `innerHTML`, consistent with how the rest
-  of the popup avoids `innerHTML` for anything other than clearing a
-  container.
-- Depends on which matching algorithm is in place — a single
-  contiguous highlighted range for today's substring matching, but
-  potentially several disjoint highlighted characters if fuzzy search
-  (above) lands first.
+Frequency-weighted folder ranking and search-term highlighting (both
+previously listed here) shipped in 1.1.0 — see
+[CHANGELOG.md](CHANGELOG.md) and `lib/weights.js`/`lib/highlight.js`
+in [ARCHITECTURE.md](ARCHITECTURE.md).

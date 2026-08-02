@@ -2,6 +2,8 @@ import { filterFolders } from "../lib/match.js";
 import { filterByAccount } from "../lib/folders.js";
 import { getOptions } from "../lib/options.js";
 import { decodeImapUtf7 } from "../lib/imapUtf7.js";
+import { sortByWeight } from "../lib/weights.js";
+import { findMatchRange } from "../lib/highlight.js";
 
 const heading = document.getElementById("heading");
 const input = document.getElementById("query");
@@ -25,6 +27,7 @@ const tabId = params.has("tabId") ? Number(params.get("tabId")) : undefined;
 let options;
 let allFolders = [];
 let recentFolders = [];
+let folderWeights = {};
 let visible = [];
 let activeIndex = 0;
 let showAccountPrefix = false;
@@ -52,18 +55,26 @@ jumpButton.classList.toggle("primary", mode === "jump");
 input.focus();
 
 async function init() {
-  const [folders, accounts, opts, { recentFolders: recentIds = [] }, activeTab] =
-    await Promise.all([
-      messenger.folders.query({}),
-      messenger.accounts.list(),
-      getOptions(messenger.storage.local),
-      messenger.storage.local.get("recentFolders"),
-      // The tab can close in the moment between background.js resolving
-      // tabId and this running; a rejection here is only used for the
-      // "search all accounts" scoping below, so fall back to unscoped
-      // rather than letting the whole Promise.all reject.
-      tabId === undefined ? undefined : messenger.mailTabs.get(tabId).catch(() => undefined),
-    ]);
+  const [
+    folders,
+    accounts,
+    opts,
+    { recentFolders: recentIds = [] },
+    { folderWeights: weights = {} },
+    activeTab,
+  ] = await Promise.all([
+    messenger.folders.query({}),
+    messenger.accounts.list(),
+    getOptions(messenger.storage.local),
+    messenger.storage.local.get("recentFolders"),
+    messenger.storage.local.get("folderWeights"),
+    // The tab can close in the moment between background.js resolving
+    // tabId and this running; a rejection here is only used for the
+    // "search all accounts" scoping below, so fall back to unscoped
+    // rather than letting the whole Promise.all reject.
+    tabId === undefined ? undefined : messenger.mailTabs.get(tabId).catch(() => undefined),
+  ]);
+  folderWeights = weights;
 
   options = opts;
   const scopedFolders = options.searchAllAccounts
@@ -129,17 +140,42 @@ function folderLabel(folder) {
   return showAccountPrefix ? `${folder.accountName}: ${folder.path}` : folder.path;
 }
 
+/**
+ * Fill `item` with `label`, wrapping the portion matching `query` (if
+ * any) in a <mark> element. Built from real DOM nodes rather than
+ * innerHTML, consistent with the rest of the popup.
+ */
+function appendHighlighted(item, label, query) {
+  const range = query
+    ? findMatchRange(label, query, { caseSensitive: options.caseSensitiveSearch })
+    : null;
+  if (!range) {
+    item.textContent = label;
+    return;
+  }
+  const mark = document.createElement("mark");
+  mark.textContent = label.slice(range.start, range.end);
+  item.append(
+    document.createTextNode(label.slice(0, range.start)),
+    mark,
+    document.createTextNode(label.slice(range.end)),
+  );
+}
+
 function render(query) {
   const trimmed = query.trim();
   visible = trimmed
-    ? filterFolders(allFolders, trimmed, { caseSensitive: options.caseSensitiveSearch })
+    ? sortByWeight(
+        filterFolders(allFolders, trimmed, { caseSensitive: options.caseSensitiveSearch }),
+        folderWeights,
+      )
     : recentFolders;
   activeIndex = 0;
 
   list.innerHTML = "";
   for (const folder of visible) {
     const item = document.createElement("li");
-    item.textContent = folderLabel(folder);
+    appendHighlighted(item, folderLabel(folder), trimmed);
     item.addEventListener("mousedown", (event) => {
       event.preventDefault();
       select(mode, folder);

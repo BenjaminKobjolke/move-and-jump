@@ -10,6 +10,15 @@ This is a modern rewrite of the venerable [Nostalgy][] and
 [Nostalgy++][] extensions. It is by no means feature complete
 in comparison to the existing add-ons.
 
+### Viable alternatives
+
+- [Quick Folder Move][]: probably the most popular today? It did not agree with
+  me too well though because I could not get the "jump to folder" function to
+  work the way I wanted.
+- [Nostalgy++][]: venerable, but does not play well with the dark theme on my
+  Fedora KDE Plasma box.
+- [mmy][]: "Move messages or yourself" add-on
+
 ## Functions
 
 Note on shortcuts: Thunderbird's WebExtension `commands` API requires
@@ -27,6 +36,10 @@ does), but you can click the other action button at any time to do
 that instead for the currently highlighted folder. If the same folder
 name exists in more than one account, results are prefixed with the
 account name to tell them apart.
+
+Search results are sorted by how often you've picked each folder
+before (most-used first), and the part of each result matching what
+you typed is highlighted.
 
 ### Move an email to a folder
 
@@ -137,6 +150,8 @@ use, modify, and redistribute it for any noncommercial purpose;
 commercial use requires a separate arrangement with the copyright
 holder.
 
+[mmy]: https://github.com/arjanarcheologie/mmy
 [Nostalgy]: https://github.com/nostalgy/nostalgy
 [Nostalgy++]: https://github.com/opto/nostalgy-xpi
+[Quick Folder Move]: https://addons.mozilla.org/thunderbird/addon/quick-folder-move
 [web-ext]: https://github.com/mozilla/web-ext
