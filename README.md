@@ -37,9 +37,14 @@ that instead for the currently highlighted folder. If the same folder
 name exists in more than one account, results are prefixed with the
 account name to tell them apart.
 
-Search results are sorted by how often you've picked each folder
-before (most-used first), and the part of each result matching what
-you typed is highlighted.
+Search results are ranked by what you've picked before, and not just
+overall: a folder you've picked after typing similar text before
+comes first, then your most-used folders in general, then
+alphabetically — so the more consistently you type a certain pattern
+for a folder, the sooner it'll show up when you type that pattern
+again. The part of each result matching what you typed is highlighted.
+(The full ranking logic, and why it's designed this way, is written
+up in [ARCHITECTURE.md](ARCHITECTURE.md).)
 
 ### Move an email to a folder
 

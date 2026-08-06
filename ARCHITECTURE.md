@@ -284,6 +284,11 @@ that mutates `storage.local` and the toolbar tooltip.
 {
   "recentFolders": ["folderId1", "folderId2", ...],  // MRU, capped at 10, shared by move & jump
   "folderWeights": { "folderId1": 12, "folderId2": 3 }, // usage counts, uncapped, never pruned
+  "queryWeights": {                                   // usage counts per typed query PREFIX
+    "arch": { "folderId1": 5 },
+    "archi": { "folderId1": 5 },
+    "b": { "folderId2": 2 }
+  },
   "lastUsedFolderId": "folderId1",                    // used by the *-last commands
   "options": {
     "caseSensitiveSearch": false,
@@ -324,8 +329,7 @@ around `lib/match.js` and `ROADMAP.md`):
   not a tie-breaker within `lib/match.js`'s existing name/path/account
   match-quality tiers. Those tiers still decide *which* folders match a
   query at all (`filterFolders()` is completely unchanged); `search.js`
-  just re-sorts that result set by weight afterward
-  (`sortByWeight(filterFolders(...), folderWeights)`). A frequently-used
+  just re-sorts that result set by weight afterward. A frequently-used
   folder that only matches on path can now rank above a rarely-used
   folder that matches on name.
 - **Only the typed-search hit list is weight-sorted.** The empty-query
@@ -341,6 +345,57 @@ rest of the popup. `<mark>` is styled with `color: var(--active-bg)` +
 bold instead of a background, so it doesn't fight with `li.active`'s
 own background/text color when the highlighted row is also the
 currently-selected one.
+
+### Per-query weighting
+
+The plain global weight above answers "which folder do I use most
+overall" — it doesn't distinguish *why* you're searching right now.
+If you always type `"arch"` for one folder and `"budg"` for a totally
+different one, a single global-most-used folder would incorrectly
+outrank the right answer for whichever query you *didn't* mostly type.
+`incrementQueryWeight()`/`sortByQueryWeight()` in `lib/weights.js`
+track weight per typed **query prefix** instead, so ranking reflects
+"which folder do I pick after typing *this*," not just "which folder
+do I pick most."
+
+- **Fan-out on write, direct lookup on read.** When a folder is
+  selected, `incrementQueryWeight()` increments the count for *every
+  prefix* of the (trimmed, lowercased) query that was typed — selecting
+  a folder after typing `"archive"` credits `"a"`, `"ar"`, …,
+  `"archiv"`, and `"archive"` itself, all in one write. This means a
+  *shorter* query typed on some future occasion still finds the
+  association (typing just `"arch"` next time already has a
+  `queryWeights["arch"]` entry from that earlier fan-out), while a
+  *longer* one won't (typing `"archiver"` — more than was ever typed
+  before — finds nothing, and falls through to the weaker signals
+  below). That's a deliberate, acceptable asymmetry: it's what makes
+  read-time lookup a plain, fast `O(1)` key access instead of scanning
+  for prefix relationships on every keystroke, and the cost only ever
+  falls on typing *more* than your own past habit, not less.
+- **Three-level fallback, composed from two stable sorts.**
+  `sortByQueryWeight()` doesn't write a three-key comparator by hand —
+  it calls `sortByWeight(folders, globalWeights)` first (that's already
+  "global weight, then alphabetical"), then does one more `.sort()` on
+  top keyed only by query weight. `Array.prototype.sort` has been
+  required to be stable since ES2019, so that second pass only
+  reorders folders that actually differ in query weight; anything tied
+  at zero (the common case for a query you've never typed before)
+  keeps exactly the order the first pass already established. Net
+  effect: query weight, then global weight, then alphabetical — without
+  three `if` branches to get subtly wrong.
+- **Storage cost is genuinely negligible**, which was asked about
+  directly before building this: growth is bounded by the number of
+  *distinct* (prefix, folder) pairs ever selected, not by keystrokes —
+  fan-out happens once per selection, not once per render. Even heavy
+  long-term use lands in the hundreds-to-low-thousands of small integer
+  entries, comfortably inside `storage.local`'s quota.
+- **Explaining this to the user matters more than the mechanism.**
+  This is genuinely non-obvious behavior — a folder's rank now depends
+  on invisible history, not just what's currently typed — so the
+  options page carries a plain-language paragraph
+  (`optionsRankingInfo`) explaining the three-level fallback in one
+  sentence, deliberately without mentioning prefixes, fan-out, or any
+  other implementation detail from this section.
 
 ## Error logging convention
 
@@ -386,7 +441,8 @@ rounds of guessing specifically because the first version didn't.
   - `options.js` — merge stored options over defaults.
   - `imapUtf7.js` — decode IMAP "modified UTF-7" (RFC 3501) mailbox
     names into plain Unicode.
-  - `weights.js` — track and sort by per-folder usage counts.
+  - `weights.js` — track and sort by per-folder usage counts, both
+    global and per-typed-query-prefix.
   - `highlight.js` — find where a query matches in a displayed label.
 - `test/` — unit tests for everything in `lib/`, using Node's
   built-in `node:test` (see below).

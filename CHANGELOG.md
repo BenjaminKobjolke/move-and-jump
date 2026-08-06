@@ -4,6 +4,18 @@ All notable changes to this project are documented here. Versions
 follow [semantic versioning](https://semver.org/) — see
 [ARCHITECTURE.md](ARCHITECTURE.md#versioning) for the project's policy.
 
+## [1.2.0] - 2026-08-06
+
+### Added
+
+- Search ranking now also considers *what you typed*, not just
+  overall usage: a folder you've previously picked after typing
+  similar text now ranks ahead of your other folders for that same
+  text, even if another folder is more-used overall. Falls back to
+  overall usage frequency, then alphabetical, when there's no
+  query-specific history yet.
+- The options page now explains how search results are ranked.
+
 ## [1.1.0] - 2026-08-01
 
 ### Added

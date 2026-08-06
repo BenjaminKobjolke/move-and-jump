@@ -2,7 +2,7 @@ import { filterFolders } from "../lib/match.js";
 import { filterByAccount } from "../lib/folders.js";
 import { getOptions } from "../lib/options.js";
 import { decodeImapUtf7 } from "../lib/imapUtf7.js";
-import { sortByWeight } from "../lib/weights.js";
+import { sortByQueryWeight } from "../lib/weights.js";
 import { findMatchRange } from "../lib/highlight.js";
 
 const heading = document.getElementById("heading");
@@ -28,6 +28,7 @@ let options;
 let allFolders = [];
 let recentFolders = [];
 let folderWeights = {};
+let queryWeights = {};
 let visible = [];
 let activeIndex = 0;
 let showAccountPrefix = false;
@@ -61,6 +62,7 @@ async function init() {
     opts,
     { recentFolders: recentIds = [] },
     { folderWeights: weights = {} },
+    { queryWeights: qWeights = {} },
     activeTab,
   ] = await Promise.all([
     messenger.folders.query({}),
@@ -68,6 +70,7 @@ async function init() {
     getOptions(messenger.storage.local),
     messenger.storage.local.get("recentFolders"),
     messenger.storage.local.get("folderWeights"),
+    messenger.storage.local.get("queryWeights"),
     // The tab can close in the moment between background.js resolving
     // tabId and this running; a rejection here is only used for the
     // "search all accounts" scoping below, so fall back to unscoped
@@ -75,6 +78,7 @@ async function init() {
     tabId === undefined ? undefined : messenger.mailTabs.get(tabId).catch(() => undefined),
   ]);
   folderWeights = weights;
+  queryWeights = qWeights;
 
   options = opts;
   const scopedFolders = options.searchAllAccounts
@@ -165,9 +169,11 @@ function appendHighlighted(item, label, query) {
 function render(query) {
   const trimmed = query.trim();
   visible = trimmed
-    ? sortByWeight(
+    ? sortByQueryWeight(
         filterFolders(allFolders, trimmed, { caseSensitive: options.caseSensitiveSearch }),
+        queryWeights,
         folderWeights,
+        trimmed,
       )
     : recentFolders;
   activeIndex = 0;
@@ -225,6 +231,7 @@ async function select(actionMode, folder) {
       mode: actionMode,
       folderId: folder.id,
       tabId,
+      query: input.value,
     });
     if (response?.ok === false) throw new Error(response.error);
   } catch (sendError) {

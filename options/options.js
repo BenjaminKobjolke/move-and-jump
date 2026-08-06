@@ -5,6 +5,8 @@ const searchAllAccounts = document.getElementById("searchAllAccounts");
 const shortcutsTable = document.getElementById("shortcuts");
 
 document.getElementById("intro").textContent = messenger.i18n.getMessage("optionsIntro");
+document.getElementById("rankingInfo").textContent =
+  messenger.i18n.getMessage("optionsRankingInfo");
 document.getElementById("shortcutsHeading").textContent = messenger.i18n.getMessage(
   "optionsShortcutsHeading",
 );

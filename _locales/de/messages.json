@@ -47,6 +47,9 @@
   "optionsShortcutsHeading": {
     "message": "Tastenkombinationen"
   },
+  "optionsRankingInfo": {
+    "message": "Die Ergebnisse werden anhand Ihrer bisherigen Auswahl sortiert: Ordner, die Sie nach Eingabe eines ähnlichen Textes bereits ausgewählt haben, erscheinen zuerst, danach Ihre insgesamt meistgenutzten Ordner, danach alphabetisch."
+  },
   "buttonMove": {
     "message": "Verschieben"
   },

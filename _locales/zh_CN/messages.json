@@ -47,6 +47,9 @@
   "optionsShortcutsHeading": {
     "message": "键盘快捷键"
   },
+  "optionsRankingInfo": {
+    "message": "搜索结果会根据您以往的选择排序：曾在输入类似文字后被选中的文件夹会排在最前面，其次是您总体使用最多的文件夹，最后按字母顺序排列。"
+  },
   "buttonMove": {
     "message": "移动"
   },

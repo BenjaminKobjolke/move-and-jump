@@ -63,6 +63,10 @@
     "message": "Keyboard shortcuts",
     "description": "Options page section heading"
   },
+  "optionsRankingInfo": {
+    "message": "Results are ranked using your past choices: folders you've picked after typing similar text come first, then your most-used folders overall, then alphabetically.",
+    "description": "Options page paragraph explaining search-result ranking"
+  },
   "buttonMove": {
     "message": "Move",
     "description": "Search window button: move the selected email to the highlighted folder"

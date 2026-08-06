@@ -1,7 +1,7 @@
 import { pushRecent } from "./lib/recent.js";
 import { DEFAULT_OPTIONS } from "./lib/options.js";
 import { decodeImapUtf7 } from "./lib/imapUtf7.js";
-import { incrementWeight } from "./lib/weights.js";
+import { incrementWeight, incrementQueryWeight } from "./lib/weights.js";
 
 /**
  * In-memory mirror of storage.local's lastUsedFolderId, kept in sync so
@@ -65,16 +65,19 @@ async function performJump(folderId, tabId) {
   await messenger.mailTabs.update(tabId, { displayedFolderId: folderId });
 }
 
-async function recordUsage(folderId) {
+async function recordUsage(folderId, query = "") {
   cachedLastUsedFolderId = folderId;
-  const [{ recentFolders = [] }, { folderWeights = {} }, folder] = await Promise.all([
-    messenger.storage.local.get("recentFolders"),
-    messenger.storage.local.get("folderWeights"),
-    getFolderById(folderId),
-  ]);
+  const [{ recentFolders = [] }, { folderWeights = {} }, { queryWeights = {} }, folder] =
+    await Promise.all([
+      messenger.storage.local.get("recentFolders"),
+      messenger.storage.local.get("folderWeights"),
+      messenger.storage.local.get("queryWeights"),
+      getFolderById(folderId),
+    ]);
   await messenger.storage.local.set({
     recentFolders: pushRecent(recentFolders, folderId),
     folderWeights: incrementWeight(folderWeights, folderId),
+    queryWeights: incrementQueryWeight(queryWeights, query, folderId),
     lastUsedFolderId: folderId,
   });
   if (folder) {
@@ -84,11 +87,11 @@ async function recordUsage(folderId) {
   }
 }
 
-async function handleSelection(mode, folderId, tabId) {
+async function handleSelection(mode, folderId, tabId, query) {
   try {
     if (mode === "move") await performMove(folderId, tabId);
     else if (mode === "jump") await performJump(folderId, tabId);
-    await recordUsage(folderId);
+    await recordUsage(folderId, query);
     return { ok: true };
   } catch (error) {
     console.error("Move and Jump: handleSelection failed", error);
@@ -212,7 +215,7 @@ messenger.action.onClicked.addListener((tab) => openSearchWindow("move", tab.id)
 
 messenger.runtime.onMessage.addListener((message) => {
   if (message?.type === "select") {
-    return handleSelection(message.mode, message.folderId, message.tabId);
+    return handleSelection(message.mode, message.folderId, message.tabId, message.query);
   }
   if (message?.type === "resize") {
     return resizeSearchWindow(message.height);
