@@ -139,12 +139,30 @@ between versions, and [ROADMAP.md](ROADMAP.md) for deferred ideas.
 A GitHub Actions workflow
 ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same
 three commands (test, lint, build) on every push and pull request.
+Pushing a version tag (`vX.Y.Z`, matching `manifest.json`'s version)
+triggers [.github/workflows/release.yml](.github/workflows/release.yml),
+which signs and publishes the release to
+[addons.thunderbird.net](https://addons.thunderbird.net) and creates a
+GitHub release — see [ARCHITECTURE.md](ARCHITECTURE.md#publishing-to-addonsthunderbirdnet-atn)
+for the details.
 
 ## Contributing to development
 
 Pull requests are welcome.
 
 This add-on is being co-authored by Claude Code (Sonnet 5).
+
+## Disclaimer
+
+This add-on moves your email between folders, and — as of 1.2.0 —
+which folder gets picked can depend on your own past search and
+selection history, not just what you typed in the moment. It's been
+used in daily production use without incident, but it's provided
+as-is, with no warranty: you're responsible for checking that a
+message ended up where you expected (the toolbar tooltip always shows
+the last-used folder), and neither this project nor its author is
+liable for lost, misfiled, or "where on earth did that email go"
+messages. See the license below for the formal version of this.
 
 ## License
 

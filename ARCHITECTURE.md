@@ -480,6 +480,51 @@ debugging cycle (see [CHANGELOG.md](CHANGELOG.md)), and a pre-release
 review — from here on, breaking changes require a major bump rather
 than being allowed under semver's pre-1.0 "anything goes" rule.
 
+## Publishing to addons.thunderbird.net (ATN)
+
+The add-on's first-ever submission (1.2.0) was done by hand through
+ATN's web UI — that's inherently a one-time, account-specific step
+(choosing categories, confirming the license, etc. — the "storefront"
+listing metadata isn't just an XPI upload). Every release after that
+is automated by `.github/workflows/release.yml`.
+
+- **Trigger: pushing a version tag (`vX.Y.Z`), not every push to
+  `main`.** Publishing to a public add-on store is a deliberate,
+  externally-visible action with real (if not permanent) consequences
+  — it shouldn't be an automatic side effect of landing a commit the
+  way `ci.yml` validating a push is. The release flow is: bump
+  `manifest.json`/`package.json`, commit, `git tag vX.Y.Z`,
+  `git push origin vX.Y.Z` — the tag push is the actual "publish"
+  action.
+- **The workflow verifies the tag matches `manifest.json`'s version**
+  before doing anything else (`node -p "require('./manifest.json').version"`),
+  so tagging the wrong commit or forgetting to bump the version fails
+  fast instead of publishing something unintended.
+- **Signing/submission uses [`kewisch/action-web-ext`](https://github.com/kewisch/action-web-ext)**
+  (maintained by a longtime Thunderbird add-on ecosystem contributor),
+  which wraps `web-ext sign` — the same tool `npm run build`/`npm run
+  lint` already use — pointed at `https://addons.thunderbird.net/api/v4`
+  instead of its Firefox/AMO default. Authentication is a JWT signed
+  with an API key/secret pair from the ATN account's Developer Hub,
+  stored as the `ATN_API_KEY`/`ATN_API_SECRET` repository secrets (not
+  committed anywhere, obviously — generate them at ATN, add them via
+  the GitHub repo's Settings → Secrets and variables → Actions).
+- **`approvalTimeout: 0`**: the workflow waits for automated
+  validation to pass, then stops — it doesn't block on full human
+  review, which for a listed add-on can take considerably longer than
+  a CI run should reasonably wait. The public ATN listing updates
+  whenever review actually completes, independent of this workflow's
+  lifetime.
+- **A GitHub Release is also created**, with the built `.xpi`
+  attached, via the `gh` CLI (already available on GitHub-hosted
+  runners — no extra action needed) rather than through ATN, giving a
+  second, independent download path and a version history outside
+  Mozilla's infrastructure.
+- Building still goes through the project's own `npm run build` (with
+  `web-ext-config.cjs`'s file-exclusion rules), not a separate build
+  step inside the action — one source of truth for what a release
+  package actually contains, matching local dev builds exactly.
+
 ## Packaging
 
 `web-ext build` packages the extension for distribution. By default
@@ -505,6 +550,19 @@ keys. Expect these specific warnings on every run and ignore them:
 `MISSING_DATA_COLLECTION_PERMISSIONS` (a Firefox-only AMO requirement).
 Anything beyond those four warnings, or any `errors > 0`, is real and
 should be fixed.
+
+**The same three `MANIFEST_PERMISSIONS` warnings show up in ATN's own
+automated validation** when submitting to addons.thunderbird.net, not
+just locally — confirmed during the 1.2.0 submission. addons.thunderbird.net
+runs [thunderbird/addons-server](https://github.com/thunderbird/addons-server),
+a fork of AMO's server, which appears to invoke the same
+Firefox-schema `addons-linter` for its automated check rather than a
+Thunderbird-aware one; a related community report attributes this to
+the Thunderbird team needing to pull in a newer `addons-linter`
+version. It shows as a warning, not an error — validation still
+passes (`0 errors`), so it doesn't block submission. Nothing to fix
+here either; if it's ever worth chasing upstream, the right place is
+that same `thunderbird/addons-server` repo's issue tracker.
 
 ## License rationale
 

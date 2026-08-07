@@ -1,0 +1,66 @@
+name: Release
+
+# Deliberately tag-triggered rather than firing on every push to main —
+# publishing to addons.thunderbird.net should be a separate, deliberate
+# step from landing a commit, not an automatic side effect of it.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # Catches the case of tagging before bumping the version (or the
+      # wrong commit) before it ever reaches ATN.
+      - name: Verify tag matches manifest.json version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          MANIFEST_VERSION=$(node -p "require('./manifest.json').version")
+          if [ "$TAG_VERSION" != "$MANIFEST_VERSION" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match manifest.json version $MANIFEST_VERSION"
+            exit 1
+          fi
+          echo "VERSION=$MANIFEST_VERSION" >> "$GITHUB_ENV"
+
+      - run: npm test
+      - run: npm run lint
+      - run: npm run build
+
+      # Submits the built .xpi to addons.thunderbird.net for signing
+      # and (re-)publishing as a listed add-on. Requires an existing
+      # ATN listing (see ARCHITECTURE.md) and ATN_API_KEY/ATN_API_SECRET
+      # repo secrets. approvalTimeout: 0 means this only waits for
+      # automated validation, not full human review, which can take
+      # much longer than a CI run should block on — the public listing
+      # updates whenever review actually completes, independent of
+      # this workflow.
+      - name: Sign and submit to addons.thunderbird.net
+        uses: kewisch/action-web-ext@v2
+        with:
+          cmd: sign
+          source: web-ext-artifacts/move-and-jump-${{ env.VERSION }}.xpi
+          channel: listed
+          apiUrlPrefix: "https://addons.thunderbird.net/api/v4"
+          apiKey: ${{ secrets.ATN_API_KEY }}
+          apiSecret: ${{ secrets.ATN_API_SECRET }}
+          approvalTimeout: 0
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" web-ext-artifacts/*.xpi \
+            --title "${GITHUB_REF_NAME}" \
+            --notes "See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details."
