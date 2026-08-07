@@ -89,8 +89,15 @@ Search in all accounts    | on (folders from all accounts are being listed)
 
 ## Installation
 
-This add-on isn't published on [addons.thunderbird.net](https://addons.thunderbird.net)
-yet, so install it from a locally built package:
+Install it straight from
+[addons.thunderbird.net](https://addons.thunderbird.net/en-US/thunderbird/addon/move-and-jump/) —
+click **Add to Thunderbird**. Installed this way, Thunderbird also
+handles future updates automatically.
+
+### Building from source
+
+To try an unreleased change ahead of the next published version,
+build and install it manually instead:
 
 ```sh
 npm install
@@ -105,10 +112,9 @@ enforcement **off** by default, so this works without touching
 is refused, set `xpinstall.signatures.required` to `false` in
 `about:config`, restart, and try again.)
 
-This installs it as a regular, persistent add-on — it survives
-restarts and updates like any other, it just won't auto-update itself;
-building and reinstalling a new `.xpi` is how you pick up new versions
-for now.
+This installs it as a regular, persistent add-on, but — unlike
+installing from ATN — it won't auto-update itself; building and
+reinstalling a new `.xpi` is how you pick up further changes this way.
 
 ## Localization
 
