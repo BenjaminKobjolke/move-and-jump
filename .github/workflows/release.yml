@@ -16,6 +16,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history + tag objects, not just the tagged commit —
+          # needed so the release step below can read this tag's own
+          # annotation message (a shallow/default checkout may not
+          # carry the tag object's contents).
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -57,10 +63,19 @@ jobs:
           apiSecret: ${{ secrets.ATN_API_SECRET }}
           approvalTimeout: 0
 
+      # Uses the tag's own annotation as the release notes (so `git
+      # tag -a vX.Y.Z -m "..."` is what actually shows up on the
+      # GitHub release) rather than generating anything from commit
+      # history — a lightweight (non-annotated) tag has no message,
+      # so `%(contents)` would come back empty; always tag releases
+      # with `-a` and a real -m message.
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          TAG_MESSAGE=$(git tag -l --format='%(contents)' "${GITHUB_REF_NAME}")
+          NOTES=$(printf '%s\n\nFull changelog: https://github.com/%s/blob/main/CHANGELOG.md' \
+            "$TAG_MESSAGE" "${{ github.repository }}")
           gh release create "${GITHUB_REF_NAME}" web-ext-artifacts/*.xpi \
             --title "${GITHUB_REF_NAME}" \
-            --notes "See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details."
+            --notes "$NOTES"

@@ -493,9 +493,20 @@ is automated by `.github/workflows/release.yml`.
   externally-visible action with real (if not permanent) consequences
   — it shouldn't be an automatic side effect of landing a commit the
   way `ci.yml` validating a push is. The release flow is: bump
-  `manifest.json`/`package.json`, commit, `git tag vX.Y.Z`,
-  `git push origin vX.Y.Z` — the tag push is the actual "publish"
-  action.
+  `manifest.json`/`package.json`, commit, then tag **and push** —
+  the tag push is the actual "publish" action:
+
+  ```sh
+  git tag -a vX.Y.Z -m "One-paragraph summary of what's in this release"
+  git push origin vX.Y.Z
+  ```
+
+  **Must be an annotated tag (`-a`) with a real `-m` message** — the
+  release step below uses that message verbatim as the GitHub
+  release's notes. A lightweight tag (`git tag vX.Y.Z` with no `-a`)
+  has no message to read, so the release would ship with empty notes.
+  (1.0.0 through 1.2.0 predate this workflow and were never tagged at
+  all, which is why the repo had no GitHub releases yet.)
 - **The workflow verifies the tag matches `manifest.json`'s version**
   before doing anything else (`node -p "require('./manifest.json').version"`),
   so tagging the wrong commit or forgetting to bump the version fails
