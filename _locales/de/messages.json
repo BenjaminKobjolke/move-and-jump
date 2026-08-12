@@ -38,6 +38,9 @@
   "optionsCaseSensitiveSearch": {
     "message": "Groß-/Kleinschreibung beachten"
   },
+  "optionsFuzzySearch": {
+    "message": "Unscharfe Suche (einzelne Wörter überall im Ordner finden)"
+  },
   "optionsSearchAllAccounts": {
     "message": "In allen Konten suchen"
   },

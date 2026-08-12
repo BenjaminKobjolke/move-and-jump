@@ -3,7 +3,7 @@ import { filterByAccount } from "../lib/folders.js";
 import { getOptions } from "../lib/options.js";
 import { decodeImapUtf7 } from "../lib/imapUtf7.js";
 import { sortByQueryWeight } from "../lib/weights.js";
-import { findMatchRange } from "../lib/highlight.js";
+import { findMatchRanges } from "../lib/highlight.js";
 
 const heading = document.getElementById("heading");
 const input = document.getElementById("query");
@@ -155,27 +155,39 @@ function folderLabel(folder) {
  * innerHTML, consistent with the rest of the popup.
  */
 function appendHighlighted(item, label, query) {
-  const range = query
-    ? findMatchRange(label, query, { caseSensitive: options.caseSensitiveSearch })
-    : null;
-  if (!range) {
+  const ranges = query
+    ? findMatchRanges(label, query, {
+        caseSensitive: options.caseSensitiveSearch,
+        fuzzy: options.fuzzySearch,
+      })
+    : [];
+  if (ranges.length === 0) {
     item.textContent = label;
     return;
   }
-  const mark = document.createElement("mark");
-  mark.textContent = label.slice(range.start, range.end);
-  item.append(
-    document.createTextNode(label.slice(0, range.start)),
-    mark,
-    document.createTextNode(label.slice(range.end)),
-  );
+  let cursor = 0;
+  for (const range of ranges) {
+    if (range.start > cursor) {
+      item.append(document.createTextNode(label.slice(cursor, range.start)));
+    }
+    const mark = document.createElement("mark");
+    mark.textContent = label.slice(range.start, range.end);
+    item.append(mark);
+    cursor = range.end;
+  }
+  if (cursor < label.length) {
+    item.append(document.createTextNode(label.slice(cursor)));
+  }
 }
 
 function render(query) {
   const trimmed = query.trim();
   visible = trimmed
     ? sortByQueryWeight(
-        filterFolders(allFolders, trimmed, { caseSensitive: options.caseSensitiveSearch }),
+        filterFolders(allFolders, trimmed, {
+          caseSensitive: options.caseSensitiveSearch,
+          fuzzy: options.fuzzySearch,
+        }),
         queryWeights,
         folderWeights,
         trimmed,

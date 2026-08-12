@@ -71,3 +71,30 @@ test("account name does not affect matches that already hit on name/path", () =>
     ["1", "2"],
   );
 });
+
+const fuzzyFolders = [
+  { id: "1", name: "Tobias", path: "/Team/Tobias", accountName: "AXMain" },
+  { id: "2", name: "Tobias", path: "/Rechnungen Tobias", accountName: "AXMain" },
+  { id: "3", name: "Anna", path: "/Team/Anna", accountName: "AXMain" },
+];
+
+test("fuzzy: every space-split term must match somewhere, order-independent", () => {
+  const result = filterFolders(fuzzyFolders, "main to", { fuzzy: true });
+  assert.deepEqual(
+    result.map((f) => f.id).sort(),
+    ["1", "2"],
+  );
+});
+
+test("fuzzy: a term matching no field excludes the folder", () => {
+  // "team" hits #1/#3 but "tob" only hits #1
+  const result = filterFolders(fuzzyFolders, "team tob", { fuzzy: true });
+  assert.deepEqual(
+    result.map((f) => f.id),
+    ["1"],
+  );
+});
+
+test("without fuzzy, a spaced query is a literal substring (no match)", () => {
+  assert.deepEqual(filterFolders(fuzzyFolders, "main to"), []);
+});

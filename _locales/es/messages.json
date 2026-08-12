@@ -38,6 +38,9 @@
   "optionsCaseSensitiveSearch": {
     "message": "Búsqueda sensible a mayúsculas"
   },
+  "optionsFuzzySearch": {
+    "message": "Búsqueda difusa (coincidir palabras sueltas en cualquier parte de la carpeta)"
+  },
   "optionsSearchAllAccounts": {
     "message": "Buscar en todas las cuentas"
   },

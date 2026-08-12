@@ -38,6 +38,9 @@
   "optionsCaseSensitiveSearch": {
     "message": "Recherche sensible à la casse"
   },
+  "optionsFuzzySearch": {
+    "message": "Recherche approximative (trouver des mots séparés n'importe où dans le dossier)"
+  },
   "optionsSearchAllAccounts": {
     "message": "Rechercher dans tous les comptes"
   },

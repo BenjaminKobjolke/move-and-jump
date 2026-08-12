@@ -1,6 +1,7 @@
 import { getOptions } from "../lib/options.js";
 
 const caseSensitiveSearch = document.getElementById("caseSensitiveSearch");
+const fuzzySearch = document.getElementById("fuzzySearch");
 const searchAllAccounts = document.getElementById("searchAllAccounts");
 const zoom = document.getElementById("zoom");
 const shortcutsTable = document.getElementById("shortcuts");
@@ -12,6 +13,7 @@ document.getElementById("intro").textContent = msg("optionsIntro");
 document.getElementById("rankingInfo").textContent = msg("optionsRankingInfo");
 document.getElementById("shortcutsHeading").textContent = msg("optionsShortcutsHeading");
 document.getElementById("caseSensitiveSearchLabel").textContent = msg("optionsCaseSensitiveSearch");
+document.getElementById("fuzzySearchLabel").textContent = msg("optionsFuzzySearch");
 document.getElementById("searchAllAccountsLabel").textContent = msg("optionsSearchAllAccounts");
 document.getElementById("zoomLabel").textContent = msg("optionsZoom");
 
@@ -144,6 +146,7 @@ function record(name, recordBtn) {
 async function load() {
   const options = await getOptions(messenger.storage.local);
   caseSensitiveSearch.checked = options.caseSensitiveSearch;
+  fuzzySearch.checked = options.fuzzySearch;
   searchAllAccounts.checked = options.searchAllAccounts;
   zoom.value = options.zoom;
 }
@@ -152,6 +155,7 @@ async function save() {
   await messenger.storage.local.set({
     options: {
       caseSensitiveSearch: caseSensitiveSearch.checked,
+      fuzzySearch: fuzzySearch.checked,
       searchAllAccounts: searchAllAccounts.checked,
       zoom: Math.min(200, Math.max(50, Number(zoom.value) || 100)),
     },
@@ -159,6 +163,7 @@ async function save() {
 }
 
 caseSensitiveSearch.addEventListener("change", save);
+fuzzySearch.addEventListener("change", save);
 searchAllAccounts.addEventListener("change", save);
 zoom.addEventListener("change", save);
 

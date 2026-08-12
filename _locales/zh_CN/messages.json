@@ -38,6 +38,9 @@
   "optionsCaseSensitiveSearch": {
     "message": "区分大小写搜索"
   },
+  "optionsFuzzySearch": {
+    "message": "模糊搜索（在文件夹中任意位置匹配各个单词）"
+  },
   "optionsSearchAllAccounts": {
     "message": "搜索所有账户"
   },
