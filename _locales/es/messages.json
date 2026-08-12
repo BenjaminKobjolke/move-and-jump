@@ -41,11 +41,29 @@
   "optionsSearchAllAccounts": {
     "message": "Buscar en todas las cuentas"
   },
+  "optionsZoom": {
+    "message": "Zoom (%)"
+  },
   "optionsIntro": {
-    "message": "Move and Jump permite mover el correo seleccionado a una carpeta, o saltar a una carpeta, mediante búsqueda incremental. Haga clic en el botón de la barra de herramientas, o use uno de los atajos siguientes — puede reasignarlos en cualquier momento desde el Administrador de complementos → icono de engranaje → Gestionar atajos de extensiones."
+    "message": "Move and Jump permite mover el correo seleccionado a una carpeta, o saltar a una carpeta, mediante búsqueda incremental. Haga clic en el botón de la barra de herramientas, o use uno de los atajos siguientes — haga clic en «Grabar» junto a un atajo para reasignarlo."
   },
   "optionsShortcutsHeading": {
     "message": "Atajos de teclado"
+  },
+  "optionsShortcutRecord": {
+    "message": "Grabar"
+  },
+  "optionsShortcutRecording": {
+    "message": "Pulse las teclas…"
+  },
+  "optionsShortcutReset": {
+    "message": "Restablecer"
+  },
+  "optionsShortcutInvalid": {
+    "message": "Ese atajo necesita una tecla modificadora (Ctrl, Alt o ⌘)."
+  },
+  "optionsShortcutRejected": {
+    "message": "Thunderbird rechazó «$1» — puede que ya esté en uso o no sea compatible."
   },
   "optionsRankingInfo": {
     "message": "Los resultados se ordenan según sus elecciones anteriores: las carpetas que ha elegido tras escribir un texto similar aparecen primero, luego sus carpetas más usadas en general, y por último por orden alfabético."

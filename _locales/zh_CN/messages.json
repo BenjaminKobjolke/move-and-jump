@@ -41,11 +41,29 @@
   "optionsSearchAllAccounts": {
     "message": "搜索所有账户"
   },
+  "optionsZoom": {
+    "message": "缩放 (%)"
+  },
   "optionsIntro": {
-    "message": "Move and Jump 可通过输入实时搜索，将选中的邮件移动到某个文件夹，或跳转到某个文件夹。点击工具栏按钮，或使用下面的快捷键——可随时在附加组件管理器 → 齿轮图标 → 管理扩展快捷键中重新设置。"
+    "message": "Move and Jump 可通过输入实时搜索，将选中的邮件移动到某个文件夹，或跳转到某个文件夹。点击工具栏按钮，或使用下面的快捷键——点击快捷键旁边的“录制”即可重新设置。"
   },
   "optionsShortcutsHeading": {
     "message": "键盘快捷键"
+  },
+  "optionsShortcutRecord": {
+    "message": "录制"
+  },
+  "optionsShortcutRecording": {
+    "message": "请按下按键…"
+  },
+  "optionsShortcutReset": {
+    "message": "重置"
+  },
+  "optionsShortcutInvalid": {
+    "message": "该快捷键需要包含修饰键（Ctrl、Alt 或 ⌘）。"
+  },
+  "optionsShortcutRejected": {
+    "message": "Thunderbird 拒绝了“$1”——它可能已被占用或不受支持。"
   },
   "optionsRankingInfo": {
     "message": "搜索结果会根据您以往的选择排序：曾在输入类似文字后被选中的文件夹会排在最前面，其次是您总体使用最多的文件夹，最后按字母顺序排列。"

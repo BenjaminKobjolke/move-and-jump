@@ -55,13 +55,37 @@
     "message": "Search in all accounts",
     "description": "Options page checkbox label"
   },
+  "optionsZoom": {
+    "message": "Zoom (%)",
+    "description": "Options page: main window zoom percentage"
+  },
   "optionsIntro": {
-    "message": "Move and Jump lets you move the selected email to a folder, or jump to a folder, using type-ahead search. Click the toolbar button, or use one of the shortcuts below — rebind them any time from Add-ons Manager → gear icon → Manage Extension Shortcuts.",
+    "message": "Move and Jump lets you move the selected email to a folder, or jump to a folder, using type-ahead search. Click the toolbar button, or use one of the shortcuts below — click Record next to any shortcut to rebind it.",
     "description": "Options page introductory paragraph"
   },
   "optionsShortcutsHeading": {
     "message": "Keyboard shortcuts",
     "description": "Options page section heading"
+  },
+  "optionsShortcutRecord": {
+    "message": "Record",
+    "description": "Options page button: start capturing a new shortcut"
+  },
+  "optionsShortcutRecording": {
+    "message": "Press keys…",
+    "description": "Options page button label while waiting for the keystroke"
+  },
+  "optionsShortcutReset": {
+    "message": "Reset",
+    "description": "Options page button: restore a shortcut to its default"
+  },
+  "optionsShortcutInvalid": {
+    "message": "That shortcut needs a modifier key (Ctrl, Alt, or ⌘).",
+    "description": "Options page error when a captured shortcut has no non-Shift modifier"
+  },
+  "optionsShortcutRejected": {
+    "message": "Thunderbird rejected \"$1\" — it may already be in use or unsupported.",
+    "description": "Options page error when commands.update rejects a shortcut"
   },
   "optionsRankingInfo": {
     "message": "Results are ranked using your past choices: folders you've picked after typing similar text come first, then your most-used folders overall, then alphabetically.",

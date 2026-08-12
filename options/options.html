@@ -11,6 +11,7 @@
 
     <h2 id="shortcutsHeading"></h2>
     <table id="shortcuts"></table>
+    <p id="shortcutError" role="alert"></p>
 
     <label>
       <input type="checkbox" id="caseSensitiveSearch" />
@@ -19,6 +20,10 @@
     <label>
       <input type="checkbox" id="searchAllAccounts" />
       <span id="searchAllAccountsLabel"></span>
+    </label>
+    <label>
+      <span id="zoomLabel"></span>
+      <input type="number" id="zoom" min="50" max="200" step="10" /> %
     </label>
     <script type="module" src="options.js"></script>
   </body>

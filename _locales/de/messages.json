@@ -41,11 +41,29 @@
   "optionsSearchAllAccounts": {
     "message": "In allen Konten suchen"
   },
+  "optionsZoom": {
+    "message": "Zoom (%)"
+  },
   "optionsIntro": {
-    "message": "Mit Move and Jump können Sie die ausgewählte E-Mail per Schnellsuche in einen Ordner verschieben oder zu einem Ordner springen. Klicken Sie auf die Symbolleisten-Schaltfläche, oder verwenden Sie einen der unten stehenden Tastenkombinationen — anpassbar unter Add-on-Verwaltung → Zahnrad-Symbol → Erweiterungs-Tastenkombinationen verwalten."
+    "message": "Mit Move and Jump können Sie die ausgewählte E-Mail per Schnellsuche in einen Ordner verschieben oder zu einem Ordner springen. Klicken Sie auf die Symbolleisten-Schaltfläche, oder verwenden Sie einen der unten stehenden Tastenkombinationen — klicken Sie neben einer Tastenkombination auf „Aufnehmen“, um sie neu zu belegen."
   },
   "optionsShortcutsHeading": {
     "message": "Tastenkombinationen"
+  },
+  "optionsShortcutRecord": {
+    "message": "Aufnehmen"
+  },
+  "optionsShortcutRecording": {
+    "message": "Tasten drücken…"
+  },
+  "optionsShortcutReset": {
+    "message": "Zurücksetzen"
+  },
+  "optionsShortcutInvalid": {
+    "message": "Diese Tastenkombination benötigt eine Sondertaste (Strg, Alt oder ⌘)."
+  },
+  "optionsShortcutRejected": {
+    "message": "Thunderbird hat „$1“ abgelehnt — sie ist möglicherweise bereits belegt oder nicht unterstützt."
   },
   "optionsRankingInfo": {
     "message": "Die Ergebnisse werden anhand Ihrer bisherigen Auswahl sortiert: Ordner, die Sie nach Eingabe eines ähnlichen Textes bereits ausgewählt haben, erscheinen zuerst, danach Ihre insgesamt meistgenutzten Ordner, danach alphabetisch."

@@ -81,6 +81,7 @@ async function init() {
   queryWeights = qWeights;
 
   options = opts;
+  document.body.style.zoom = (options.zoom || 100) / 100;
   const scopedFolders = options.searchAllAccounts
     ? folders
     : filterByAccount(folders, activeTab?.displayedFolder?.accountId);
@@ -115,7 +116,11 @@ async function init() {
   // later render() while typing — the window keeps this size and the
   // list scrolls internally for larger result sets, same as before.
   messenger.runtime
-    .sendMessage({ type: "resize", height: measureRequiredWindowHeight() })
+    .sendMessage({
+      type: "resize",
+      height: measureRequiredWindowHeight(),
+      zoom: (options.zoom || 100) / 100,
+    })
     .catch(() => {});
 }
 

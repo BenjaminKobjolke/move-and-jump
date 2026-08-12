@@ -45,9 +45,24 @@ table#shortcuts {
   border-bottom: 1px solid var(--border);
 }
 
-#shortcuts td:last-child {
+#shortcuts td.shortcut-value {
   font-family: monospace;
   color: var(--muted);
+  min-width: 8em;
+}
+
+#shortcuts button {
+  font: inherit;
+}
+
+#shortcuts button.recording {
+  font-style: italic;
+}
+
+#shortcutError {
+  margin: 0 0 16px;
+  min-height: 1.4em;
+  color: #c0392b;
 }
 
 label {

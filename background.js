@@ -16,8 +16,14 @@ messenger.storage.local.get("lastUsedFolderId").then(({ lastUsedFolderId }) => {
 /** Tracks the currently open search window, if any, so a second
  * invocation replaces it instead of piling up windows. */
 let searchWindowId = null;
+// Parent (mail) window geometry captured at open time, so the popup can be
+// re-centered after it resizes itself — see resizeSearchWindow.
+let searchWindowParent = null;
 messenger.windows.onRemoved.addListener((windowId) => {
-  if (windowId === searchWindowId) searchWindowId = null;
+  if (windowId === searchWindowId) {
+    searchWindowId = null;
+    searchWindowParent = null;
+  }
 });
 
 /**
@@ -131,8 +137,15 @@ async function openSearchWindow(mode, tabId) {
 
   let left;
   let top;
+  searchWindowParent = null;
   try {
     const current = await messenger.windows.getCurrent();
+    searchWindowParent = {
+      left: current.left,
+      top: current.top,
+      width: current.width,
+      height: current.height,
+    };
     left = Math.round(current.left + (current.width - SEARCH_WINDOW_WIDTH) / 2);
     top = Math.round(current.top + (current.height - SEARCH_WINDOW_MIN_HEIGHT) / 3);
   } catch {
@@ -165,13 +178,25 @@ async function openSearchWindow(mode, tabId) {
  * recent-folder list's 10 entries) and a generous ceiling (guards
  * against pathological cases on unusual systems).
  */
-async function resizeSearchWindow(requestedHeight) {
+async function resizeSearchWindow(requestedHeight, zoom = 1) {
   if (searchWindowId === null) return;
+  // Content is zoomed in the popup (body.style.zoom), so widen the window
+  // by the same factor and scale the height clamps to match — otherwise a
+  // larger zoom would clip horizontally against the fixed 560px width.
+  const width = Math.round(SEARCH_WINDOW_WIDTH * zoom);
   const height = Math.min(
-    SEARCH_WINDOW_MAX_HEIGHT,
-    Math.max(SEARCH_WINDOW_MIN_HEIGHT, Math.round(requestedHeight)),
+    Math.round(SEARCH_WINDOW_MAX_HEIGHT * zoom),
+    Math.max(Math.round(SEARCH_WINDOW_MIN_HEIGHT * zoom), Math.round(requestedHeight)),
   );
-  await messenger.windows.update(searchWindowId, { height });
+  // Growing width/height keeps the top-left fixed, so re-center over the parent
+  // mail window (captured at open) rather than letting the popup drift.
+  const update = { width, height };
+  const p = searchWindowParent;
+  if (p) {
+    update.left = Math.round(p.left + (p.width - width) / 2);
+    update.top = Math.round(p.top + (p.height - height) / 2);
+  }
+  await messenger.windows.update(searchWindowId, update);
 }
 
 async function actOnLastFolder(mode, tabId) {
@@ -218,7 +243,7 @@ messenger.runtime.onMessage.addListener((message) => {
     return handleSelection(message.mode, message.folderId, message.tabId, message.query);
   }
   if (message?.type === "resize") {
-    return resizeSearchWindow(message.height);
+    return resizeSearchWindow(message.height, message.zoom);
   }
   return undefined;
 });
