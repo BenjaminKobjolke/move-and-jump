@@ -91,6 +91,14 @@
     "message": "Search in all accounts",
     "description": "Options page checkbox label"
   },
+  "optionsResizeToFit": {
+    "message": "Resize the search window to fit the results",
+    "description": "Options page checkbox label"
+  },
+  "optionsCenterOnParent": {
+    "message": "Center the search window over the mail window",
+    "description": "Options page checkbox label"
+  },
   "optionsZoom": {
     "message": "Zoom (%)",
     "description": "Options page: main window zoom percentage"

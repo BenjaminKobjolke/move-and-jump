@@ -44,6 +44,12 @@
   "optionsSearchAllAccounts": {
     "message": "In allen Konten suchen"
   },
+  "optionsResizeToFit": {
+    "message": "Suchfenster an die Ergebnisse anpassen"
+  },
+  "optionsCenterOnParent": {
+    "message": "Suchfenster über dem Mail-Fenster zentrieren"
+  },
   "optionsZoom": {
     "message": "Zoom (%)"
   },

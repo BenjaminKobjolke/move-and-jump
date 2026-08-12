@@ -3,6 +3,8 @@ import { getOptions, clampZoom } from "../lib/options.js";
 const caseSensitiveSearch = document.getElementById("caseSensitiveSearch");
 const fuzzySearch = document.getElementById("fuzzySearch");
 const searchAllAccounts = document.getElementById("searchAllAccounts");
+const resizeToFit = document.getElementById("resizeToFit");
+const centerOnParent = document.getElementById("centerOnParent");
 const zoom = document.getElementById("zoom");
 const shortcutsTable = document.getElementById("shortcuts");
 const shortcutError = document.getElementById("shortcutError");
@@ -15,6 +17,8 @@ document.getElementById("shortcutsHeading").textContent = msg("optionsShortcutsH
 document.getElementById("caseSensitiveSearchLabel").textContent = msg("optionsCaseSensitiveSearch");
 document.getElementById("fuzzySearchLabel").textContent = msg("optionsFuzzySearch");
 document.getElementById("searchAllAccountsLabel").textContent = msg("optionsSearchAllAccounts");
+document.getElementById("resizeToFitLabel").textContent = msg("optionsResizeToFit");
+document.getElementById("centerOnParentLabel").textContent = msg("optionsCenterOnParent");
 document.getElementById("zoomLabel").textContent = msg("optionsZoom");
 
 let isMac = false;
@@ -148,6 +152,8 @@ async function load() {
   caseSensitiveSearch.checked = options.caseSensitiveSearch;
   fuzzySearch.checked = options.fuzzySearch;
   searchAllAccounts.checked = options.searchAllAccounts;
+  resizeToFit.checked = options.resizeToFit;
+  centerOnParent.checked = options.centerOnParent;
   zoom.value = options.zoom;
 }
 
@@ -157,6 +163,8 @@ async function save() {
       caseSensitiveSearch: caseSensitiveSearch.checked,
       fuzzySearch: fuzzySearch.checked,
       searchAllAccounts: searchAllAccounts.checked,
+      resizeToFit: resizeToFit.checked,
+      centerOnParent: centerOnParent.checked,
       zoom: clampZoom(zoom.value),
     },
   });
@@ -165,6 +173,8 @@ async function save() {
 caseSensitiveSearch.addEventListener("change", save);
 fuzzySearch.addEventListener("change", save);
 searchAllAccounts.addEventListener("change", save);
+resizeToFit.addEventListener("change", save);
+centerOnParent.addEventListener("change", save);
 zoom.addEventListener("change", save);
 
 load();

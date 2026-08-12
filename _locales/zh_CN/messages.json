@@ -44,6 +44,12 @@
   "optionsSearchAllAccounts": {
     "message": "搜索所有账户"
   },
+  "optionsResizeToFit": {
+    "message": "调整搜索窗口大小以适应结果"
+  },
+  "optionsCenterOnParent": {
+    "message": "将搜索窗口居中于邮件窗口"
+  },
   "optionsZoom": {
     "message": "缩放 (%)"
   },

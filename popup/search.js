@@ -22,8 +22,14 @@ const cancelButton = document.getElementById("cancelButton");
 // so `currentWindow: true` queries from in here would resolve to
 // *this* window, not the mail window.
 const params = new URLSearchParams(window.location.search);
-const mode = params.get("mode") === "jump" ? "jump" : "move";
-const tabId = params.has("tabId") ? Number(params.get("tabId")) : undefined;
+// Mutable: the window is reused across triggers (see background.js) — a "reset"
+// message re-points these at the new mode/tab without recreating the window.
+let mode = params.get("mode") === "jump" ? "jump" : "move";
+let tabId = params.has("tabId") ? Number(params.get("tabId")) : undefined;
+// Zoom is passed in the URL (not read from storage in init()) so it can be
+// applied synchronously below, before the first paint — background.js already
+// created the window at this scale, so content and window match on frame one.
+const initialZoom = clampZoom(params.get("zoom"));
 
 let options;
 // Raw inputs kept around so a `/all` toggle can recompute the scoped
@@ -49,19 +55,26 @@ let showAccountPrefix = false;
 // focus handling. The `autofocus` attribute in search.html is a
 // second line of defense; render()'s repeat call below is a third.
 document.title = messenger.i18n.getMessage("actionTitle");
-heading.textContent = messenger.i18n.getMessage(
-  mode === "move" ? "popupHeadingMove" : "popupHeadingJump",
-);
-input.placeholder = messenger.i18n.getMessage(
-  mode === "move" ? "popupPlaceholderMove" : "popupPlaceholderJump",
-);
 empty.textContent = messenger.i18n.getMessage("popupNoMatches");
 error.textContent = messenger.i18n.getMessage("popupError");
 moveButton.textContent = messenger.i18n.getMessage("buttonMove");
 jumpButton.textContent = messenger.i18n.getMessage("buttonJump");
 cancelButton.textContent = messenger.i18n.getMessage("buttonCancel");
-moveButton.classList.toggle("primary", mode === "move");
-jumpButton.classList.toggle("primary", mode === "jump");
+
+/** Apply the current `mode` to the heading, placeholder, and primary button. */
+function setModeUI() {
+  heading.textContent = messenger.i18n.getMessage(
+    mode === "move" ? "popupHeadingMove" : "popupHeadingJump",
+  );
+  input.placeholder = messenger.i18n.getMessage(
+    mode === "move" ? "popupPlaceholderMove" : "popupPlaceholderJump",
+  );
+  moveButton.classList.toggle("primary", mode === "move");
+  jumpButton.classList.toggle("primary", mode === "jump");
+}
+
+setModeUI();
+document.body.style.zoom = initialZoom / 100;
 input.focus();
 
 async function init() {
@@ -143,6 +156,10 @@ function applyScope() {
 function applyZoom() {
   const factor = (options.zoom || 100) / 100;
   document.body.style.zoom = factor;
+  // background.js already created the window at the zoom-scaled base size; the
+  // resize only grows it to fit content. Skip it when the user disabled
+  // fit-to-content — the list scrolls internally instead.
+  if (!options.resizeToFit) return;
   messenger.runtime
     .sendMessage({ type: "resize", height: measureRequiredWindowHeight(), zoom: factor })
     .catch(() => {});
@@ -379,12 +396,25 @@ function moveActive(delta) {
 }
 
 // Guards against our own dismiss-on-blur handler below racing a
-// deliberate selection closed: if Enter (unlike the arrow keys)
-// causes this window to lose focus as a side effect, blur would fire
-// while select()'s sendMessage is still in flight and close the
-// window before the move/jump actually happens. Once we've decided to
-// close on purpose, further blur events are a no-op.
-let closing = false;
+// deliberate selection: if Enter (unlike the arrow keys) causes this
+// window to lose focus as a side effect, blur would fire while
+// select()'s sendMessage is still in flight and hide the window before
+// the move/jump actually happens. Once we've decided to hide on
+// purpose, further blur events are a no-op.
+let hiding = false;
+
+// The window is kept alive and reused (see background.js): dismissing
+// minimizes it rather than closing it, so the next trigger just
+// restores + re-inits it instead of recreating the whole window.
+async function hide() {
+  hiding = true;
+  try {
+    const self = await messenger.windows.getCurrent();
+    await messenger.windows.update(self.id, { state: "minimized" });
+  } catch (hideError) {
+    console.error("Move and Jump: hide failed", hideError);
+  }
+}
 
 async function select(actionMode, folder) {
   if (!folder) {
@@ -395,7 +425,7 @@ async function select(actionMode, folder) {
     return;
   }
   error.hidden = true;
-  closing = true;
+  hiding = true;
   try {
     const response = await messenger.runtime.sendMessage({
       type: "select",
@@ -407,11 +437,11 @@ async function select(actionMode, folder) {
     if (response?.ok === false) throw new Error(response.error);
   } catch (sendError) {
     console.error("Move and Jump: select failed", sendError);
-    closing = false;
+    hiding = false;
     error.hidden = false;
     return;
   }
-  window.close();
+  hide();
 }
 
 input.addEventListener("input", () => render(input.value));
@@ -437,8 +467,7 @@ input.addEventListener("keydown", (event) => {
       break;
     case "Escape":
       event.preventDefault();
-      closing = true;
-      window.close();
+      hide();
       break;
     default:
       break;
@@ -455,15 +484,31 @@ jumpButton.addEventListener("click", () => {
   if (entry?.type === "folder") select("jump", entry.folder);
 });
 cancelButton.addEventListener("click", () => {
-  closing = true;
-  window.close();
+  hide();
 });
 
 // This is a real top-level window rather than an anchored toolbar
 // popup, so nothing dismisses it automatically when the user clicks
-// elsewhere — do that ourselves. Guarded by `closing` (see above).
+// elsewhere — do that ourselves. Guarded by `hiding` (see above) so our
+// own minimize doesn't re-trigger it.
 window.addEventListener("blur", () => {
-  if (!closing) window.close();
+  if (!hiding) hide();
+});
+
+// Reused across triggers: background.js restores the window and sends this to
+// re-point it at the new mode/tab/zoom and refresh the folder list, in place of
+// recreating the window. Re-runs the same init() the first URL-driven open uses.
+messenger.runtime.onMessage.addListener((message) => {
+  if (message?.type !== "reset") return undefined;
+  mode = message.mode === "jump" ? "jump" : "move";
+  tabId = message.tabId;
+  hiding = false;
+  document.body.style.zoom = clampZoom(message.zoom) / 100;
+  input.value = "";
+  setModeUI();
+  init();
+  input.focus();
+  return undefined;
 });
 
 init();

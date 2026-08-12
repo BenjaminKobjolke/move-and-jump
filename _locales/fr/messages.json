@@ -44,6 +44,12 @@
   "optionsSearchAllAccounts": {
     "message": "Rechercher dans tous les comptes"
   },
+  "optionsResizeToFit": {
+    "message": "Redimensionner la fenêtre de recherche selon les résultats"
+  },
+  "optionsCenterOnParent": {
+    "message": "Centrer la fenêtre de recherche sur la fenêtre de courrier"
+  },
   "optionsZoom": {
     "message": "Zoom (%)"
   },

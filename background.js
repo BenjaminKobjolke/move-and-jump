@@ -1,5 +1,5 @@
 import { pushRecent } from "./lib/recent.js";
-import { DEFAULT_OPTIONS } from "./lib/options.js";
+import { DEFAULT_OPTIONS, getOptions, clampZoom } from "./lib/options.js";
 import { decodeImapUtf7 } from "./lib/imapUtf7.js";
 import { incrementWeight, incrementQueryWeight } from "./lib/weights.js";
 
@@ -124,42 +124,79 @@ const SEARCH_WINDOW_MAX_HEIGHT = 700;
  * the URL, rather than re-queried later — once the popup window
  * exists, "current window" no longer reliably means the mail window.
  */
+/**
+ * Read options and compute the search window's base (zoom-scaled) geometry for
+ * this open. The parent mail window may have moved since last time, so this
+ * re-queries it every open and (re)sets searchWindowParent — which also gates
+ * re-centering in resizeSearchWindow (null → not centered).
+ */
+async function computeSearchWindowGeometry() {
+  const options = await getOptions(messenger.storage.local);
+  const zoom = clampZoom(options.zoom);
+  const factor = zoom / 100;
+  const width = Math.round(SEARCH_WINDOW_WIDTH * factor);
+  const height = Math.round(SEARCH_WINDOW_MIN_HEIGHT * factor);
+
+  let left;
+  let top;
+  searchWindowParent = null;
+  if (options.centerOnParent) {
+    try {
+      const current = await messenger.windows.getCurrent();
+      searchWindowParent = {
+        left: current.left,
+        top: current.top,
+        width: current.width,
+        height: current.height,
+      };
+      left = Math.round(current.left + (current.width - width) / 2);
+      top = Math.round(current.top + (current.height - height) / 3);
+    } catch {
+      // Fall back to the platform's default placement.
+    }
+  }
+  return { zoom, width, height, left, top };
+}
+
 async function openSearchWindow(mode, tabId) {
   const resolvedTabId = tabId ?? (await getActiveTab())?.id;
   if (resolvedTabId === undefined) {
     console.error("Move and Jump: openSearchWindow could not resolve a target mail tab");
   }
 
+  const { zoom, width, height, left, top } = await computeSearchWindowGeometry();
+
+  // Reuse the existing window (kept alive, minimized while dismissed) instead of
+  // recreating it: restore + re-center it, then tell the popup to re-init for
+  // the new mode/tab/zoom. The popup's re-init sends its own resize message, so
+  // resizeSearchWindow still fits/centers to content.
   if (searchWindowId !== null) {
-    await messenger.windows.remove(searchWindowId).catch(() => {});
-    searchWindowId = null;
+    try {
+      await messenger.windows.update(searchWindowId, {
+        state: "normal",
+        focused: true,
+        width,
+        height,
+        left,
+        top,
+      });
+      await messenger.runtime.sendMessage({ type: "reset", mode, tabId: resolvedTabId, zoom });
+      return;
+    } catch {
+      // Window is gone despite our id (e.g. closed at just the wrong moment);
+      // fall through and create a fresh one.
+      searchWindowId = null;
+    }
   }
 
-  let left;
-  let top;
-  searchWindowParent = null;
-  try {
-    const current = await messenger.windows.getCurrent();
-    searchWindowParent = {
-      left: current.left,
-      top: current.top,
-      width: current.width,
-      height: current.height,
-    };
-    left = Math.round(current.left + (current.width - SEARCH_WINDOW_WIDTH) / 2);
-    top = Math.round(current.top + (current.height - SEARCH_WINDOW_MIN_HEIGHT) / 3);
-  } catch {
-    // Fall back to the platform's default placement.
-  }
-
-  const params = new URLSearchParams({ mode });
+  const params = new URLSearchParams({ mode, zoom: String(zoom) });
   if (resolvedTabId !== undefined) params.set("tabId", String(resolvedTabId));
 
   const win = await messenger.windows.create({
     type: "popup",
     url: `popup/search.html?${params}`,
-    width: SEARCH_WINDOW_WIDTH,
-    height: SEARCH_WINDOW_MIN_HEIGHT,
+    width,
+    height,
     left,
     top,
     allowScriptsToClose: true,
