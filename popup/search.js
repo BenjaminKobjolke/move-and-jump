@@ -1,9 +1,10 @@
 import { filterFolders } from "../lib/match.js";
 import { filterByAccount } from "../lib/folders.js";
-import { getOptions } from "../lib/options.js";
+import { getOptions, clampZoom } from "../lib/options.js";
 import { decodeImapUtf7 } from "../lib/imapUtf7.js";
 import { sortByQueryWeight } from "../lib/weights.js";
 import { findMatchRanges } from "../lib/highlight.js";
+import { parseCommand, matchCommands } from "../lib/commands.js";
 
 const heading = document.getElementById("heading");
 const input = document.getElementById("query");
@@ -25,10 +26,18 @@ const mode = params.get("mode") === "jump" ? "jump" : "move";
 const tabId = params.has("tabId") ? Number(params.get("tabId")) : undefined;
 
 let options;
+// Raw inputs kept around so a `/all` toggle can recompute the scoped
+// folder view without re-querying Thunderbird (see applyScope()).
+let rawFolders = [];
+let accountsList = [];
+let activeTab;
+let recentIds = [];
 let allFolders = [];
 let recentFolders = [];
 let folderWeights = {};
 let queryWeights = {};
+// Each entry is { type: "folder", folder } or
+// { type: "command", command, arg, label, enabled }.
 let visible = [];
 let activeIndex = 0;
 let showAccountPrefix = false;
@@ -60,10 +69,10 @@ async function init() {
     folders,
     accounts,
     opts,
-    { recentFolders: recentIds = [] },
+    { recentFolders: storedRecentIds = [] },
     { folderWeights: weights = {} },
     { queryWeights: qWeights = {} },
-    activeTab,
+    tab,
   ] = await Promise.all([
     messenger.folders.query({}),
     messenger.accounts.list(),
@@ -77,21 +86,42 @@ async function init() {
     // rather than letting the whole Promise.all reject.
     tabId === undefined ? undefined : messenger.mailTabs.get(tabId).catch(() => undefined),
   ]);
+  rawFolders = folders;
+  accountsList = accounts;
+  recentIds = storedRecentIds;
+  activeTab = tab;
   folderWeights = weights;
   queryWeights = qWeights;
-
   options = opts;
-  document.body.style.zoom = (options.zoom || 100) / 100;
+
+  applyScope();
+
+  render("");
+  input.focus();
+
+  // Set the popup zoom and size the window to fit the initial
+  // (recent-folders) view without scrolling. applyZoom() measures the
+  // now-rendered, now-zoomed DOM, so render() must run first. Not
+  // repeated on every later render() while typing — the window keeps
+  // this size and the list scrolls internally for larger result sets.
+  applyZoom();
+}
+
+/**
+ * Recompute allFolders / recentFolders / showAccountPrefix from the raw
+ * inputs and the current options.searchAllAccounts. Called on startup
+ * and again whenever the `/all` command flips the scope.
+ */
+function applyScope() {
   const scopedFolders = options.searchAllAccounts
-    ? folders
-    : filterByAccount(folders, activeTab?.displayedFolder?.accountId);
+    ? rawFolders
+    : filterByAccount(rawFolders, activeTab?.displayedFolder?.accountId);
 
   // Folder names commonly repeat across accounts ("Inbox", "Sent", …);
   // attach each folder's account name so the list — and the search
-  // ranking in lib/match.js — can disambiguate them. Only bother
-  // showing the prefix in the UI when more than one account is
-  // actually present in the current scope.
-  const accountNameById = new Map(accounts.map((account) => [account.id, account.name]));
+  // ranking in lib/match.js — can disambiguate them. Only show the
+  // prefix in the UI when more than one account is present in scope.
+  const accountNameById = new Map(accountsList.map((account) => [account.id, account.name]));
   allFolders = scopedFolders.map((folder) => ({
     ...folder,
     // IMAP folder names/paths come back as raw, undecoded modified
@@ -107,20 +137,14 @@ async function init() {
 
   const byId = new Map(allFolders.map((folder) => [folder.id, folder]));
   recentFolders = recentIds.map((id) => byId.get(id)).filter(Boolean);
+}
 
-  render("");
-  input.focus();
-
-  // Resize once, based on the initial (recent-folders) view, so up to
-  // 10 entries are visible without scrolling. Not repeated on every
-  // later render() while typing — the window keeps this size and the
-  // list scrolls internally for larger result sets, same as before.
+/** Apply options.zoom to the popup body and resize the window to match. */
+function applyZoom() {
+  const factor = (options.zoom || 100) / 100;
+  document.body.style.zoom = factor;
   messenger.runtime
-    .sendMessage({
-      type: "resize",
-      height: measureRequiredWindowHeight(),
-      zoom: (options.zoom || 100) / 100,
-    })
+    .sendMessage({ type: "resize", height: measureRequiredWindowHeight(), zoom: factor })
     .catch(() => {});
 }
 
@@ -181,8 +205,18 @@ function appendHighlighted(item, label, query) {
 }
 
 function render(query) {
+  // A leading "/" switches the list to slash-command mode (see
+  // lib/commands.js). Folder paths that start with "/" are still
+  // reachable by typing without the slash — filterFolders matches any
+  // substring — so no folders become unreachable.
+  const parsed = parseCommand(query);
+  if (parsed) {
+    renderCommands(parsed);
+    return;
+  }
+
   const trimmed = query.trim();
-  visible = trimmed
+  const folders = trimmed
     ? sortByQueryWeight(
         filterFolders(allFolders, trimmed, {
           caseSensitive: options.caseSensitiveSearch,
@@ -193,22 +227,142 @@ function render(query) {
         trimmed,
       )
     : recentFolders;
+  visible = folders.map((folder) => ({ type: "folder", folder }));
   activeIndex = 0;
 
   list.innerHTML = "";
-  for (const folder of visible) {
+  for (const entry of visible) {
     const item = document.createElement("li");
-    appendHighlighted(item, folderLabel(folder), trimmed);
+    appendHighlighted(item, folderLabel(entry.folder), trimmed);
     item.addEventListener("mousedown", (event) => {
       event.preventDefault();
-      select(mode, folder);
+      activate(entry);
     });
     list.appendChild(item);
   }
   highlight();
 
+  empty.textContent = messenger.i18n.getMessage("popupNoMatches");
   empty.hidden = !(trimmed && visible.length === 0);
   moveButton.disabled = jumpButton.disabled = visible.length === 0;
+}
+
+function renderCommands({ token, arg }) {
+  visible = matchCommands(token).map((command) => commandEntry(command, arg));
+  activeIndex = 0;
+
+  list.innerHTML = "";
+  for (const entry of visible) {
+    const item = document.createElement("li");
+    item.textContent = entry.label;
+    if (entry.enabled === false) item.classList.add("disabled");
+    item.addEventListener("mousedown", (event) => {
+      event.preventDefault();
+      activate(entry);
+    });
+    list.appendChild(item);
+  }
+  highlight();
+
+  empty.textContent = messenger.i18n.getMessage("popupNoCommands");
+  empty.hidden = visible.length !== 0;
+  // Move/Jump act on folders, not commands.
+  moveButton.disabled = jumpButton.disabled = true;
+}
+
+const onOff = (value) => messenger.i18n.getMessage(value ? "onState" : "offState");
+
+/** Build a command result entry: its display label and enabled state. */
+function commandEntry(command, arg) {
+  let label;
+  let enabled = true;
+  switch (command.name) {
+    case "zoom": {
+      // Selectable with or without a value: with a valid number it applies;
+      // without one, activate() prefills the input for editing (see below).
+      const valid = arg !== "" && !Number.isNaN(Number(arg));
+      label = valid
+        ? messenger.i18n.getMessage("commandZoomSet", [String(clampZoom(arg))])
+        : messenger.i18n.getMessage("commandZoomHint", [String(options.zoom || 100)]);
+      break;
+    }
+    case "fuzzy":
+      label = messenger.i18n.getMessage("commandToggleFuzzy", [onOff(options.fuzzySearch)]);
+      break;
+    case "all":
+      label = messenger.i18n.getMessage("commandToggleAll", [onOff(options.searchAllAccounts)]);
+      break;
+    case "sensitive":
+      label = messenger.i18n.getMessage("commandToggleSensitive", [
+        onOff(options.caseSensitiveSearch),
+      ]);
+      break;
+  }
+  return { type: "command", command, arg, label, enabled };
+}
+
+/**
+ * Handle selection of the active/clicked entry. Folders move/jump (and
+ * close the window); commands mutate + persist options, then clear the
+ * input and re-render, leaving the window open.
+ */
+async function activate(entry) {
+  if (!entry) return;
+  if (entry.type === "command") {
+    if (entry.enabled === false) return;
+    switch (entry.command.name) {
+      case "zoom": {
+        const valid = entry.arg !== "" && !Number.isNaN(Number(entry.arg));
+        if (!valid) {
+          // No value yet: prefill "/zoom <current>" and preselect the number
+          // so the user can overtype and Enter through the valid path below.
+          input.value = `/zoom ${options.zoom || 100}`;
+          render(input.value);
+          input.setSelectionRange(input.value.indexOf(" ") + 1, input.value.length);
+          input.focus();
+          return;
+        }
+        options.zoom = clampZoom(entry.arg);
+        applyZoom();
+        break;
+      }
+      case "fuzzy":
+        options.fuzzySearch = !options.fuzzySearch;
+        break;
+      case "sensitive":
+        options.caseSensitiveSearch = !options.caseSensitiveSearch;
+        break;
+      case "all":
+        options.searchAllAccounts = !options.searchAllAccounts;
+        applyScope();
+        break;
+    }
+    await messenger.storage.local.set({ options });
+    input.value = "";
+    render("");
+    input.focus();
+    return;
+  }
+  select(mode, entry.folder);
+}
+
+/**
+ * Autocomplete the active entry into the input (Tab). Folders complete to
+ * their path with the leading slash stripped — folder paths start with "/"
+ * (e.g. "/INBOX/Sub"), which would otherwise trigger command mode; without
+ * it, filterFolders still matches the path as a substring. Commands complete
+ * to "/name", plus a trailing space for arg-taking commands (zoom).
+ */
+function completeActive() {
+  const entry = visible[activeIndex];
+  if (!entry) return;
+  const text =
+    entry.type === "command"
+      ? `/${entry.command.name}${entry.command.takesArg ? " " : ""}`
+      : entry.folder.path.replace(/^\/+/, "");
+  input.value = text;
+  render(text);
+  input.focus();
 }
 
 function highlight() {
@@ -272,9 +426,14 @@ input.addEventListener("keydown", (event) => {
       event.preventDefault();
       moveActive(-1);
       break;
+    case "Tab":
+      if (event.shiftKey) break;
+      event.preventDefault();
+      completeActive();
+      break;
     case "Enter":
       event.preventDefault();
-      select(mode, visible[activeIndex]);
+      activate(visible[activeIndex]);
       break;
     case "Escape":
       event.preventDefault();
@@ -286,8 +445,15 @@ input.addEventListener("keydown", (event) => {
   }
 });
 
-moveButton.addEventListener("click", () => select("move", visible[activeIndex]));
-jumpButton.addEventListener("click", () => select("jump", visible[activeIndex]));
+// Buttons act on folders only; in command mode they're disabled.
+moveButton.addEventListener("click", () => {
+  const entry = visible[activeIndex];
+  if (entry?.type === "folder") select("move", entry.folder);
+});
+jumpButton.addEventListener("click", () => {
+  const entry = visible[activeIndex];
+  if (entry?.type === "folder") select("jump", entry.folder);
+});
 cancelButton.addEventListener("click", () => {
   closing = true;
   window.close();

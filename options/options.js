@@ -1,4 +1,4 @@
-import { getOptions } from "../lib/options.js";
+import { getOptions, clampZoom } from "../lib/options.js";
 
 const caseSensitiveSearch = document.getElementById("caseSensitiveSearch");
 const fuzzySearch = document.getElementById("fuzzySearch");
@@ -157,7 +157,7 @@ async function save() {
       caseSensitiveSearch: caseSensitiveSearch.checked,
       fuzzySearch: fuzzySearch.checked,
       searchAllAccounts: searchAllAccounts.checked,
-      zoom: Math.min(200, Math.max(50, Number(zoom.value) || 100)),
+      zoom: clampZoom(zoom.value),
     },
   });
 }

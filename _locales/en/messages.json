@@ -43,9 +43,41 @@
     "message": "No matching folders",
     "description": "Shown when a search query has no results"
   },
+  "popupNoCommands": {
+    "message": "No matching commands",
+    "description": "Shown when a slash-command query matches no command"
+  },
   "popupError": {
     "message": "Something went wrong — see the Browser Console for details.",
     "description": "Shown when a move/jump fails"
+  },
+  "commandZoomSet": {
+    "message": "Set zoom to $1%",
+    "description": "Popup slash-command row: /zoom with a value"
+  },
+  "commandZoomHint": {
+    "message": "Set zoom — press Enter to edit (current: $1%)",
+    "description": "Popup slash-command row: /zoom with no/invalid value; selecting it prefills the input for editing"
+  },
+  "commandToggleFuzzy": {
+    "message": "Toggle: Fuzzy search — Current: $1",
+    "description": "Popup slash-command row: /fuzzy. $1 is ON or OFF"
+  },
+  "commandToggleAll": {
+    "message": "Toggle: Search in all accounts — Current: $1",
+    "description": "Popup slash-command row: /all. $1 is ON or OFF"
+  },
+  "commandToggleSensitive": {
+    "message": "Toggle: Case-sensitive search — Current: $1",
+    "description": "Popup slash-command row: /sensitive. $1 is ON or OFF"
+  },
+  "onState": {
+    "message": "ON",
+    "description": "Toggle state shown in slash-command rows"
+  },
+  "offState": {
+    "message": "OFF",
+    "description": "Toggle state shown in slash-command rows"
   },
   "optionsCaseSensitiveSearch": {
     "message": "Case-sensitive search",

@@ -101,6 +101,17 @@ li.active {
   color: var(--active-fg);
 }
 
+/* A slash-command row that can't run yet (e.g. "/zoom" with no value). */
+li.disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+li.active.disabled {
+  color: var(--active-fg);
+  opacity: 0.7;
+}
+
 mark {
   background: transparent;
   color: var(--active-bg);
