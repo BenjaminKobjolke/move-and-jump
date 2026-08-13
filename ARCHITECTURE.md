@@ -139,9 +139,20 @@ free anymore.
   re-derived from "current window" once the popup exists.
 - Clicking the toolbar button now fires `action.onClicked` (there's no
   `default_popup` anymore) and opens the same window in "move" mode.
-- A second command fired while a search window is already open closes
-  the old one first (`searchWindowId` tracked in `background.js`,
-  cleared via `windows.onRemoved`) rather than piling up windows.
+- A second command fired while a search window is already open **reuses**
+  it — restores (it minimizes rather than closes on dismiss) + focuses it
+  and sends the popup a `reset` message to re-point its mode/tab/zoom —
+  rather than piling up windows. The window is tracked in `searchWindowId`
+  (`background.js`), cleared via `windows.onRemoved`.
+  - `searchWindowId` lives in memory, but the background is a **non-persistent
+    MV3 event page** (`manifest.json`) — Gecko suspends it after a short idle,
+    wiping that variable while the popup keeps living. Relying on it alone let
+    the next command open a duplicate. `openSearchWindow()` now recovers the id
+    first via `findExistingSearchWindow()`, which scans `windows.getAll({populate:
+    true})` for the open popup by its `popup/search.html` url. The reuse
+    `windows.update` and the `reset` `sendMessage` are also in **separate**
+    try/catches: a failed `reset` send (popup not ready) no longer discards the
+    id and creates a duplicate — only a failed `update` (window truly gone) does.
 
 The lesson, if you're touching this again: don't move back to
 `action.openPopup()` for this UI without re-testing keyboard focus on

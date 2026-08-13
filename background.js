@@ -158,6 +158,21 @@ async function computeSearchWindowGeometry() {
   return { zoom, width, height, left, top };
 }
 
+/**
+ * Find an already-open search popup among live windows. The background is an
+ * MV3 non-persistent event page (see manifest.json): Gecko suspends it after a
+ * short idle, wiping searchWindowId while the popup keeps living. Without this,
+ * the next command would create a duplicate. Own extension pages expose their
+ * url without any extra permission.
+ */
+async function findExistingSearchWindow() {
+  const wins = await messenger.windows.getAll({ populate: true });
+  const match = wins.find(
+    (w) => w.type === "popup" && w.tabs?.some((t) => t.url?.includes("popup/search.html")),
+  );
+  return match?.id ?? null;
+}
+
 async function openSearchWindow(mode, tabId) {
   const resolvedTabId = tabId ?? (await getActiveTab())?.id;
   if (resolvedTabId === undefined) {
@@ -165,6 +180,13 @@ async function openSearchWindow(mode, tabId) {
   }
 
   const { zoom, width, height, left, top } = await computeSearchWindowGeometry();
+
+  // Recover the id if the event page was suspended (searchWindowId wiped) while
+  // the popup stayed open — otherwise we'd create a duplicate. See
+  // findExistingSearchWindow.
+  if (searchWindowId === null) {
+    searchWindowId = await findExistingSearchWindow();
+  }
 
   // Reuse the existing window (kept alive, minimized while dismissed) instead of
   // recreating it: restore + re-center it, then tell the popup to re-init for
@@ -180,12 +202,19 @@ async function openSearchWindow(mode, tabId) {
         left,
         top,
       });
-      await messenger.runtime.sendMessage({ type: "reset", mode, tabId: resolvedTabId, zoom });
-      return;
     } catch {
       // Window is gone despite our id (e.g. closed at just the wrong moment);
       // fall through and create a fresh one.
       searchWindowId = null;
+    }
+    if (searchWindowId !== null) {
+      try {
+        await messenger.runtime.sendMessage({ type: "reset", mode, tabId: resolvedTabId, zoom });
+      } catch {
+        // Popup script not ready to receive the reset yet; the window is focused
+        // regardless, so don't fall through and create a duplicate.
+      }
+      return;
     }
   }
 

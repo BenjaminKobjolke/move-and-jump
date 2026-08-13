@@ -4,6 +4,18 @@ All notable changes to this project are documented here. Versions
 follow [semantic versioning](https://semver.org/) — see
 [ARCHITECTURE.md](ARCHITECTURE.md#versioning) for the project's policy.
 
+## [Unreleased]
+
+### Fixed
+
+- Pressing a search shortcut while the search window was already open
+  could open a **second** window instead of focusing the existing one.
+  The window is tracked in memory, but the background is a
+  non-persistent MV3 event page that Gecko suspends after a short idle,
+  wiping that state while the window stayed open — the next shortcut
+  then created a duplicate. The background now recovers the open window
+  by scanning live windows for it before deciding to create a new one.
+
 ## [1.2.0] - 2026-08-06
 
 ### Added
