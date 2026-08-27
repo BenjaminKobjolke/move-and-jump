@@ -190,11 +190,13 @@ function requestResize() {
  */
 function updatePlacement() {
   const next = isFilterMode() ? "corner" : "center";
+  // Strip the heading and the (already disabled) buttons so the window measures
+  // down to just the input and the filter rows. Set unconditionally: the reset
+  // listener resets `placement` without touching the DOM, so putting this behind
+  // the change guard would leave a stale `filtering` class hiding every row.
+  document.body.classList.toggle("filtering", next === "corner");
   if (next === placement) return;
   placement = next;
-  // Strip the heading and the (already disabled) buttons so the window measures
-  // down to just the input and the filter rows.
-  document.body.classList.toggle("filtering", next === "corner");
   requestResize();
 }
 
