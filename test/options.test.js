@@ -18,20 +18,10 @@ test("stored options override defaults", async () => {
   const result = await getOptions(
     fakeStorage({ options: { caseSensitiveSearch: true } }),
   );
-  assert.deepEqual(result, {
-    caseSensitiveSearch: true,
-    fuzzySearch: false,
-    searchAllAccounts: true,
-    zoom: 100,
-  });
+  assert.deepEqual(result, { ...DEFAULT_OPTIONS, caseSensitiveSearch: true });
 });
 
 test("all default keys are present even with a partial stored object", async () => {
   const result = await getOptions(fakeStorage({ options: { searchAllAccounts: false } }));
-  assert.deepEqual(result, {
-    caseSensitiveSearch: false,
-    fuzzySearch: false,
-    searchAllAccounts: false,
-    zoom: 100,
-  });
+  assert.deepEqual(result, { ...DEFAULT_OPTIONS, searchAllAccounts: false });
 });

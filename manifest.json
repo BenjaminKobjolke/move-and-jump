@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Move and Jump",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "author": "Daniel Kraus",
@@ -48,6 +48,9 @@
     "jump-last": {
       "suggested_key": { "default": "Ctrl+Alt+H" },
       "description": "__MSG_commandJumpLastDescription__"
+    },
+    "filter-search": {
+      "description": "__MSG_commandFilterSearchDescription__"
     }
   },
   "options_ui": {

@@ -6,7 +6,38 @@ follow [semantic versioning](https://semver.org/) — see
 
 ## [Unreleased]
 
+### Added
+
+- New `/filter <query>` slash command: filters the **message list** of the
+  folder already displayed in the mail tab, live as you type, instead of
+  searching folders. It drives Thunderbird's own Quick Filter, so terms are
+  ANDed and each matches the sender (display name included) or the subject.
+  `/body` and `/recipients` toggle two more fields into the search — or
+  **Ctrl+B** / **Ctrl+R** while typing a query, which keeps the query and
+  re-filters at once. A bare `/filter` clears it. See [docs/FILTER_EMAILS.md](docs/FILTER_EMAILS.md).
+
+- Clearing the message filter (a bare `/filter`) now also hides Thunderbird's
+  Quick Filter bar, instead of leaving an emptied bar occupying a row of the
+  mail tab. The bar stays visible while a query is active.
+
+- While the popup is in `/filter` mode it now strips down to just the input and
+  the field-hint row — heading, buttons and the command row hidden, narrower and
+  much shorter window — and moves to the **bottom-right corner of the Thunderbird window**,
+  so the message list it is filtering stays visible as you type. It
+  returns to the centered, full-height layout when the input leaves filter
+  mode. Requires *Center on parent window*.
+
 ### Fixed
+
+- Fit-to-content measured the window height with `<html>` still at
+  `height: 100%`, so `documentElement.scrollHeight` never fell below the
+  current viewport — the window could only ever grow, never shrink. Both
+  `<html>` and `<body>` are now unclamped while measuring, which is what lets
+  the `/filter` corner window shrink to its two rows.
+
+- The options page rewrote the whole options object from its own six
+  controls, which would have discarded settings it has no checkbox for
+  (`/body`, `/recipients`). It now merges over what is stored.
 
 - Pressing a search shortcut while the search window was already open
   could open a **second** window instead of focusing the existing one.

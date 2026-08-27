@@ -86,10 +86,21 @@ from the real, rendered DOM (`measureRequiredWindowHeight()`) — font size, DPI
 and OS text scaling all affect it — then the window chrome overhead is added.
 Measured once, after the first render.
 
+The same resize message carries a **placement**: `center` (over the parent mail
+window) normally, and `corner` while the input is in
+[`/filter`](FILTER_EMAILS.md) mode — there `body.filtering` hides the heading,
+the (already disabled) action buttons and every list row but the field hint —
+nothing on screen there is a result — and the window shrinks to what is left
+(the minimum-height floor is dropped, the width drops to
+`SEARCH_WINDOW_CORNER_WIDTH`) and moves to the parent window's bottom-right
+corner so it doesn't cover the message list it is filtering.
+
 ## Slash commands
 
 A leading `/` switches the list into command mode (settings you can flip from
-the keyboard). See [COMMANDS.md](COMMANDS.md) for the full list and mechanics.
+the keyboard). See [COMMANDS.md](COMMANDS.md) for the full list and mechanics,
+and [FILTER_EMAILS.md](FILTER_EMAILS.md) for `/filter`, which narrows the mail
+tab's **message** list instead of the folder list.
 
 ## Relevant files
 

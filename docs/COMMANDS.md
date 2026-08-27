@@ -8,24 +8,46 @@ another command.
 
 ## Available commands
 
-| Command      | Effect                                           |
-| ------------ | ------------------------------------------------ |
-| `/zoom <n>`  | Set popup zoom to `n`% (clamped **50–200**)      |
-| `/fuzzy`     | Toggle [fuzzy search](settings/FUZZY_SEARCH.md)  |
-| `/all`       | Toggle search in all accounts                    |
-| `/sensitive` | Toggle case-sensitive search                     |
+| Command           | Effect                                                       |
+| ----------------- | ------------------------------------------------------------ |
+| `/filter <query>` | Filter the displayed **message** list (see below)            |
+| `/body`           | Toggle: `/filter` also searches the message body (**Ctrl+B**) |
+| `/recipients`     | Toggle: `/filter` also searches To/Cc (**Ctrl+R**)           |
+| `/zoom <n>`       | Set popup zoom to `n`% (clamped **50–200**)                  |
+| `/fuzzy`          | Toggle [fuzzy search](settings/FUZZY_SEARCH.md)              |
+| `/all`            | Toggle search in all accounts                                |
+| `/sensitive`      | Toggle case-sensitive search                                 |
 
-These are the same four settings as the options page — a command just changes
-them in place. All changes persist to the shared `options` object in
-`messenger.storage.local`, so they stick across popups and match the options
-page exactly.
+`/zoom`, `/fuzzy`, `/all` and `/sensitive` are the same four settings as the
+options page — a command just changes them in place. `/body` and `/recipients`
+have no options-page checkbox; the slash commands are their only UI. All changes
+persist to the shared `options` object in `messenger.storage.local`, so they
+stick across popups and match the options page exactly.
+
+## Filtering messages
+
+`/filter` is the one command that doesn't act on the popup: it narrows the
+**message list of the folder currently displayed in the mail tab**, live as you
+type, via Thunderbird's own Quick Filter. Enter hides the popup and leaves the
+filter applied; a bare `/filter` clears it. Terms are ANDed and each matches
+sender or subject (plus recipients/body when toggled on), so `inn lehrich@theim`
+finds a message whose subject contains "Inn" and whose sender contains
+"lehrich@theim", and `tom` finds one from `Thomas Lehrich`.
+
+While typing a query, **Ctrl+B** and **Ctrl+R** flip the body and recipient
+fields without losing what you typed — the fix for a query that matches nothing.
+
+Full details — fields, semantics, limits — in
+[FILTER_EMAILS.md](FILTER_EMAILS.md).
 
 ## Using it
 
 - Type `/` alone to list **all** commands (discoverable — no need to memorize
   them).
 - Commands prefix-match on name, like folder search: `/a` → `all`, `/s` →
-  `sensitive`, `/f` → `fuzzy`, `/z` → `zoom`.
+  `sensitive`, `/z` → `zoom`, `/b` → `body`. An ambiguous prefix lists every
+  match: `/f` shows both `filter` and `fuzzy` (and filters nothing until the
+  name is complete).
 - Each row shows the current state, e.g. `Toggle: Search in all accounts —
   Current: ON`. Selecting it flips the state.
 - Select with **Enter** (on the highlighted row) or a **mouse click**, same as a
@@ -36,6 +58,8 @@ page exactly.
   can overtype and press Enter. Out-of-range values are clamped to 50–200.
 
 After a command runs, the input clears and the list returns to the folder view.
+`/filter` is the exception: it hides the popup instead, leaving you with the
+filtered message list.
 
 ## Note on folder paths starting with `/`
 
@@ -63,12 +87,18 @@ the leading slash still finds it. No folders become unreachable.
 - **Execution:** `activate(entry)` dispatches on `entry.type`. Folders
   move/jump and close the window (unchanged). Commands mutate the in-memory
   `options`, run any side effect (`applyZoom()` for zoom, `applyScope()` for
-  `/all` so the folder list is re-scoped), then
+  `/all` so the folder list is re-scoped, `applyFilter()` for `/body` and
+  `/recipients` so the active filter is re-applied with the new fields), then
   `messenger.storage.local.set({ options })`, clear the input, and re-render —
   the window stays open. A value-less `/zoom` is the one exception: instead of
   applying, it prefills the input with `/zoom <current>` (number preselected)
   and returns early, so the user edits the value and Enter applies it through
   the normal path.
+- **Message filter:** `applyFilter(query)` calls
+  `messenger.mailTabs.setQuickFilter(tabId, ...)`. It runs from the `input`
+  listener on every keystroke whose token is exactly `filter` (live filtering),
+  and again from `activate()`, which then `hide()`s the window instead of
+  clearing the input.
 - **Zoom clamp:** `clampZoom` lives in `lib/options.js` and is shared by the
   `/zoom` command and the options page `save()`.
 - **Labels:** built with `messenger.i18n.getMessage`; keys `commandZoomSet`,
@@ -81,7 +111,8 @@ the leading slash still finds it. No folders become unreachable.
 - `lib/commands.js` — `parseCommand`, `matchCommands`, the `COMMANDS` list
 - `lib/options.js` — shared `clampZoom`
 - `popup/search.js` — `renderCommands`, `commandEntry`, `activate`, `applyScope`,
-  `applyZoom`
+  `applyZoom`, `applyFilter`
+- `docs/FILTER_EMAILS.md` — the `/filter` semantics in full
 - `popup/search.css` — `li.disabled` styling for unrunnable command rows
 - `_locales/*/messages.json` — command label strings
 - `test/commands.test.js` — parse/match unit tests

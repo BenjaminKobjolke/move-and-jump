@@ -30,6 +30,8 @@ let tabId = params.has("tabId") ? Number(params.get("tabId")) : undefined;
 // applied synchronously below, before the first paint — background.js already
 // created the window at this scale, so content and window match on frame one.
 const initialZoom = clampZoom(params.get("zoom"));
+// Text to start with, e.g. "/filter " from the filter-search shortcut.
+const initialPrefill = params.get("prefill") ?? "";
 
 let options;
 // Raw inputs kept around so a `/all` toggle can recompute the scoped
@@ -46,6 +48,9 @@ let queryWeights = {};
 // { type: "command", command, arg, label, enabled }.
 let visible = [];
 let activeIndex = 0;
+// Last query handed to the mail tab's quick filter, so a /body or /recipients
+// toggle can re-apply it with the new field set.
+let lastFilterQuery = "";
 let showAccountPrefix = false;
 
 // Set text and grab focus immediately, synchronously, before any
@@ -74,6 +79,7 @@ function setModeUI() {
 }
 
 setModeUI();
+input.value = initialPrefill;
 document.body.style.zoom = initialZoom / 100;
 input.focus();
 
@@ -109,7 +115,7 @@ async function init() {
 
   applyScope();
 
-  render("");
+  render(input.value);
   input.focus();
 
   // Set the popup zoom and size the window to fit the initial
@@ -118,6 +124,10 @@ async function init() {
   // repeated on every later render() while typing — the window keeps
   // this size and the list scrolls internally for larger result sets.
   applyZoom();
+  // A /filter prefill (the filter-search command) opens straight into filter
+  // mode, so move out of the message list's way right away. After applyZoom()
+  // so the corner placement is the last geometry sent.
+  updatePlacement();
 }
 
 /**
@@ -152,17 +162,46 @@ function applyScope() {
   recentFolders = recentIds.map((id) => byId.get(id)).filter(Boolean);
 }
 
-/** Apply options.zoom to the popup body and resize the window to match. */
-function applyZoom() {
-  const factor = (options.zoom || 100) / 100;
-  document.body.style.zoom = factor;
+/** Where background.js was last told to put this window: "center" or "corner". */
+let placement = "center";
+
+/** Ask background.js to fit this window to its content at the current placement. */
+function requestResize() {
   // background.js already created the window at the zoom-scaled base size; the
   // resize only grows it to fit content. Skip it when the user disabled
-  // fit-to-content — the list scrolls internally instead.
-  if (!options.resizeToFit) return;
+  // fit-to-content — the list scrolls internally instead. A corner placement
+  // still has to be sent: it moves the window, which resizeToFit isn't about.
+  if (!options.resizeToFit && placement === "center") return;
   messenger.runtime
-    .sendMessage({ type: "resize", height: measureRequiredWindowHeight(), zoom: factor })
+    .sendMessage({
+      type: "resize",
+      height: measureRequiredWindowHeight(),
+      zoom: (options.zoom || 100) / 100,
+      place: placement,
+    })
     .catch(() => {});
+}
+
+/**
+ * Park the popup in the parent window's bottom-right corner while a /filter
+ * query is in the input, and bring it back to center when it leaves filter
+ * mode: /filter narrows the mail tab's message list live, and a centered popup
+ * covers the list it's filtering. Only sends on a change of state.
+ */
+function updatePlacement() {
+  const next = isFilterMode() ? "corner" : "center";
+  if (next === placement) return;
+  placement = next;
+  // Strip the heading and the (already disabled) buttons so the window measures
+  // down to just the input and the filter rows.
+  document.body.classList.toggle("filtering", next === "corner");
+  requestResize();
+}
+
+/** Apply options.zoom to the popup body and resize the window to match. */
+function applyZoom() {
+  document.body.style.zoom = (options.zoom || 100) / 100;
+  requestResize();
 }
 
 /**
@@ -171,17 +210,28 @@ function applyZoom() {
  * rendered DOM rather than assumed, since font size, DPI, and OS text
  * scaling all affect this and none of them are known ahead of time.
  * Temporarily lifts the list's height/overflow constraints (which
- * would otherwise clip it to whatever height it currently has) so
- * `scrollHeight` reflects the natural, unclipped content size; then
- * converts that content height into an outer *window* height by
- * adding this window's current chrome overhead (title bar etc. —
+ * would otherwise clip it to whatever height it currently has), then
+ * converts the content height into an outer *window* height by adding
+ * this window's current chrome overhead (title bar etc. —
  * `outerHeight - innerHeight`), whatever that happens to be on this
  * system.
+ *
+ * Measured as the bottom edge of the last visible top-level element rather than
+ * `documentElement.scrollHeight`: html/body are `height: 100%`, and scrollHeight
+ * never reports less than the viewport, so that number could only ever grow the
+ * window — never shrink it back down (which /filter mode needs).
  */
 function measureRequiredWindowHeight() {
+  document.documentElement.classList.add("measuring");
   document.body.classList.add("measuring");
-  const contentHeight = document.documentElement.scrollHeight;
+  const bodyBox = document.body.getBoundingClientRect();
+  const bottoms = [...document.body.children]
+    .filter((el) => el.getClientRects().length > 0)
+    .map((el) => el.getBoundingClientRect().bottom);
+  const paddingBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
   document.body.classList.remove("measuring");
+  document.documentElement.classList.remove("measuring");
+  const contentHeight = Math.max(0, ...bottoms) - bodyBox.top + paddingBottom;
   const chromeOverhead = window.outerHeight - window.innerHeight;
   return contentHeight + chromeOverhead;
 }
@@ -279,6 +329,18 @@ function renderCommands({ token, arg }) {
     });
     list.appendChild(item);
   }
+  // Which fields the filter searches, and the shortcuts that flip the optional
+  // two — shown right where a query is being typed, so a query that matches
+  // nothing has its fix on screen. Not an entry in `visible`: not selectable.
+  if (token === "filter") {
+    const hint = document.createElement("li");
+    hint.textContent = messenger.i18n.getMessage("commandFilterFields", [
+      onOff(options.filterBody),
+      onOff(options.filterRecipients),
+    ]);
+    hint.classList.add("disabled", "filter-hint");
+    list.appendChild(hint);
+  }
   highlight();
 
   empty.textContent = messenger.i18n.getMessage("popupNoCommands");
@@ -303,6 +365,19 @@ function commandEntry(command, arg) {
         : messenger.i18n.getMessage("commandZoomHint", [String(options.zoom || 100)]);
       break;
     }
+    case "filter":
+      label = arg
+        ? messenger.i18n.getMessage("commandFilterSet", [arg])
+        : messenger.i18n.getMessage("commandFilterClear");
+      break;
+    case "body":
+      label = messenger.i18n.getMessage("commandToggleBody", [onOff(options.filterBody)]);
+      break;
+    case "recipients":
+      label = messenger.i18n.getMessage("commandToggleRecipients", [
+        onOff(options.filterRecipients),
+      ]);
+      break;
     case "fuzzy":
       label = messenger.i18n.getMessage("commandToggleFuzzy", [onOff(options.fuzzySearch)]);
       break;
@@ -316,6 +391,52 @@ function commandEntry(command, arg) {
       break;
   }
   return { type: "command", command, arg, label, enabled };
+}
+
+/**
+ * Flip one of the optional filter fields, persist it, and re-apply the active
+ * query so the effect is immediate. Reached two ways: the /body and
+ * /recipients command rows, and Ctrl+B / Ctrl+R while typing a /filter query
+ * (which is where you actually notice a query matching nothing).
+ * @param {"filterBody"|"filterRecipients"} key
+ */
+const isFilterMode = () => parseCommand(input.value)?.token === "filter";
+
+async function toggleFilterField(key) {
+  options[key] = !options[key];
+  await messenger.storage.local.set({ options });
+  applyFilter(lastFilterQuery);
+}
+
+/**
+ * Filter the mail tab's message list via Thunderbird's own quick filter.
+ * Sender and subject are always searched; /body and /recipients widen it.
+ * An empty query clears the filter. The quick filter ANDs whitespace-separated
+ * terms and ORs each term across the enabled fields, so "inn lehrich@theim"
+ * matches a message whose subject has "Inn" and whose sender has "lehrich@theim".
+ * @param {string} query
+ */
+function applyFilter(query) {
+  lastFilterQuery = query;
+  if (tabId === undefined) return;
+  const text = query
+    ? {
+        text: query,
+        author: true,
+        subject: true,
+        recipients: options.filterRecipients,
+        body: options.filterBody,
+      }
+    : null;
+  // Clearing: put the Quick Filter bar away too, otherwise an emptied bar keeps
+  // occupying a row of the mail tab until Ctrl+Shift+K. Only on the clearing
+  // call — while a query is active the bar is the visible sign a filter is on,
+  // and the way to drop it without the popup.
+  const properties = text ? { text } : { text: null, show: false };
+  // The tab can be gone (same race as the mailTabs.get() in init()); a failed
+  // filter is not worth surfacing an error row for.
+  // ponytail: no debounce; add one if typing stutters on very large folders.
+  messenger.mailTabs.setQuickFilter(tabId, properties).catch(() => {});
 }
 
 /**
@@ -343,6 +464,30 @@ async function activate(entry) {
         applyZoom();
         break;
       }
+      case "filter":
+        if (!entry.arg) {
+          // No query yet ("/fil", "/filter"): clear any active filter and
+          // complete the input so the next keystroke starts the query.
+          // Hiding here would dismiss the popup mid-word.
+          applyFilter("");
+          input.value = "/filter ";
+          render(input.value);
+          updatePlacement();
+          input.focus();
+          return;
+        }
+        // Already applied live while typing; re-apply for the click path, then
+        // get out of the way so the filtered list is visible. The filter stays
+        // on the tab (clear it with a bare "/filter", or Thunderbird's own bar).
+        applyFilter(entry.arg);
+        hide();
+        return;
+      case "body":
+        await toggleFilterField("filterBody");
+        break;
+      case "recipients":
+        await toggleFilterField("filterRecipients");
+        break;
       case "fuzzy":
         options.fuzzySearch = !options.fuzzySearch;
         break;
@@ -357,6 +502,7 @@ async function activate(entry) {
     await messenger.storage.local.set({ options });
     input.value = "";
     render("");
+    updatePlacement();
     input.focus();
     return;
   }
@@ -379,6 +525,7 @@ function completeActive() {
       : entry.folder.path.replace(/^\/+/, "");
   input.value = text;
   render(text);
+  updatePlacement();
   input.focus();
 }
 
@@ -444,9 +591,30 @@ async function select(actionMode, folder) {
   hide();
 }
 
-input.addEventListener("input", () => render(input.value));
+input.addEventListener("input", () => {
+  render(input.value);
+  // After render: the corner window is sized from the rendered DOM.
+  updatePlacement();
+  // Filter as you type. Exact token only: "/f" still matches both "filter" and
+  // "fuzzy", and shouldn't filter anything until the user commits to one.
+  const parsed = parseCommand(input.value);
+  if (parsed?.token === "filter") applyFilter(parsed.arg);
+});
 
 input.addEventListener("keydown", (event) => {
+  // Change the searched fields without losing the query you're typing. Only
+  // in filter mode: elsewhere these keys would silently flip a setting with
+  // nothing on screen to show it.
+  if (event.ctrlKey && !event.altKey && !event.shiftKey && isFilterMode()) {
+    const key = event.key.toLowerCase();
+    if (key === "b" || key === "r") {
+      event.preventDefault();
+      toggleFilterField(key === "b" ? "filterBody" : "filterRecipients").then(() =>
+        render(input.value),
+      );
+      return;
+    }
+  }
   switch (event.key) {
     case "ArrowDown":
       event.preventDefault();
@@ -503,8 +671,12 @@ messenger.runtime.onMessage.addListener((message) => {
   mode = message.mode === "jump" ? "jump" : "move";
   tabId = message.tabId;
   hiding = false;
+  lastFilterQuery = "";
+  // background.js re-centers the window before sending this, so the placement
+  // we last requested no longer holds; init() re-applies it from the input.
+  placement = "center";
   document.body.style.zoom = clampZoom(message.zoom) / 100;
-  input.value = "";
+  input.value = message.prefill ?? "";
   setModeUI();
   init();
   input.focus();

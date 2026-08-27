@@ -78,6 +78,7 @@ ul {
    *naturally* wants to be (fonts/DPI/OS text scale all affect this),
    so the window can be resized to fit instead of clipping the list —
    see measureRequiredWindowHeight() in search.js. */
+html.measuring,
 body.measuring {
   height: auto;
 }
@@ -85,6 +86,22 @@ body.measuring {
 body.measuring ul {
   flex: none;
   overflow: visible;
+}
+
+/* Filter mode: the popup sits in the corner over the mail window, filtering the
+   message list behind it — so nothing on screen here is a result worth showing.
+   Everything but the input and the field-hint row is dropped, leaving a two-row
+   window. The command row stays in the DOM (hidden) so Enter still activates it
+   the same way. See updatePlacement() in search.js. */
+body.filtering h1,
+body.filtering .actions,
+body.filtering li,
+body.filtering .empty {
+  display: none;
+}
+
+body.filtering li.filter-hint {
+  display: block;
 }
 
 li {

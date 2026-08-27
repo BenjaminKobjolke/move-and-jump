@@ -19,6 +19,10 @@
     "message": "Jump to last-used folder",
     "description": "manifest.json commands.jump-last.description"
   },
+  "commandFilterSearchDescription": {
+    "message": "Filter the displayed message list",
+    "description": "manifest.json commands.filter-search description; no default key, assign one on the options page"
+  },
   "actionTitle": {
     "message": "Move and Jump",
     "description": "Toolbar button tooltip / title"
@@ -50,6 +54,26 @@
   "popupError": {
     "message": "Something went wrong — see the Browser Console for details.",
     "description": "Shown when a move/jump fails"
+  },
+  "commandFilterSet": {
+    "message": "Filter messages: $1",
+    "description": "Popup slash-command row: /filter with a query. $1 is the query"
+  },
+  "commandFilterClear": {
+    "message": "Filter messages — type a query, or press Enter to clear the filter",
+    "description": "Popup slash-command row: /filter with no query"
+  },
+  "commandFilterFields": {
+    "message": "Sender + subject — Ctrl+B body: $1, Ctrl+R recipients: $2",
+    "description": "Second /filter row: which fields are searched and how to toggle the two optional ones. $1/$2 are ON or OFF"
+  },
+  "commandToggleBody": {
+    "message": "Toggle: Filter searches message body — Current: $1",
+    "description": "Popup slash-command row: /body. $1 is ON or OFF"
+  },
+  "commandToggleRecipients": {
+    "message": "Toggle: Filter searches recipients — Current: $1",
+    "description": "Popup slash-command row: /recipients. $1 is ON or OFF"
   },
   "commandZoomSet": {
     "message": "Set zoom to $1%",

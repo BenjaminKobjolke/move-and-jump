@@ -108,6 +108,11 @@ async function handleSelection(mode, folderId, tabId, query) {
 const SEARCH_WINDOW_WIDTH = 560;
 const SEARCH_WINDOW_MIN_HEIGHT = 440;
 const SEARCH_WINDOW_MAX_HEIGHT = 700;
+// Gap kept between the popup and the parent window's edges in corner placement.
+const SEARCH_WINDOW_MARGIN = 12;
+// Corner placement shows two rows and no buttons, so it doesn't need the full
+// width either — see the .filtering rules in popup/search.css.
+const SEARCH_WINDOW_CORNER_WIDTH = 400;
 
 /**
  * Open the search UI as a real top-level popup window rather than the
@@ -173,7 +178,7 @@ async function findExistingSearchWindow() {
   return match?.id ?? null;
 }
 
-async function openSearchWindow(mode, tabId) {
+async function openSearchWindow(mode, tabId, prefill = "") {
   const resolvedTabId = tabId ?? (await getActiveTab())?.id;
   if (resolvedTabId === undefined) {
     console.error("Move and Jump: openSearchWindow could not resolve a target mail tab");
@@ -209,7 +214,13 @@ async function openSearchWindow(mode, tabId) {
     }
     if (searchWindowId !== null) {
       try {
-        await messenger.runtime.sendMessage({ type: "reset", mode, tabId: resolvedTabId, zoom });
+        await messenger.runtime.sendMessage({
+          type: "reset",
+          mode,
+          tabId: resolvedTabId,
+          zoom,
+          prefill,
+        });
       } catch {
         // Popup script not ready to receive the reset yet; the window is focused
         // regardless, so don't fall through and create a duplicate.
@@ -220,6 +231,7 @@ async function openSearchWindow(mode, tabId) {
 
   const params = new URLSearchParams({ mode, zoom: String(zoom) });
   if (resolvedTabId !== undefined) params.set("tabId", String(resolvedTabId));
+  if (prefill) params.set("prefill", prefill);
 
   const win = await messenger.windows.create({
     type: "popup",
@@ -243,22 +255,35 @@ async function openSearchWindow(mode, tabId) {
  * leaving headroom for typed searches that return more than the
  * recent-folder list's 10 entries) and a generous ceiling (guards
  * against pathological cases on unusual systems).
+ *
+ * `place` is "center" normally and "corner" while a /filter query is being
+ * typed: the popup is filtering the mail tab's message list, so it has to get
+ * off it (see docs/FILTER_EMAILS.md).
+ * @param {"center"|"corner"} place
  */
-async function resizeSearchWindow(requestedHeight, zoom = 1) {
+async function resizeSearchWindow(requestedHeight, zoom = 1, place = "center") {
   if (searchWindowId === null) return;
   // Content is zoomed in the popup (body.style.zoom), so widen the window
   // by the same factor and scale the height clamps to match — otherwise a
   // larger zoom would clip horizontally against the fixed 560px width.
-  const width = Math.round(SEARCH_WINDOW_WIDTH * zoom);
+  const width = Math.round(
+    (place === "corner" ? SEARCH_WINDOW_CORNER_WIDTH : SEARCH_WINDOW_WIDTH) * zoom,
+  );
+  // In corner placement the results list is empty, so the usual floor would
+  // only pad the window with blank space over the message list.
+  const floor = place === "corner" ? 0 : Math.round(SEARCH_WINDOW_MIN_HEIGHT * zoom);
   const height = Math.min(
     Math.round(SEARCH_WINDOW_MAX_HEIGHT * zoom),
-    Math.max(Math.round(SEARCH_WINDOW_MIN_HEIGHT * zoom), Math.round(requestedHeight)),
+    Math.max(floor, Math.round(requestedHeight)),
   );
-  // Growing width/height keeps the top-left fixed, so re-center over the parent
+  // Growing width/height keeps the top-left fixed, so re-place over the parent
   // mail window (captured at open) rather than letting the popup drift.
   const update = { width, height };
   const p = searchWindowParent;
-  if (p) {
+  if (p && place === "corner") {
+    update.left = Math.round(p.left + p.width - width - SEARCH_WINDOW_MARGIN);
+    update.top = Math.round(p.top + p.height - height - SEARCH_WINDOW_MARGIN);
+  } else if (p) {
     update.left = Math.round(p.left + (p.width - width) / 2);
     update.top = Math.round(p.top + (p.height - height) / 2);
   }
@@ -290,6 +315,11 @@ messenger.commands.onCommand.addListener((command, tab) => {
       return openSearchWindow("move", tab?.id);
     case "jump-search":
       return openSearchWindow("jump", tab?.id);
+    // No default key (see manifest.json) — the user assigns one on the options
+    // page. Opens the same popup, already in /filter mode; move/jump stay
+    // reachable from it by clearing the input.
+    case "filter-search":
+      return openSearchWindow("move", tab?.id, "/filter ");
     case "move-last":
       return actOnLastFolder("move", tab?.id);
     case "jump-last":
@@ -309,7 +339,7 @@ messenger.runtime.onMessage.addListener((message) => {
     return handleSelection(message.mode, message.folderId, message.tabId, message.query);
   }
   if (message?.type === "resize") {
-    return resizeSearchWindow(message.height, message.zoom);
+    return resizeSearchWindow(message.height, message.zoom, message.place);
   }
   return undefined;
 });

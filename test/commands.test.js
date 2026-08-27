@@ -19,14 +19,27 @@ test("parseCommand returns null for non-command input", () => {
   assert.equal(parseCommand(""), null);
 });
 
+test("parseCommand keeps spaces inside a multi-term argument", () => {
+  assert.deepEqual(parseCommand("/filter tom lehr"), { token: "filter", arg: "tom lehr" });
+});
+
 test("matchCommands prefix-matches by command name", () => {
   assert.deepEqual(matchCommands("a").map((c) => c.name), ["all"]);
   assert.deepEqual(matchCommands("s").map((c) => c.name), ["sensitive"]);
   assert.deepEqual(matchCommands("z").map((c) => c.name), ["zoom"]);
+  assert.deepEqual(matchCommands("b").map((c) => c.name), ["body"]);
+  assert.deepEqual(matchCommands("r").map((c) => c.name), ["recipients"]);
+});
+
+test("an ambiguous prefix matches every command sharing it", () => {
+  assert.deepEqual(matchCommands("f").map((c) => c.name), ["filter", "fuzzy"]);
 });
 
 test("bare slash (empty token) matches every command", () => {
   assert.deepEqual(matchCommands("").map((c) => c.name), [
+    "filter",
+    "body",
+    "recipients",
     "zoom",
     "fuzzy",
     "all",

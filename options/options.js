@@ -158,8 +158,13 @@ async function load() {
 }
 
 async function save() {
+  // Merge over what's stored: options with no control on this page
+  // (filterBody, filterRecipients — set via slash commands) would
+  // otherwise be dropped every time a checkbox here changes.
+  const current = await getOptions(messenger.storage.local);
   await messenger.storage.local.set({
     options: {
+      ...current,
       caseSensitiveSearch: caseSensitiveSearch.checked,
       fuzzySearch: fuzzySearch.checked,
       searchAllAccounts: searchAllAccounts.checked,

@@ -1,6 +1,6 @@
 # Keyboard shortcuts
 
-Move and Jump ships four keyboard commands. Users can rebind or reset each one
+Move and Jump ships five keyboard commands. Users can rebind or reset each one
 directly on the add-on's options page — no need to dig through Thunderbird's
 Add-ons Manager.
 
@@ -12,6 +12,13 @@ Add-ons Manager.
 | `jump-search` | `Ctrl+Shift+H` | Jump to folder: open folder search |
 | `move-last` | `Ctrl+Alt+N` | Move email to last-used folder (no UI) |
 | `jump-last` | `Ctrl+Alt+H` | Jump to last-used folder (no UI) |
+| `filter-search` | *(none)* | Open the popup in [`/filter`](../FILTER_EMAILS.md) mode |
+
+`filter-search` ships **unbound** on purpose: the obvious keys near the quick
+filter (`Ctrl+Shift+K`, `Ctrl+Shift+F`) already mean something in Thunderbird, so
+picking one is left to you — Record it on the options page. Everything it does is
+also reachable by typing `/filter` in a popup opened with any of the other
+shortcuts.
 
 Defaults live in `manifest.json` (`commands` block). Descriptions are localized
 via `__MSG_command*Description__` keys in `_locales/*/messages.json`.
