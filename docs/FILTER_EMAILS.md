@@ -122,7 +122,8 @@ close while the popup is open.
 
 - `background.js` — `resizeSearchWindow(height, zoom, place)`; `place: "corner"`
   drops the minimum-height floor, narrows to `SEARCH_WINDOW_CORNER_WIDTH`, and
-  parks the window in the parent window's bottom-right corner
+  parks the window in the parent window's bottom-right corner (also
+  used by `/columns`, see [COMMANDS.md](COMMANDS.md#toggling-columns))
 - `popup/search.css` — `body.filtering` hides the heading, the action buttons
   and every row but `li.filter-hint`
 - `manifest.json` / `background.js` — the `filter-search` command; it calls

@@ -110,8 +110,8 @@ const SEARCH_WINDOW_MIN_HEIGHT = 440;
 const SEARCH_WINDOW_MAX_HEIGHT = 700;
 // Gap kept between the popup and the parent window's edges in corner placement.
 const SEARCH_WINDOW_MARGIN = 12;
-// Corner placement shows two rows and no buttons, so it doesn't need the full
-// width either — see the .filtering rules in popup/search.css.
+// Corner placement shows a short, button-less list, so it doesn't need the full
+// width either — see the .filtering/.columns rules in popup/search.css.
 const SEARCH_WINDOW_CORNER_WIDTH = 400;
 
 /**
@@ -256,9 +256,9 @@ async function openSearchWindow(mode, tabId, prefill = "") {
  * recent-folder list's 10 entries) and a generous ceiling (guards
  * against pathological cases on unusual systems).
  *
- * `place` is "center" normally and "corner" while a /filter query is being
- * typed: the popup is filtering the mail tab's message list, so it has to get
- * off it (see docs/FILTER_EMAILS.md).
+ * `place` is "center" normally and "corner" while /filter or /columns is in the
+ * input: the popup is acting on the mail tab's message list behind it, so it has
+ * to get off it (see docs/FILTER_EMAILS.md and docs/COMMANDS.md).
  * @param {"center"|"corner"} place
  */
 async function resizeSearchWindow(requestedHeight, zoom = 1, place = "center") {
@@ -269,7 +269,7 @@ async function resizeSearchWindow(requestedHeight, zoom = 1, place = "center") {
   const width = Math.round(
     (place === "corner" ? SEARCH_WINDOW_CORNER_WIDTH : SEARCH_WINDOW_WIDTH) * zoom,
   );
-  // In corner placement the results list is empty, so the usual floor would
+  // In corner placement the list is short or empty, so the usual floor would
   // only pad the window with blank space over the message list.
   const floor = place === "corner" ? 0 : Math.round(SEARCH_WINDOW_MIN_HEIGHT * zoom);
   const height = Math.min(

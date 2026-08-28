@@ -104,6 +104,24 @@ body.filtering li.filter-hint {
   display: block;
 }
 
+/* Columns mode: the same corner placement as /filter, and for the same reason —
+   the thread pane behind the popup is what's changing. The rows stay: unlike
+   filter mode, they *are* the UI (one per column). */
+body.columns h1,
+body.columns .actions {
+  display: none;
+}
+
+/* ...and it stays small: a thread pane has a dozen-plus columns, and a window
+   grown to fit them all covers the pane it's toggling. Cap the list at ~5 rows
+   and scroll the rest — including while measuring, since the measured height is
+   what the window is resized to. */
+body.columns ul,
+body.columns.measuring ul {
+  max-height: 120px;
+  overflow-y: auto;
+}
+
 li {
   padding: 5px 8px;
   border-radius: 4px;

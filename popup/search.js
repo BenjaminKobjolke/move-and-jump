@@ -191,18 +191,22 @@ function requestResize() {
 }
 
 /**
- * Park the popup in the parent window's bottom-right corner while a /filter
- * query is in the input, and bring it back to center when it leaves filter
- * mode: /filter narrows the mail tab's message list live, and a centered popup
- * covers the list it's filtering. Only sends on a change of state.
+ * Park the popup in the parent window's bottom-right corner while /filter or
+ * /columns is in the input, and bring it back to center when it leaves them:
+ * both act on the mail tab behind the popup — /filter narrows its message list,
+ * /columns shows and hides that list's columns — and a centered popup covers
+ * exactly what's changing. Only sends on a change of state.
  */
 function updatePlacement() {
-  const next = isFilterMode() ? "corner" : "center";
+  const token = parseCommand(input.value)?.token;
+  const next = token === "filter" || token === "columns" ? "corner" : "center";
   // Strip the heading and the (already disabled) buttons so the window measures
-  // down to just the input and the filter rows. Set unconditionally: the reset
-  // listener resets `placement` without touching the DOM, so putting this behind
-  // the change guard would leave a stale `filtering` class hiding every row.
-  document.body.classList.toggle("filtering", next === "corner");
+  // down to its remaining rows — for /filter, just the input and the filter
+  // hint; for /columns, the column rows themselves. Set unconditionally: the
+  // reset listener resets `placement` without touching the DOM, so putting this
+  // behind the change guard would leave a stale class hiding every row.
+  document.body.classList.toggle("filtering", token === "filter");
+  document.body.classList.toggle("columns", token === "columns");
   if (next === placement) return;
   placement = next;
   requestResize();

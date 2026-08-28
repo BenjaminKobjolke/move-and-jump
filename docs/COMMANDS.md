@@ -60,6 +60,14 @@ open** with the highlight on the same row, so several columns can be flipped in
 a row. An argument prefix-filters the list by column name: `/columns da` → just
 Date.
 
+Like `/filter`, the popup **gets out of the way** while the column list is up:
+heading and buttons are dropped and the window moves to the **bottom-right
+corner of the Thunderbird window**, so the thread pane it is changing stays
+visible. The column rows themselves stay — they're the list. Leaving columns
+mode (backspacing to `/column`, or clearing the input) puts it back in the
+middle at full size. Needs *Center on parent window*; with that option off the
+popup only resizes and stays where it is.
+
 The state is **persisted by Thunderbird itself**, exactly as if the column had
 been ticked in the thread pane's column picker — the add-on stores nothing, and
 the options page has no checkbox for it.
@@ -140,7 +148,9 @@ the leading slash still finds it. No folders become unreachable.
   `[{ id, label, hidden }]` list; `popup/search.js` caches it in `columnState`
   (refreshed by `init()`, so window reuse re-reads it) and `renderColumns()`
   turns it into rows. `renderRows()` is the row-building helper shared with
-  `renderCommands()`. Note that `npm run lint` (Firefox's addons-linter) reports
+  `renderCommands()`. `updatePlacement()` sends `place: "corner"` for the
+  `columns` token too, and marks the body `columns` (heading and buttons hidden,
+  rows kept) rather than `filtering` (everything but the hint row hidden). Note that `npm run lint` (Firefox's addons-linter) reports
   `MANIFEST_FIELD_PRIVILEGED` for `experiment_apis` — expected, and not a
   problem for a Thunderbird add-on distributed via ATN.
 - **Zoom clamp:** `clampZoom` lives in `lib/options.js` and is shared by the
