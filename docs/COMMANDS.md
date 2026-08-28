@@ -18,6 +18,7 @@ another command.
 | `/all`            | Toggle search in all accounts                                |
 | `/sensitive`      | Toggle case-sensitive search                                 |
 | `/columns [name]` | Show/hide message-list columns (Date, From, …)               |
+| `/go [name]`      | Jump to an inbox, a unified folder, or all unread             |
 
 `/columns` is the odd one out: its state belongs to Thunderbird, not to this
 add-on (see [Toggling columns](#toggling-columns)).
@@ -75,6 +76,55 @@ the options page has no checkbox for it.
 If the column list can't be read (no mail tab, or a Thunderbird version whose
 internals moved), the row reads `Message list columns — unavailable here` and is
 not selectable.
+
+## Jumping with `/go`
+
+`/go` is two levels deep like `/columns`: `/g` … `/go` shows a single command
+row; selecting it completes the input to `/go `. From there the list has three
+kinds of row:
+
+```
+Go to all unread — every account, unread only
+Go to inbox: Work
+Go to inbox: Private
+Go to Inbox — all accounts
+Go to Drafts — all accounts
+Go to Sent — all accounts
+…
+```
+
+Enter (or a click) switches the mail tab to that folder and closes the popup —
+the same action as picking the folder out of the normal folder list, so it
+counts towards the recents and the usage weights. An argument prefix-filters the
+rows: `/go wo` → just Work, `/go unr` → just the unread row.
+
+The account list is **not** affected by *Search in all accounts* (`/all`): every
+account with an inbox is always listed, since reaching the other account is the
+whole point. If nothing can be found at all, the row reads `Account inboxes —
+unavailable here` and is not selectable.
+
+### All unread, and the unified folders
+
+The `— all accounts` rows are Thunderbird's own **unified folders**: real
+virtual folders that gather one special folder (Inbox, Sent, Drafts, …) from
+every account into one list. They are ordinary folders with an id, so `/go`
+jumps to them exactly like any other.
+
+**Go to all unread** is that unified Inbox plus Thunderbird's **unread quick
+filter** — every account's unread mail in a single list. Two things worth
+knowing:
+
+- It does **not** touch the folder pane's *Folder Modes* (All / Unified /
+  Unread / Favorite / Recent / Tags). Those modes change which **folders the
+  pane lists**; they never produce a combined message list. `/go` leaves the
+  mode exactly as it was.
+- The Quick Filter bar is shown with *Unread* lit, so the filter is visible and
+  clears the normal way — the bar itself, or a bare `/filter`. It is the same
+  quick filter `/filter` drives, so the two overwrite each other.
+
+Unified folders are a Thunderbird 128+ feature and `folders.query({})` skips
+them by design, so they are fetched separately; on a Thunderbird that won't
+serve them the extra rows are simply absent and the account inboxes still work.
 
 ## Using it
 
@@ -153,6 +203,19 @@ the leading slash still finds it. No folders become unreachable.
   rows kept) rather than `filtering` (everything but the hint row hidden). Note that `npm run lint` (Firefox's addons-linter) reports
   `MANIFEST_FIELD_PRIVILEGED` for `experiment_apis` — expected, and not a
   problem for a Thunderbird add-on distributed via ATN.
+- **Accounts:** `/go` adds no new permission — `init()` already reads
+  `messenger.folders.query({})` and `messenger.accounts.list()` under
+  `accountsRead`. It adds one query, `folders.query({ isUnified: true })`, since
+  the plain query omits unified folders; a rejection degrades to `[]`.
+  `goEntries()` (`popup/search.js`) builds the whole row list once — the unread
+  row, then `inboxFolders()` over the **unscoped** `rawFolders` paired with
+  account names, then `orderUnified()` over the unified folders (both helpers in
+  `lib/folders.js`) — and gives each row a `key` for `renderAccounts()` to
+  prefix-filter on. `activate()` hands the folder to the existing
+  `select("jump", folder)`, so the jump, the recents/weights bookkeeping and the
+  error row are all the folder path, unchanged. The unread row then calls
+  `mailTabs.setQuickFilter(tabId, { unread: true, show: true })` — **after** the
+  jump, since changing folders clears the quick filter bar.
 - **Zoom clamp:** `clampZoom` lives in `lib/options.js` and is shared by the
   `/zoom` command and the options page `save()`.
 - **Labels:** built with `messenger.i18n.getMessage`; keys `commandZoomSet`,
@@ -164,9 +227,11 @@ the leading slash still finds it. No folders become unreachable.
 
 - `experiments/columns/` — the `/columns` Experiment API (schema + implementation)
 - `lib/commands.js` — `parseCommand`, `matchCommands`, the `COMMANDS` list
+- `lib/folders.js` — `filterByAccount`, `inboxFolders`, `orderUnified` (the
+  `/go` lookups)
 - `lib/options.js` — shared `clampZoom`
-- `popup/search.js` — `renderCommands`, `commandEntry`, `activate`, `applyScope`,
-  `applyZoom`, `applyFilter`
+- `popup/search.js` — `renderCommands`, `goEntries`, `renderAccounts`,
+  `commandEntry`, `activate`, `applyScope`, `applyZoom`, `applyFilter`
 - `docs/FILTER_EMAILS.md` — the `/filter` semantics in full
 - `popup/search.css` — `li.disabled` styling for unrunnable command rows
 - `_locales/*/messages.json` — command label strings

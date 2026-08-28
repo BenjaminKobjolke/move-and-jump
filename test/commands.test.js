@@ -46,6 +46,7 @@ test("bare slash (empty token) matches every command", () => {
     "all",
     "sensitive",
     "columns",
+    "go",
   ]);
 });
 
@@ -55,4 +56,8 @@ test("parseCommand keeps a column name as the argument", () => {
 
 test("no command matches an unknown token", () => {
   assert.deepEqual(matchCommands("xyz"), []);
+});
+
+test("matchCommands(\"g\") matches only go", () => {
+  assert.deepEqual(matchCommands("g").map((c) => c.name), ["go"]);
 });

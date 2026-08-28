@@ -1,5 +1,5 @@
 import { filterFolders } from "../lib/match.js";
-import { filterByAccount } from "../lib/folders.js";
+import { filterByAccount, inboxFolders, orderUnified } from "../lib/folders.js";
 import { getOptions, clampZoom } from "../lib/options.js";
 import { decodeImapUtf7 } from "../lib/imapUtf7.js";
 import { sortByQueryWeight } from "../lib/weights.js";
@@ -37,6 +37,9 @@ let options;
 // Raw inputs kept around so a `/all` toggle can recompute the scoped
 // folder view without re-querying Thunderbird (see applyScope()).
 let rawFolders = [];
+// The unified ("smart") folders, which span every account. folders.query({})
+// skips them by design, so they need their own query and their own list.
+let unifiedFolders = [];
 let accountsList = [];
 let activeTab;
 let recentIds = [];
@@ -46,7 +49,8 @@ let folderWeights = {};
 let queryWeights = {};
 // Each entry is { type: "folder", folder },
 // { type: "command", command, arg, label, enabled }, or
-// { type: "column", id, label } (one message-list column).
+// { type: "column", id, label } (one message-list column), or
+// { type: "account", folder, label } (one account's inbox).
 let visible = [];
 // Message-list columns as last reported by the columns experiment:
 // [{ id, label, hidden }]. Empty when unavailable (no mail tab, or a
@@ -98,6 +102,7 @@ async function init() {
     { queryWeights: qWeights = {} },
     tab,
     cols,
+    unified,
   ] = await Promise.all([
     messenger.folders.query({}),
     messenger.accounts.list(),
@@ -111,8 +116,12 @@ async function init() {
     // rather than letting the whole Promise.all reject.
     tabId === undefined ? undefined : messenger.mailTabs.get(tabId).catch(() => undefined),
     listColumns(),
+    // Unified folders are a TB 128+ nicety; degrade to none rather than
+    // failing the whole popup if this Thunderbird won't serve them.
+    messenger.folders.query({ isUnified: true }).catch(() => []),
   ]);
   rawFolders = folders;
+  unifiedFolders = unified;
   accountsList = accounts;
   recentIds = storedRecentIds;
   activeTab = tab;
@@ -295,6 +304,7 @@ function render(query) {
     // "/columns" (the complete name) lists the columns themselves; anything
     // shorter is still an ordinary command row.
     if (parsed.token === "columns") renderColumns(parsed.arg);
+    else if (parsed.token === "go") renderAccounts(parsed.arg);
     else renderCommands(parsed);
     return;
   }
@@ -387,6 +397,67 @@ function renderColumns(arg) {
   moveButton.disabled = jumpButton.disabled = true;
 }
 
+/**
+ * Every row `/go` can offer, in display order: "all unread" first, then one row
+ * per account inbox, then the unified folders. `key` is what the argument
+ * prefix-filters on. Built from `rawFolders`, not `allFolders`: the latter is
+ * narrowed to one account while "search all accounts" is off, which is exactly
+ * when this command is most useful.
+ */
+function goEntries() {
+  const accountNameById = new Map(accountsList.map((account) => [account.id, account.name]));
+  const unified = orderUnified(unifiedFolders);
+  const unifiedInbox = inboxFolders(unified)[0];
+
+  const entries = [];
+  if (unifiedInbox) {
+    // "All unread" is not a folder Thunderbird has: it's the unified inbox
+    // (every account's mail in one list) plus the unread quick filter, applied
+    // after the jump in activate().
+    entries.push({
+      type: "account",
+      folder: unifiedInbox,
+      unread: true,
+      key: "unread",
+      label: messenger.i18n.getMessage("commandGoUnread"),
+    });
+  }
+  for (const folder of inboxFolders(rawFolders)) {
+    const accountName = accountNameById.get(folder.accountId) ?? "";
+    entries.push({
+      type: "account",
+      folder,
+      key: accountName,
+      label: messenger.i18n.getMessage("commandGoAccount", [accountName]),
+    });
+  }
+  for (const folder of unified) {
+    // Unified folders carry no accountId, and Thunderbird already localizes
+    // their names ("Inbox" / "Posteingang"), so the name is the label.
+    entries.push({
+      type: "account",
+      folder,
+      key: folder.name,
+      label: messenger.i18n.getMessage("commandGoUnified", [folder.name]),
+    });
+  }
+  return entries;
+}
+
+/** The `/go` rows, prefix-filtered by `arg` on each row's `key`. */
+function renderAccounts(arg) {
+  const needle = arg.toLowerCase();
+  const entries = goEntries();
+  renderRows(entries.filter((entry) => entry.key.toLowerCase().startsWith(needle)));
+  highlight();
+
+  empty.textContent = messenger.i18n.getMessage(
+    entries.length === 0 ? "commandGoUnavailable" : "popupNoCommands",
+  );
+  empty.hidden = visible.length !== 0;
+  moveButton.disabled = jumpButton.disabled = true;
+}
+
 function renderCommands({ token, arg }) {
   renderRows(matchCommands(token).map((command) => commandEntry(command, arg)));
   // Which fields the filter searches, and the shortcuts that flip the optional
@@ -456,6 +527,12 @@ function commandEntry(command, arg) {
       label = messenger.i18n.getMessage(
         enabled ? "commandColumnsHint" : "commandColumnsUnavailable",
       );
+      break;
+    case "go":
+      // Like /columns, only ever a "press Enter" row: completing the name
+      // switches the list to the accounts themselves (see renderAccounts).
+      enabled = goEntries().length > 0;
+      label = messenger.i18n.getMessage(enabled ? "commandGoHint" : "commandGoUnavailable");
       break;
   }
   return { type: "command", command, arg, label, enabled };
@@ -529,6 +606,22 @@ async function activate(entry) {
     input.focus();
     return;
   }
+  if (entry.type === "account") {
+    // Same path as picking the folder out of the list by hand, so the
+    // recents/weights bookkeeping and the error row come along unchanged.
+    // ponytail: a unified folder id gets recorded in recentFolders too, where
+    // applyScope()'s lookup drops it — it costs one recents slot and renders
+    // nothing. Plumb a skip-recording flag through background.js if that ever
+    // becomes visible.
+    await select("jump", entry.folder);
+    if (entry.unread) {
+      // After the jump: switching folders clears the quick filter bar, so
+      // setting it first would lose it. `show` reveals the bar, so the filter
+      // is visible and can be cleared Thunderbird's own way.
+      messenger.mailTabs.setQuickFilter(tabId, { unread: true, show: true }).catch(() => {});
+    }
+    return;
+  }
   if (entry.type === "command") {
     if (entry.enabled === false) return;
     switch (entry.command.name) {
@@ -588,6 +681,13 @@ async function activate(entry) {
         updatePlacement();
         input.focus();
         return;
+      case "go":
+        // Complete the name; render() then lists the accounts themselves.
+        input.value = "/go ";
+        render(input.value);
+        updatePlacement();
+        input.focus();
+        return;
     }
     await messenger.storage.local.set({ options });
     input.value = "";
@@ -609,9 +709,10 @@ async function activate(entry) {
 function completeActive() {
   const entry = visible[activeIndex];
   if (!entry) return;
-  // Column rows have nothing useful to complete to — the input already reads
-  // "/columns …" and completing to a name would just re-filter the same list.
-  if (entry.type === "column") return;
+  // Column and account rows have nothing useful to complete to — the input
+  // already reads "/columns …" / "/go …" and completing to a name would just
+  // re-filter the same list.
+  if (entry.type === "column" || entry.type === "account") return;
   const text =
     entry.type === "command"
       ? `/${entry.command.name}${entry.command.takesArg ? " " : ""}`

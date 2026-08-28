@@ -95,6 +95,26 @@
     "message": "Toggle: Case-sensitive search — Current: $1",
     "description": "Popup slash-command row: /sensitive. $1 is ON or OFF"
   },
+  "commandGoHint": {
+    "message": "Go to an account's inbox — press Enter to list accounts",
+    "description": "Popup slash-command row: /go with no argument"
+  },
+  "commandGoUnavailable": {
+    "message": "Account inboxes — unavailable here",
+    "description": "Popup slash-command row: /go when no account inbox could be found"
+  },
+  "commandGoAccount": {
+    "message": "Go to inbox: $1",
+    "description": "Popup row for one account's inbox. $1 is the account name"
+  },
+  "commandGoUnread": {
+    "message": "Go to all unread — every account, unread only",
+    "description": "Popup /go row: the unified inbox with the unread quick filter applied"
+  },
+  "commandGoUnified": {
+    "message": "Go to $1 — all accounts",
+    "description": "Popup /go row for one unified folder. $1 is the folder name, e.g. Inbox"
+  },
   "commandColumnsHint": {
     "message": "Message list columns — press Enter to list them",
     "description": "Popup slash-command row: /columns with no argument"
