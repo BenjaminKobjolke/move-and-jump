@@ -95,6 +95,18 @@
     "message": "Toggle: Case-sensitive search — Current: $1",
     "description": "Popup slash-command row: /sensitive. $1 is ON or OFF"
   },
+  "commandColumnsHint": {
+    "message": "Message list columns — press Enter to list them",
+    "description": "Popup slash-command row: /columns with no argument"
+  },
+  "commandColumnsUnavailable": {
+    "message": "Message list columns — unavailable here",
+    "description": "Popup slash-command row: /columns when no mail tab/column list could be read"
+  },
+  "commandColumnToggle": {
+    "message": "Toggle column: $1 — Current: $2",
+    "description": "Popup row for one message-list column. $1 is the column name, $2 is ON or OFF"
+  },
   "onState": {
     "message": "ON",
     "description": "Toggle state shown in slash-command rows"

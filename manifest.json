@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Move and Jump",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "author": "Daniel Kraus",
@@ -13,6 +13,16 @@
     }
   },
   "permissions": ["accountsRead", "messagesRead", "messagesMove", "storage"],
+  "experiment_apis": {
+    "columns": {
+      "schema": "experiments/columns/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "paths": [["columns"]],
+        "script": "experiments/columns/implementation.js"
+      }
+    }
+  },
   "background": {
     "scripts": ["background.js"],
     "type": "module"

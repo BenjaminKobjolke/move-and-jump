@@ -44,9 +44,14 @@ let allFolders = [];
 let recentFolders = [];
 let folderWeights = {};
 let queryWeights = {};
-// Each entry is { type: "folder", folder } or
-// { type: "command", command, arg, label, enabled }.
+// Each entry is { type: "folder", folder },
+// { type: "command", command, arg, label, enabled }, or
+// { type: "column", id, label } (one message-list column).
 let visible = [];
+// Message-list columns as last reported by the columns experiment:
+// [{ id, label, hidden }]. Empty when unavailable (no mail tab, or a
+// Thunderbird version whose internals the experiment can't read).
+let columnState = [];
 let activeIndex = 0;
 // Last query handed to the mail tab's quick filter, so a /body or /recipients
 // toggle can re-apply it with the new field set.
@@ -92,6 +97,7 @@ async function init() {
     { folderWeights: weights = {} },
     { queryWeights: qWeights = {} },
     tab,
+    cols,
   ] = await Promise.all([
     messenger.folders.query({}),
     messenger.accounts.list(),
@@ -104,6 +110,7 @@ async function init() {
     // "search all accounts" scoping below, so fall back to unscoped
     // rather than letting the whole Promise.all reject.
     tabId === undefined ? undefined : messenger.mailTabs.get(tabId).catch(() => undefined),
+    listColumns(),
   ]);
   rawFolders = folders;
   accountsList = accounts;
@@ -112,6 +119,7 @@ async function init() {
   folderWeights = weights;
   queryWeights = qWeights;
   options = opts;
+  columnState = cols;
 
   applyScope();
 
@@ -280,7 +288,10 @@ function render(query) {
   // substring — so no folders become unreachable.
   const parsed = parseCommand(query);
   if (parsed) {
-    renderCommands(parsed);
+    // "/columns" (the complete name) lists the columns themselves; anything
+    // shorter is still an ordinary command row.
+    if (parsed.token === "columns") renderColumns(parsed.arg);
+    else renderCommands(parsed);
     return;
   }
 
@@ -316,10 +327,20 @@ function render(query) {
   moveButton.disabled = jumpButton.disabled = visible.length === 0;
 }
 
-function renderCommands({ token, arg }) {
-  visible = matchCommands(token).map((command) => commandEntry(command, arg));
-  activeIndex = 0;
+/** Read the message list's columns; [] whenever the experiment can't serve them. */
+async function listColumns() {
+  try {
+    // -1: no mail tab known — the experiment falls back to the front mail window.
+    return (await messenger.columns.list(tabId ?? -1)) ?? [];
+  } catch (columnsError) {
+    return [];
+  }
+}
 
+/** Fill the result list with one plain-text row per entry. */
+function renderRows(entries) {
+  visible = entries;
+  activeIndex = 0;
   list.innerHTML = "";
   for (const entry of visible) {
     const item = document.createElement("li");
@@ -331,6 +352,39 @@ function renderCommands({ token, arg }) {
     });
     list.appendChild(item);
   }
+}
+
+/**
+ * One row per message-list column, prefix-filtered by `arg`. Selecting a row
+ * shows/hides that column; the popup stays open so several can be flipped.
+ */
+function renderColumns(arg) {
+  const needle = arg.toLowerCase();
+  const matches = columnState.filter(
+    (column) =>
+      column.label.toLowerCase().startsWith(needle) || column.id.toLowerCase().startsWith(needle),
+  );
+  renderRows(
+    matches.map((column) => ({
+      type: "column",
+      id: column.id,
+      label: messenger.i18n.getMessage("commandColumnToggle", [
+        column.label,
+        onOff(!column.hidden),
+      ]),
+    })),
+  );
+  highlight();
+
+  empty.textContent = messenger.i18n.getMessage(
+    columnState.length === 0 ? "commandColumnsUnavailable" : "popupNoCommands",
+  );
+  empty.hidden = visible.length !== 0;
+  moveButton.disabled = jumpButton.disabled = true;
+}
+
+function renderCommands({ token, arg }) {
+  renderRows(matchCommands(token).map((command) => commandEntry(command, arg)));
   // Which fields the filter searches, and the shortcuts that flip the optional
   // two — shown right where a query is being typed, so a query that matches
   // nothing has its fix on screen. Not an entry in `visible`: not selectable.
@@ -391,6 +445,14 @@ function commandEntry(command, arg) {
         onOff(options.caseSensitiveSearch),
       ]);
       break;
+    case "columns":
+      // Only ever a "press Enter" row: completing the name switches the list
+      // to the columns themselves (see renderColumns).
+      enabled = columnState.length > 0;
+      label = messenger.i18n.getMessage(
+        enabled ? "commandColumnsHint" : "commandColumnsUnavailable",
+      );
+      break;
   }
   return { type: "command", command, arg, label, enabled };
 }
@@ -448,6 +510,21 @@ function applyFilter(query) {
  */
 async function activate(entry) {
   if (!entry) return;
+  if (entry.type === "column") {
+    // Thunderbird persists column visibility itself, so nothing to store here.
+    // The input is left as typed so the list stays on the same filter and the
+    // next column is one Enter away.
+    const keepIndex = activeIndex;
+    columnState = await messenger.columns.toggle(tabId ?? -1, entry.id).catch(() => columnState);
+    render(input.value);
+    // render() resets the highlight; keep it on the row just toggled so the
+    // state flip is visible where the eye already is.
+    activeIndex = Math.min(keepIndex, Math.max(visible.length - 1, 0));
+    highlight();
+    updatePlacement();
+    input.focus();
+    return;
+  }
   if (entry.type === "command") {
     if (entry.enabled === false) return;
     switch (entry.command.name) {
@@ -500,6 +577,13 @@ async function activate(entry) {
         options.searchAllAccounts = !options.searchAllAccounts;
         applyScope();
         break;
+      case "columns":
+        // Complete the name; render() then lists the columns themselves.
+        input.value = "/columns ";
+        render(input.value);
+        updatePlacement();
+        input.focus();
+        return;
     }
     await messenger.storage.local.set({ options });
     input.value = "";
@@ -521,6 +605,9 @@ async function activate(entry) {
 function completeActive() {
   const entry = visible[activeIndex];
   if (!entry) return;
+  // Column rows have nothing useful to complete to — the input already reads
+  // "/columns …" and completing to a name would just re-filter the same list.
+  if (entry.type === "column") return;
   const text =
     entry.type === "command"
       ? `/${entry.command.name}${entry.command.takesArg ? " " : ""}`

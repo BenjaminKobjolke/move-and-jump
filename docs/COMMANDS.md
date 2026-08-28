@@ -17,6 +17,10 @@ another command.
 | `/fuzzy`          | Toggle [fuzzy search](settings/FUZZY_SEARCH.md)              |
 | `/all`            | Toggle search in all accounts                                |
 | `/sensitive`      | Toggle case-sensitive search                                 |
+| `/columns [name]` | Show/hide message-list columns (Date, From, …)               |
+
+`/columns` is the odd one out: its state belongs to Thunderbird, not to this
+add-on (see [Toggling columns](#toggling-columns)).
 
 `/zoom`, `/fuzzy`, `/all` and `/sensitive` are the same four settings as the
 options page — a command just changes them in place. `/body` and `/recipients`
@@ -39,6 +43,30 @@ fields without losing what you typed — the fix for a query that matches nothin
 
 Full details — fields, semantics, limits — in
 [FILTER_EMAILS.md](FILTER_EMAILS.md).
+
+## Toggling columns
+
+`/columns` is two levels deep. Typing `/c` … `/column` shows the usual single
+command row; selecting it completes the input to `/columns `. From there the
+list is **one row per message-list column** with its current state:
+
+```
+Toggle column: Date — Current: ON
+Toggle column: Sender — Current: ON
+```
+
+Enter (or a click) shows/hides that column immediately and **leaves the popup
+open** with the highlight on the same row, so several columns can be flipped in
+a row. An argument prefix-filters the list by column name: `/columns da` → just
+Date.
+
+The state is **persisted by Thunderbird itself**, exactly as if the column had
+been ticked in the thread pane's column picker — the add-on stores nothing, and
+the options page has no checkbox for it.
+
+If the column list can't be read (no mail tab, or a Thunderbird version whose
+internals moved), the row reads `Message list columns — unavailable here` and is
+not selectable.
 
 ## Using it
 
@@ -99,6 +127,22 @@ the leading slash still finds it. No folders become unreachable.
   listener on every keystroke whose token is exactly `filter` (live filtering),
   and again from `activate()`, which then `hide()`s the window instead of
   clearing the input.
+- **Columns:** the one command backed by a **WebExtension Experiment**
+  (`experiments/columns/`, wired via `experiment_apis` in `manifest.json`).
+  Thunderbird's stable API has no column control — `mailTabs` covers layout,
+  panes, sort and the quick filter, but not column visibility — so the
+  experiment reaches into the internal `about:3pane` window and does what
+  Thunderbird's own column picker does: flip `hidden` on the column, then
+  `persistColumnStates()` + `updateColumns()`. That is internal API and may
+  break on a Thunderbird upgrade; every access is feature-detected and wrapped,
+  and a failure degrades to an empty list (disabled row), never an exception.
+  `columns.list(tabId)` / `columns.toggle(tabId, id)` both return the full
+  `[{ id, label, hidden }]` list; `popup/search.js` caches it in `columnState`
+  (refreshed by `init()`, so window reuse re-reads it) and `renderColumns()`
+  turns it into rows. `renderRows()` is the row-building helper shared with
+  `renderCommands()`. Note that `npm run lint` (Firefox's addons-linter) reports
+  `MANIFEST_FIELD_PRIVILEGED` for `experiment_apis` — expected, and not a
+  problem for a Thunderbird add-on distributed via ATN.
 - **Zoom clamp:** `clampZoom` lives in `lib/options.js` and is shared by the
   `/zoom` command and the options page `save()`.
 - **Labels:** built with `messenger.i18n.getMessage`; keys `commandZoomSet`,
@@ -108,6 +152,7 @@ the leading slash still finds it. No folders become unreachable.
 
 ## Relevant files
 
+- `experiments/columns/` — the `/columns` Experiment API (schema + implementation)
 - `lib/commands.js` — `parseCommand`, `matchCommands`, the `COMMANDS` list
 - `lib/options.js` — shared `clampZoom`
 - `popup/search.js` — `renderCommands`, `commandEntry`, `activate`, `applyScope`,

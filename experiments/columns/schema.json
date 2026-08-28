@@ -1,0 +1,34 @@
+[
+  {
+    "namespace": "columns",
+    "functions": [
+      {
+        "name": "list",
+        "type": "function",
+        "description": "Columns of the message list, in display order. Empty when unavailable.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "tabId",
+            "type": "integer",
+            "description": "Mail tab to act on; -1 means the front mail window."
+          }
+        ]
+      },
+      {
+        "name": "toggle",
+        "type": "function",
+        "description": "Show/hide one column and return the refreshed list.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "tabId",
+            "type": "integer",
+            "description": "Mail tab to act on; -1 means the front mail window."
+          },
+          { "name": "columnId", "type": "string" }
+        ]
+      }
+    ]
+  }
+]

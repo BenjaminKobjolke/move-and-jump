@@ -29,6 +29,7 @@ test("matchCommands prefix-matches by command name", () => {
   assert.deepEqual(matchCommands("z").map((c) => c.name), ["zoom"]);
   assert.deepEqual(matchCommands("b").map((c) => c.name), ["body"]);
   assert.deepEqual(matchCommands("r").map((c) => c.name), ["recipients"]);
+  assert.deepEqual(matchCommands("c").map((c) => c.name), ["columns"]);
 });
 
 test("an ambiguous prefix matches every command sharing it", () => {
@@ -44,7 +45,12 @@ test("bare slash (empty token) matches every command", () => {
     "fuzzy",
     "all",
     "sensitive",
+    "columns",
   ]);
+});
+
+test("parseCommand keeps a column name as the argument", () => {
+  assert.deepEqual(parseCommand("/columns da"), { token: "columns", arg: "da" });
 });
 
 test("no command matches an unknown token", () => {

@@ -8,6 +8,14 @@ follow [semantic versioning](https://semver.org/) — see
 
 ### Added
 
+- New `/columns [name]` slash command: show or hide the columns of the message
+  list (Date, Sender, Size, …) from the popup. `/columns` lists every column
+  with its ON/OFF state; Enter toggles one and the popup stays open, so several
+  can be flipped in a row. Thunderbird's stable WebExtension API has no column
+  control, so this one command is backed by a **WebExtension Experiment**
+  (`experiments/columns/`); the state is persisted by Thunderbird itself.
+  See [docs/COMMANDS.md](docs/COMMANDS.md#toggling-columns).
+
 - New `/filter <query>` slash command: filters the **message list** of the
   folder already displayed in the mail tab, live as you type, instead of
   searching folders. It drives Thunderbird's own Quick Filter, so terms are
