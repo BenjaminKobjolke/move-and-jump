@@ -1,0 +1,54 @@
+[
+  {
+    "namespace": "keys",
+    "functions": [
+      {
+        "name": "register",
+        "type": "function",
+        "description": "Replace all single-key bindings. Returns one report entry per binding.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "bindings",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Command name, matching a key of manifest.commands."
+                },
+                "shortcut": {
+                  "type": "string",
+                  "description": "A bare key (\"S\") or a Shift combination (\"Shift+S\")."
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "check",
+        "type": "function",
+        "description": "Report whether a shortcut is usable and what it would shadow.",
+        "async": true,
+        "parameters": [{ "name": "shortcut", "type": "string" }]
+      }
+    ],
+    "events": [
+      {
+        "name": "onCommand",
+        "type": "function",
+        "description": "A registered single key was pressed in a mail window.",
+        "parameters": [
+          { "name": "id", "type": "string" },
+          {
+            "name": "tabId",
+            "type": "integer",
+            "description": "Mail tab the key was pressed in; -1 when it could not be resolved."
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -74,6 +74,46 @@
   "optionsShortcutRejected": {
     "message": "Thunderbird hat „$1“ abgelehnt — sie ist möglicherweise bereits belegt oder nicht unterstützt."
   },
+  "optionsShortcutColumnCommand": {
+    "message": "Befehl",
+    "description": "Options page: shortcut table column header for the command name"
+  },
+  "optionsShortcutColumnKey": {
+    "message": "Tastenkombination",
+    "description": "Options page: shortcut table column header for the commands-API shortcut"
+  },
+  "optionsShortcutColumnSingleKey": {
+    "message": "Einzeltaste",
+    "description": "Options page: shortcut table column header for the modifier-less binding"
+  },
+  "optionsShortcutClear": {
+    "message": "Löschen",
+    "description": "Options page button that removes a single-key binding"
+  },
+  "optionsSingleKeyHint": {
+    "message": "Eine Einzeltaste braucht keine Sondertaste — einfach s drücken, wie früher in Nostalgy. Sie löst nicht aus, während Sie in ein Textfeld tippen, und lässt sich zusätzlich zur normalen Tastenkombination belegen.",
+    "description": "Options page paragraph explaining the single-key column"
+  },
+  "optionsSingleKeyUnavailable": {
+    "message": "Einzeltasten sind in dieser Thunderbird-Version nicht verfügbar.",
+    "description": "Options page paragraph shown when the keys experiment failed to load"
+  },
+  "optionsSingleKeyHasModifier": {
+    "message": "Eine Einzeltaste kommt ohne Strg, Alt oder ⌘ aus — dafür ist die Spalte Tastenkombination da. Umschalt ist erlaubt.",
+    "description": "Options page error when a modifier combination is recorded in the single-key column"
+  },
+  "optionsSingleKeyInvalid": {
+    "message": "Thunderbird kennt keinen Namen für „$1“ — nehmen Sie einen Buchstaben, eine Ziffer oder eine Funktionstaste.",
+    "description": "Options page error when a recorded single key has no XUL spelling"
+  },
+  "optionsSingleKeyShadows": {
+    "message": "„$1“ überschreibt jetzt Thunderbirds eigene Belegung ($2).",
+    "description": "Options page warning when a single key shadows a built-in shortcut"
+  },
+  "optionsShortcutUseSingleKey": {
+    "message": "Diese Tastenkombination hat keine Sondertaste — nehmen Sie sie in der Spalte Einzeltaste auf.",
+    "description": "Options page hint when a bare key is recorded in the commands-API column"
+  },
   "optionsRankingInfo": {
     "message": "Die Ergebnisse werden anhand Ihrer bisherigen Auswahl sortiert: Ordner, die Sie nach Eingabe eines ähnlichen Textes bereits ausgewählt haben, erscheinen zuerst, danach Ihre insgesamt meistgenutzten Ordner, danach alphabetisch."
   },

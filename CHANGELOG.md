@@ -8,6 +8,26 @@ follow [semantic versioning](https://semver.org/) — see
 
 ### Added
 
+- **Single-key shortcuts.** Every command can now also be bound to a bare
+  key — plain `s`, `g`, `Shift+G` — the way Nostalgy did it, set on the
+  options page in a new *Single key* column. This is a second, independent
+  binding: it sits alongside the normal shortcut rather than replacing it.
+  Thunderbird's `commands` API rejects any shortcut whose only modifier is
+  Shift or that has none at all, so this is backed by a new **WebExtension
+  Experiment** (`experiments/keys/`), which listens for the keystroke in the
+  mail window itself.
+
+  A single key stays quiet while you are typing in a text field (including
+  the quick filter), and takes precedence over Thunderbird's own binding for
+  the same letter — the options page warns which one it is shadowing, since
+  several plain letters are already taken (`s` is *mark as flagged*). It does
+  not fire while the focus is inside a displayed message's text, and, like
+  any Experiment, it depends on Thunderbird internals: if a future release
+  breaks it the column reads *unavailable* and the modifier shortcuts carry
+  on unaffected. See
+  [ARCHITECTURE.md](ARCHITECTURE.md#single-key-shortcuts) for why the
+  obvious XUL `<key>` implementation had to be abandoned.
+
 - New `/columns [name]` slash command: show or hide the columns of the message
   list (Date, Sender, Size, …) from the popup. `/columns` lists every column
   with its ON/OFF state; Enter toggles one and the popup stays open, so several

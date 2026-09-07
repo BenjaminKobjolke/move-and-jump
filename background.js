@@ -1,5 +1,6 @@
 import { pushRecent } from "./lib/recent.js";
 import { DEFAULT_OPTIONS, getOptions, clampZoom } from "./lib/options.js";
+import { COMMAND_NAMES } from "./lib/keys.js";
 import { decodeImapUtf7 } from "./lib/imapUtf7.js";
 import { incrementWeight, incrementQueryWeight } from "./lib/weights.js";
 
@@ -301,6 +302,33 @@ async function actOnLastFolder(mode, tabId) {
   await recordUsage(folderId);
 }
 
+/**
+ * Run one of the add-on's commands. Shared by the two ways a command can be
+ * triggered from the keyboard: Thunderbird's own `commands` API, and the
+ * single-key bindings from experiments/keys. Both hand us the mail tab up
+ * front rather than making us query for it — see the callers.
+ * @param {number|undefined} tabId
+ */
+function dispatchCommand(command, tabId) {
+  switch (command) {
+    case "move-search":
+      return openSearchWindow("move", tabId);
+    case "jump-search":
+      return openSearchWindow("jump", tabId);
+    // No default key (see manifest.json) — the user assigns one on the options
+    // page. Opens the same popup, already in /filter mode; move/jump stay
+    // reachable from it by clearing the input.
+    case "filter-search":
+      return openSearchWindow("move", tabId, "/filter ");
+    case "move-last":
+      return actOnLastFolder("move", tabId);
+    case "jump-last":
+      return actOnLastFolder("jump", tabId);
+    default:
+      return undefined;
+  }
+}
+
 // commands.onCommand hands us the active tab directly as its second
 // argument (Thunderbird 106+) — use that, same as action.onClicked
 // below, rather than an independent currentWindow query. That query
@@ -309,25 +337,71 @@ async function actOnLastFolder(mode, tabId) {
 // called from these event callbacks — confirmed via the
 // "could not resolve a target mail tab" diagnostic, which is what
 // silently broke the keyboard-shortcut path.
-messenger.commands.onCommand.addListener((command, tab) => {
-  switch (command) {
-    case "move-search":
-      return openSearchWindow("move", tab?.id);
-    case "jump-search":
-      return openSearchWindow("jump", tab?.id);
-    // No default key (see manifest.json) — the user assigns one on the options
-    // page. Opens the same popup, already in /filter mode; move/jump stay
-    // reachable from it by clearing the input.
-    case "filter-search":
-      return openSearchWindow("move", tab?.id, "/filter ");
-    case "move-last":
-      return actOnLastFolder("move", tab?.id);
-    case "jump-last":
-      return actOnLastFolder("jump", tab?.id);
-    default:
-      return undefined;
+messenger.commands.onCommand.addListener((command, tab) => dispatchCommand(command, tab?.id));
+
+/**
+ * The single-key experiment (experiments/keys), or null when it isn't there.
+ *
+ * Resolved once, in a try/catch, and never touched as `messenger.keys` again.
+ * That is not defensiveness for its own sake: an experiment namespace that
+ * failed to register does not necessarily read back as undefined — the property
+ * access itself can throw, and an unguarded one at module scope takes the whole
+ * background down with it, which means every command, the toolbar button and
+ * move/jump all stop working because of an optional extra. An add-on must not
+ * be able to lose its core function to its most fragile part.
+ */
+const keysApi = (() => {
+  try {
+    return messenger.keys ?? null;
+  } catch (error) {
+    console.error("Move and Jump: single-key experiment unavailable", error);
+    return null;
   }
+})();
+
+/**
+ * Push the single-key bindings (options.singleKeys) into the keys experiment,
+ * which watches for them in every mail window.
+ *
+ * Called at every background start — including the wake-ups Thunderbird does
+ * after suspending the event page — because the experiment holds the bindings
+ * in memory only. Registering is idempotent: it replaces the set wholesale.
+ * @returns {Promise<Array<{id: string, shortcut: string, shadows: ?string}>>}
+ */
+async function applySingleKeys() {
+  // Absent when the experiment failed to load (a Thunderbird build whose
+  // internals moved, or a policy that blocks experiments). Everything else
+  // keeps working; the options page shows the column as unavailable.
+  if (!keysApi) return [];
+  const { singleKeys } = await getOptions(messenger.storage.local);
+  const bindings = COMMAND_NAMES.filter((id) => singleKeys?.[id]).map((id) => ({
+    id,
+    shortcut: singleKeys[id],
+  }));
+  try {
+    return await keysApi.register(bindings);
+  } catch (error) {
+    console.error("Move and Jump: keys.register failed", error);
+    return [];
+  }
+}
+
+if (keysApi) {
+  // tabId is -1 when the experiment could not resolve one; openSearchWindow
+  // then falls back the same way it does for the toolbar button.
+  keysApi.onCommand.addListener((command, tabId) =>
+    dispatchCommand(command, tabId >= 0 ? tabId : undefined),
+  );
+}
+
+// Re-register whenever the options page rebinds a key. This also wakes a
+// suspended event page, so the new binding takes effect immediately rather
+// than at the next Thunderbird start.
+messenger.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === "local" && changes.options) applySingleKeys();
 });
+
+applySingleKeys();
 
 // action.onClicked hands us the clicked tab directly — use that
 // rather than an independent currentWindow query, which is not
