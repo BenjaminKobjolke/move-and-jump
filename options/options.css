@@ -19,15 +19,20 @@ body {
   font: message-box;
   font-size: 13px;
   padding: 8px;
-  max-width: 480px;
+  max-width: 620px;
   color: var(--fg);
   background: var(--bg);
 }
 
-#intro {
+#intro,
+#shortcutsHint {
   margin: 0 0 12px;
   line-height: 1.4;
   color: var(--muted);
+}
+
+#shortcutsHint {
+  margin-bottom: 6px;
 }
 
 h2 {
@@ -40,15 +45,32 @@ table#shortcuts {
   margin-bottom: 16px;
 }
 
+#shortcuts th {
+  padding: 0 12px 4px 0;
+  text-align: start;
+  font-weight: 600;
+}
+
 #shortcuts td {
   padding: 2px 12px 2px 0;
   border-bottom: 1px solid var(--border);
 }
 
+/* Value and its two buttons share a cell, so the table stays three columns
+   wide however many binding kinds a command has. */
 #shortcuts td.shortcut-value {
+  white-space: nowrap;
+}
+
+#shortcuts td.shortcut-value > span {
+  display: inline-block;
+  min-width: 7em;
   font-family: monospace;
   color: var(--muted);
-  min-width: 8em;
+}
+
+#shortcuts td.shortcut-value > button {
+  margin-inline-start: 4px;
 }
 
 #shortcuts button {
@@ -63,6 +85,11 @@ table#shortcuts {
   margin: 0 0 16px;
   min-height: 1.4em;
   color: #c0392b;
+}
+
+/* Shadowing a built-in key is allowed, so it reads as a caution, not a failure. */
+#shortcutError.warning {
+  color: #b9770e;
 }
 
 label {

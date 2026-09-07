@@ -21,13 +21,28 @@ in comparison to the existing add-ons.
 
 ## Functions
 
-Note on shortcuts: Thunderbird's WebExtension `commands` API requires
-at least one modifier key, so bare-letter shortcuts like Nostalgy's
-plain <kbd>s</kbd>/<kbd>g</kbd> aren't available without falling back
-to legacy, privileged code. The defaults below can be changed to
-whatever you like under *Add-ons Manager → gear icon → Manage
-Extension Shortcuts* (the same page also lists them, under
-*Options*).
+Note on shortcuts: the defaults below can be changed to whatever you
+like under *Add-ons Manager → gear icon → Manage Extension Shortcuts*
+(the options page lists them too, and can rebind them in place).
+
+Thunderbird's `commands` API refuses any shortcut without a
+<kbd>Ctrl</kbd>/<kbd>Alt</kbd>/<kbd>⌘</kbd> modifier, so bare-letter
+bindings like Nostalgy's plain <kbd>s</kbd>/<kbd>g</kbd> can't be
+registered that way. Move and Jump ships them anyway, as **single
+keys** on the options page — a second, independent binding per
+command, so a letter can sit alongside the normal shortcut rather
+than replacing it. A single key stays quiet while you're typing in a
+text field, and may override one of Thunderbird's own letters (the
+options page warns you when it does — <kbd>s</kbd>, for instance, is
+normally *mark as flagged*). Two caveats: single keys don't fire
+while the focus is inside a displayed message's text, and they rely
+on Thunderbird internals, so a future release could disable them —
+the modifier shortcuts always keep working.
+
+<kbd>Alt</kbd>+letter is worth avoiding for the normal shortcuts: the
+API accepts it, but on Windows and Linux the menu bar claims those
+(<kbd>Alt</kbd>+<kbd>G</kbd> opens *Go*), even when the menu bar is
+hidden, and the add-on then never sees the key.
 
 The search window always shows explicit **Move**, **Jump**, and
 **Cancel** buttons, whichever way it was opened — the one matching

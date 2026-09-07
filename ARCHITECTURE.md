@@ -18,28 +18,154 @@ every time someone (human or AI) touches this code.
 
 ## Two decisions that don't match Nostalgy exactly
 
-**Bare-letter shortcuts are not possible.** Nostalgy binds plain
+**Bare-letter shortcuts need an Experiment.** Nostalgy binds plain
 `s`/`g` with no modifier. Thunderbird's `commands` WebExtension API
-requires at least one modifier key — bare-letter shortcuts would
-require a privileged "Experiment" API that hooks into the mail
-window's internal DOM, i.e. exactly the fragile, chrome-coupled
-legacy code this project is meant to leave behind. Instead, Move and
-Jump ships modifier-based defaults (`Ctrl+Shift+N`, `Ctrl+Alt+N`,
-`Ctrl+Shift+H`, `Ctrl+Alt+H`) that any user can rebind from
-`about:addons` → gear icon → *Manage Extension Shortcuts*.
+cannot: `ShortcutUtils.validate()` returns `MODIFIER_REQUIRED` for
+anything whose only modifier is Shift, or that has none at all, and
+[bug 1591730][] (an API for exactly this) has been open since 2019.
+So the defaults shipped in `manifest.json` are modifier-based
+(`Ctrl+Shift+N`, `Ctrl+Alt+N`, `Ctrl+Shift+H`, `Ctrl+Alt+H`),
+rebindable from `about:addons` → gear icon → *Manage Extension
+Shortcuts*, and single keys are available **as well**, through the
+`experiments/keys/` Experiment — see [Single-key shortcuts][sk]
+below for why that took the shape it did.
+
 The original `S`/`G`-based defaults were dropped after real-world
 testing found both unusable: `Ctrl+Shift+S` collides with something
 outside Thunderbird (exact cause unconfirmed — likely an OS/desktop
 binding, e.g. a screenshot tool), and `Ctrl+Shift+G` is already a
 built-in Thunderbird shortcut (as, incidentally, is `Ctrl+Shift+M` —
 Thunderbird's own "move again" — which is why the `N`/`H` scheme
-avoids `M` too).
+avoids `M` too). Note that `Alt+S` and `Alt+G` are *accepted* by the
+`commands` API — one non-Shift modifier is enough — but on Windows
+and Linux `Alt`+letter is claimed by the menu bar's access keys
+(File/Edit/View/**Go**/Message/Tools/Help, localised), even with the
+menu bar hidden. A combination the application already uses cannot be
+overridden: the shortcut registers and the handler is simply never
+called.
+
+[bug 1591730]: https://bugzilla.mozilla.org/show_bug.cgi?id=1591730
+[sk]: #single-key-shortcuts
 
 **There is no status-bar text.** The "last used folder" indicator
 described for Nostalgy relied on Thunderbird's legacy XUL status bar,
 which has no WebExtension equivalent in MV3. Move and Jump instead
 sets the toolbar button's tooltip (`action.setTitle()`) to
 `Move and Jump — Last: <folder path>` whenever a folder is used.
+
+## Single-key shortcuts
+
+`experiments/keys/` is what makes a bare `s` or `g` possible. The
+interesting part is not the feature, it's that the obvious
+implementation does not work and fails *silently*.
+
+### The approach that looks right and isn't
+
+Thunderbird binds its own single letters with XUL `<key>` elements —
+`mail/base/content/mainKeySet.inc.xhtml` is full of them:
+
+```xml
+<key id="key_nextMsg" key="&nextMsgCmd.key;" oncommand="goDoCommand('cmd_nextMsg')"/>
+```
+
+No `modifiers` attribute at all. And `ExtensionShortcuts` builds the
+same elements at runtime for the shortcuts `commands` *does* support,
+so the machinery is clearly reachable from an add-on. Building the
+missing modifier-less ones the same way is the obvious move.
+
+It does not work. Measured against Thunderbird 153.2.0, firing a
+synthesised keystroke and counting `command` events:
+
+| what was inserted                                  | fires |
+| -------------------------------------------------- | ----- |
+| own keyset, `key="s"`, no modifiers                 | no    |
+| own keyset, `key="s"`, `modifiers="alt"`            | yes   |
+| same element, inside Thunderbird's own `mailKeys`   | no    |
+| exact clone of a working built-in, letter changed   | no    |
+| the built-in itself (control)                       | yes   |
+
+The discriminator is not the element, the keyset, or where either is
+placed — an exact clone of a built-in that works, with only the letter
+changed, still does nothing. It is *modifier-less* plus *inserted after
+the window's handler chain was built*. Keys carrying a modifier are
+picked up when added at runtime; keys without one are only honoured if
+they were there when the window was built. Nothing reports an error;
+the binding is simply inert.
+
+### What the Experiment actually does
+
+A `keydown` listener on each mail window, in the capture phase — the
+same approach [tbkeys][] takes. The one thing that had to be checked
+first is whether such a listener sees keys pressed in the message
+list, since Thunderbird 115 moved that into an `about:3pane` document
+inside a `<browser>`. It does, and the event arrives with the real
+inner element as its target (`ul#folderTree`), not the `<browser>` —
+which is what makes the typing test below possible at all.
+
+Two consequences follow from not going through Thunderbird's own key
+handling:
+
+- **Quiet-while-typing is no longer free.** Chrome key handlers run
+  after the focused element, so an editor that consumed the keystroke
+  has already stopped them; that is why `n` doesn't jump to the next
+  message while you type in the quick filter. A DOM listener runs
+  first and has to ask, which is `isTypingContext()` — a tag list
+  taken from tbkeys' `stopCallback` (the Thunderbird-specific search
+  boxes are the ones you would not guess), plus `isContentEditable`
+  and `designMode`. Verified: the quick filter box resolves to
+  `search-bar` and is correctly treated as typing.
+- **Overriding a built-in works.** Capture phase runs ahead of
+  Thunderbird's handlers, and `preventDefault()` stops them, so a user
+  who binds `n` gets Move and Jump rather than "next unread message".
+  Because that is a surprise rather than a gift, `keys.check()`
+  reports what a key would shadow (`systemKeyFor()`, a variant of
+  `ShortcutUtils.isSystem()` that returns *which* key it hit) and the
+  options page says so. Worth knowing: plain `s` is not free —
+  it is Thunderbird's `key_toggleFlagged`.
+
+**Limitation.** A rendered message body is a remote `<browser>`; its
+keystrokes never reach the chrome window, so a single key does not
+fire while focus is inside the message text. Thunderbird's own
+letters still do, because they go through the path described above.
+
+### Event delivery across a sleeping background
+
+The background is an MV3 event page and gets suspended, which takes a
+plain `EventManager` listener down with its context. The documented
+answer is a primed listener — `ExtensionAPIPersistent` plus a
+`PERSISTENT_EVENTS` block and an `EventManager({module, event,
+extensionApi})`. **Do not reach for it here.** With that wiring the
+API namespace was never registered at all: the module loaded, but
+`getAPI()` was never called and `messenger.keys` did not exist. That
+is a far worse failure than a sleeping page, and a silent one.
+
+So the Experiment wakes the background itself: `emit()` notices that
+`fires` is empty, calls `extension.wakeupBackground()`, and waits
+briefly for the re-run background to re-register — which it does at
+every start, including wake-ups, because the Experiment holds the
+bindings in memory only (see `applySingleKeys`).
+
+The tab id is resolved in the Experiment, from the window the key was
+pressed in, via `extension.tabManager` rather than a context: when the
+event page is asleep there is no context to ask.
+
+### Never let the Experiment take the add-on down with it
+
+`messenger.keys` is read **once, inside a try/catch**, in both
+`background.js` (`keysApi`) and `options/options.js`. This is not
+belt-and-braces: an experiment namespace that fails to register does
+not necessarily read back as `undefined` — *the property access itself
+can throw*. Both files touched it at module scope, so a single
+unguarded read killed the entire background (every command, the
+toolbar button, move and jump) and blanked the whole options page,
+because of an optional extra. `test/guards.test.js` loads both modules
+against a `messenger.keys` that throws and asserts they survive.
+
+The general rule for this add-on: the core feature must never be able
+to fail because a privileged Experiment did. `columns` follows the
+same rule by only ever being called from inside a `try`/`catch`.
+
+[tbkeys]: https://github.com/wshanks/tbkeys
 
 ## UI mechanism: a real popup window (not the toolbar action popup)
 
@@ -455,6 +581,15 @@ rounds of guessing specifically because the first version didn't.
   - `weights.js` — track and sort by per-folder usage counts, both
     global and per-typed-query-prefix.
   - `highlight.js` — find where a query matches in a displayed label.
+  - `keys.js` — recognise and validate the modifier-less shortcuts
+    `commands` refuses (see [Single-key shortcuts][sk]); also the list
+    of command names shared with `background.js`.
+- `experiments/` — the two privileged WebExtension Experiments, each a
+  `schema.json` plus an `implementation.js`. Both reach into
+  Thunderbird's internals, so both feature-detect everything and
+  degrade to "unavailable" rather than throwing:
+  - `columns/` — message-list column visibility, for `/columns`.
+  - `keys/` — single-key shortcuts.
 - `test/` — unit tests for everything in `lib/`, using Node's
   built-in `node:test` (see below).
 - `icons/` — `icon.svg` source plus generated PNGs (via `rsvg-convert`).

@@ -187,6 +187,46 @@
     "message": "Thunderbird rejected \"$1\" — it may already be in use or unsupported.",
     "description": "Options page error when commands.update rejects a shortcut"
   },
+  "optionsShortcutColumnCommand": {
+    "message": "Command",
+    "description": "Options page: shortcut table column header for the command name"
+  },
+  "optionsShortcutColumnKey": {
+    "message": "Shortcut",
+    "description": "Options page: shortcut table column header for the commands-API shortcut"
+  },
+  "optionsShortcutColumnSingleKey": {
+    "message": "Single key",
+    "description": "Options page: shortcut table column header for the modifier-less binding"
+  },
+  "optionsShortcutClear": {
+    "message": "Clear",
+    "description": "Options page button that removes a single-key binding"
+  },
+  "optionsSingleKeyHint": {
+    "message": "A single key needs no modifier — press s the way Nostalgy did. It stays quiet while you are typing in a text field, and can be used alongside the normal shortcut.",
+    "description": "Options page paragraph explaining the single-key column"
+  },
+  "optionsSingleKeyUnavailable": {
+    "message": "Single-key shortcuts are unavailable in this Thunderbird build.",
+    "description": "Options page paragraph shown when the keys experiment failed to load"
+  },
+  "optionsSingleKeyHasModifier": {
+    "message": "A single key takes no Ctrl, Alt or ⌘ — use the Shortcut column for those. Shift is allowed.",
+    "description": "Options page error when a modifier combination is recorded in the single-key column"
+  },
+  "optionsSingleKeyInvalid": {
+    "message": "Thunderbird has no name for “$1” — try a letter, a digit or a function key.",
+    "description": "Options page error when a recorded single key has no XUL spelling"
+  },
+  "optionsSingleKeyShadows": {
+    "message": "“$1” now overrides Thunderbird's own binding ($2).",
+    "description": "Options page warning when a single key shadows a built-in shortcut"
+  },
+  "optionsShortcutUseSingleKey": {
+    "message": "That shortcut has no modifier — record it in the Single key column instead.",
+    "description": "Options page hint when a bare key is recorded in the commands-API column"
+  },
   "optionsRankingInfo": {
     "message": "Results are ranked using your past choices: folders you've picked after typing similar text come first, then your most-used folders overall, then alphabetically.",
     "description": "Options page paragraph explaining search-result ranking"

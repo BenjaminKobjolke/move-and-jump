@@ -1,4 +1,5 @@
 import { getOptions, clampZoom } from "../lib/options.js";
+import { shortcutFromEvent, hasPrimaryModifier, validateSingleKey } from "../lib/keys.js";
 
 const caseSensitiveSearch = document.getElementById("caseSensitiveSearch");
 const fuzzySearch = document.getElementById("fuzzySearch");
@@ -11,9 +12,28 @@ const shortcutError = document.getElementById("shortcutError");
 
 const msg = (key, subs) => messenger.i18n.getMessage(key, subs);
 
+// The single-key experiment (experiments/keys). Absent on a Thunderbird build
+// whose internals moved, or where experiments are blocked by policy — the
+// column is then dropped rather than offering a control that can't work.
+//
+// In a try/catch, and not for tidiness: an experiment namespace that failed to
+// register does not necessarily read back as undefined — the property access
+// itself can throw. Unguarded, that took the *whole options page* down with it
+// (every checkbox on it included), because this runs at module scope before
+// anything is rendered. Nothing about the single-key column is worth that.
+let keysAvailable = false;
+try {
+  keysAvailable = Boolean(messenger.keys);
+} catch (error) {
+  console.error("Move and Jump: single-key experiment unavailable", error);
+}
+
 document.getElementById("intro").textContent = msg("optionsIntro");
 document.getElementById("rankingInfo").textContent = msg("optionsRankingInfo");
 document.getElementById("shortcutsHeading").textContent = msg("optionsShortcutsHeading");
+document.getElementById("shortcutsHint").textContent = msg(
+  keysAvailable ? "optionsSingleKeyHint" : "optionsSingleKeyUnavailable",
+);
 document.getElementById("caseSensitiveSearchLabel").textContent = msg("optionsCaseSensitiveSearch");
 document.getElementById("fuzzySearchLabel").textContent = msg("optionsFuzzySearch");
 document.getElementById("searchAllAccountsLabel").textContent = msg("optionsSearchAllAccounts");
@@ -26,43 +46,9 @@ messenger.runtime.getPlatformInfo().then((info) => {
   isMac = info.os === "mac";
 });
 
-// event.key values that don't map to Thunderbird's shortcut key names 1:1.
-// Anything not listed and length 1 is uppercased; F1-F12 pass through. Keys
-// commands.update still rejects (e.g. "," → wants "Comma") surface as an error.
-const KEY_ALIASES = {
-  ArrowUp: "Up",
-  ArrowDown: "Down",
-  ArrowLeft: "Left",
-  ArrowRight: "Right",
-  " ": "Space",
-};
-
-function mapKey(key) {
-  if (key in KEY_ALIASES) return KEY_ALIASES[key];
-  if (/^F([1-9]|1[0-2])$/.test(key)) return key;
-  if (key.length === 1) return key.toUpperCase();
-  return null;
-}
-
-/**
- * Build a Thunderbird shortcut string from a keydown event, or return null
- * if it isn't a usable binding yet (bare modifier, or no non-Shift modifier
- * — Thunderbird requires at least one of Ctrl/Alt/Command/MacCtrl).
- */
-function buildShortcut(event) {
-  const mapped = mapKey(event.key);
-  if (mapped === null) return null;
-
-  const parts = [];
-  if (event.ctrlKey) parts.push(isMac ? "MacCtrl" : "Ctrl");
-  if (event.metaKey && isMac) parts.push("Command");
-  if (event.altKey) parts.push("Alt");
-  const hasPrimaryModifier = parts.length > 0;
-  if (event.shiftKey) parts.push("Shift");
-
-  if (!hasPrimaryModifier) return null;
-  parts.push(mapped);
-  return parts.join("+");
+function setMessage(text, isWarning = false) {
+  shortcutError.textContent = text;
+  shortcutError.classList.toggle("warning", isWarning);
 }
 
 function button(labelKey, onClick) {
@@ -73,9 +59,43 @@ function button(labelKey, onClick) {
   return btn;
 }
 
+function headerCell(labelKey) {
+  const th = document.createElement("th");
+  th.textContent = msg(labelKey);
+  return th;
+}
+
+/** Read the stored single-key map (command name → shortcut). */
+async function getSingleKeys() {
+  const { singleKeys } = await getOptions(messenger.storage.local);
+  return { ...singleKeys };
+}
+
+/**
+ * Store one single-key binding (or clear it with null). Writing to storage is
+ * what installs it: the background watches storage.onChanged and re-registers
+ * the whole set — which also wakes it if the event page was suspended.
+ */
+async function saveSingleKey(name, shortcut) {
+  const current = await getOptions(messenger.storage.local);
+  const singleKeys = { ...current.singleKeys };
+  if (shortcut) singleKeys[name] = shortcut;
+  else delete singleKeys[name];
+  await messenger.storage.local.set({ options: { ...current, singleKeys } });
+}
+
 async function renderShortcuts() {
-  const commands = await messenger.commands.getAll();
+  const [commands, singleKeys] = await Promise.all([
+    messenger.commands.getAll(),
+    getSingleKeys(),
+  ]);
   shortcutsTable.innerHTML = "";
+
+  const head = document.createElement("tr");
+  head.append(headerCell("optionsShortcutColumnCommand"), headerCell("optionsShortcutColumnKey"));
+  if (keysAvailable) head.appendChild(headerCell("optionsShortcutColumnSingleKey"));
+  shortcutsTable.appendChild(head);
+
   for (const command of commands) {
     const row = document.createElement("tr");
 
@@ -84,29 +104,52 @@ async function renderShortcuts() {
 
     const shortcut = document.createElement("td");
     shortcut.className = "shortcut-value";
-    shortcut.textContent = command.shortcut || "—";
-
-    const recordCell = document.createElement("td");
+    const shortcutText = document.createElement("span");
+    shortcutText.textContent = command.shortcut || "—";
     const recordBtn = button("optionsShortcutRecord", () => record(command.name, recordBtn));
-    recordCell.appendChild(recordBtn);
-
-    const resetCell = document.createElement("td");
-    resetCell.appendChild(
+    shortcut.append(
+      shortcutText,
+      recordBtn,
       button("optionsShortcutReset", async () => {
-        shortcutError.textContent = "";
+        setMessage("");
         await messenger.commands.reset(command.name);
         await renderShortcuts();
       }),
     );
 
-    row.append(description, shortcut, recordCell, resetCell);
+    row.append(description, shortcut);
+
+    if (keysAvailable) {
+      const single = document.createElement("td");
+      single.className = "shortcut-value";
+      const singleText = document.createElement("span");
+      singleText.textContent = singleKeys[command.name] || "—";
+      const singleBtn = button("optionsShortcutRecord", () =>
+        recordSingleKey(command.name, singleBtn),
+      );
+      single.append(
+        singleText,
+        singleBtn,
+        button("optionsShortcutClear", async () => {
+          setMessage("");
+          await saveSingleKey(command.name, null);
+          await renderShortcuts();
+        }),
+      );
+      row.appendChild(single);
+    }
+
     shortcutsTable.appendChild(row);
   }
 }
 
-/** Capture the next keystroke and apply it as the binding for `name`. */
-function record(name, recordBtn) {
-  shortcutError.textContent = "";
+/**
+ * Capture the next keystroke and hand it to `apply`. Shared by both recorders;
+ * the only difference between them is what they do with the shortcut string.
+ * @param {(shortcut: string) => Promise<void>} apply
+ */
+function captureKey(recordBtn, apply) {
+  setMessage("");
   recordBtn.classList.add("recording");
   recordBtn.textContent = msg("optionsShortcutRecording");
 
@@ -121,30 +164,66 @@ function record(name, recordBtn) {
     if (["Control", "Alt", "Shift", "Meta", "OS"].includes(event.key)) return;
     event.preventDefault();
     event.stopPropagation();
-
-    if (event.key === "Escape") {
-      stop();
-      return;
-    }
-
-    const shortcut = buildShortcut(event);
-    if (!shortcut) {
-      shortcutError.textContent = msg("optionsShortcutInvalid");
-      stop();
-      return;
-    }
-
     stop();
+
+    if (event.key === "Escape") return;
+
+    const shortcut = shortcutFromEvent(event, { isMac });
+    if (!shortcut) {
+      setMessage(msg("optionsShortcutInvalid"));
+      return;
+    }
+    await apply(shortcut);
+  };
+
+  document.addEventListener("keydown", onKeydown, true);
+}
+
+/** Bind through Thunderbird's own commands API — needs a modifier. */
+function record(name, recordBtn) {
+  captureKey(recordBtn, async (shortcut) => {
+    if (!hasPrimaryModifier(shortcut)) {
+      // Not an error the user has to fix twice: say which column takes it.
+      setMessage(msg(keysAvailable ? "optionsShortcutUseSingleKey" : "optionsShortcutInvalid"));
+      return;
+    }
     try {
       await messenger.commands.update({ name, shortcut });
       await renderShortcuts();
     } catch (error) {
       console.error("Move and Jump: commands.update failed", error);
-      shortcutError.textContent = msg("optionsShortcutRejected", [shortcut]);
+      setMessage(msg("optionsShortcutRejected", [shortcut]));
     }
-  };
+  });
+}
 
-  document.addEventListener("keydown", onKeydown, true);
+/** Bind through experiments/keys — a bare key, or Shift plus a key. */
+function recordSingleKey(name, recordBtn) {
+  captureKey(recordBtn, async (shortcut) => {
+    const problem = validateSingleKey(shortcut);
+    if (problem === "has-modifier") {
+      setMessage(msg("optionsSingleKeyHasModifier"));
+      return;
+    }
+    if (problem) {
+      setMessage(msg("optionsSingleKeyInvalid", [shortcut]));
+      return;
+    }
+
+    // Thunderbird's own bindings sit in the same window, and ours is inserted
+    // ahead of them, so this succeeds — but silently taking `a` away from
+    // Archive would be a nasty surprise. Report it and let the choice stand.
+    let shadows = null;
+    try {
+      ({ shadows } = await messenger.keys.check(shortcut));
+    } catch (error) {
+      console.error("Move and Jump: keys.check failed", error);
+    }
+
+    await saveSingleKey(name, shortcut);
+    await renderShortcuts();
+    if (shadows) setMessage(msg("optionsSingleKeyShadows", [shortcut, shadows]), true);
+  });
 }
 
 async function load() {
@@ -159,8 +238,9 @@ async function load() {
 
 async function save() {
   // Merge over what's stored: options with no control on this page
-  // (filterBody, filterRecipients — set via slash commands) would
-  // otherwise be dropped every time a checkbox here changes.
+  // (filterBody, filterRecipients — set via slash commands; singleKeys — set
+  // by the recorder above) would otherwise be dropped every time a checkbox
+  // here changes.
   const current = await getOptions(messenger.storage.local);
   await messenger.storage.local.set({
     options: {
