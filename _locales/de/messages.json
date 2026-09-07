@@ -106,6 +106,10 @@
     "message": "Thunderbird kennt keinen Namen für „$1“ — nehmen Sie einen Buchstaben, eine Ziffer oder eine Funktionstaste.",
     "description": "Options page error when a recorded single key has no XUL spelling"
   },
+  "optionsSingleKeyTaken": {
+    "message": "„$1“ ist bereits die Einzeltaste für „$2“ — löschen Sie sie dort zuerst.",
+    "description": "Options page error when the recorded single key is bound to another command"
+  },
   "optionsSingleKeyShadows": {
     "message": "„$1“ überschreibt jetzt Thunderbirds eigene Belegung ($2).",
     "description": "Options page warning when a single key shadows a built-in shortcut"

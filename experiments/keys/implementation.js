@@ -201,6 +201,9 @@ function handlerFor(win) {
     try {
       // Something ahead of us already claimed this keystroke.
       if (event.defaultPrevented) return;
+      // Held down, not pressed again. Every command here opens a window or
+      // moves a message, so autorepeat would fire it dozens of times.
+      if (event.repeat) return;
       const shortcut = shortcutForEvent(event);
       if (!shortcut) return;
       const id = shortcuts.get(shortcut);

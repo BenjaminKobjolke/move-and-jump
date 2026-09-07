@@ -210,6 +210,19 @@ function recordSingleKey(name, recordBtn) {
       return;
     }
 
+    // The experiment keys its bindings by shortcut, so a second command taking
+    // the same letter would silently displace the first. Refuse instead, and
+    // name the command holding it so the user knows what to clear.
+    const taken = Object.entries(await getSingleKeys()).find(
+      ([other, key]) => key === shortcut && other !== name,
+    );
+    if (taken) {
+      const commands = await messenger.commands.getAll();
+      const holder = commands.find((command) => command.name === taken[0]);
+      setMessage(msg("optionsSingleKeyTaken", [shortcut, holder?.description || taken[0]]));
+      return;
+    }
+
     // Thunderbird's own bindings sit in the same window, and ours is inserted
     // ahead of them, so this succeeds — but silently taking `a` away from
     // Archive would be a nasty surprise. Report it and let the choice stand.

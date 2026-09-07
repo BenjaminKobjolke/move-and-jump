@@ -219,6 +219,10 @@
     "message": "Thunderbird has no name for “$1” — try a letter, a digit or a function key.",
     "description": "Options page error when a recorded single key has no XUL spelling"
   },
+  "optionsSingleKeyTaken": {
+    "message": "“$1” is already the single key for “$2” — clear it there first.",
+    "description": "Options page error when the recorded single key is bound to another command"
+  },
   "optionsSingleKeyShadows": {
     "message": "“$1” now overrides Thunderbird's own binding ($2).",
     "description": "Options page warning when a single key shadows a built-in shortcut"
