@@ -216,7 +216,7 @@
     "description": "Options page error when a modifier combination is recorded in the single-key column"
   },
   "optionsSingleKeyInvalid": {
-    "message": "Thunderbird has no name for “$1” — try a letter, a digit or a function key.",
+    "message": "A single key must be a letter or a digit — “$1” is neither.",
     "description": "Options page error when a recorded single key has no XUL spelling"
   },
   "optionsSingleKeyTaken": {

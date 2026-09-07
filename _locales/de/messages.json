@@ -103,7 +103,7 @@
     "description": "Options page error when a modifier combination is recorded in the single-key column"
   },
   "optionsSingleKeyInvalid": {
-    "message": "Thunderbird kennt keinen Namen für „$1“ — nehmen Sie einen Buchstaben, eine Ziffer oder eine Funktionstaste.",
+    "message": "Eine Einzeltaste muss ein Buchstabe oder eine Ziffer sein — „$1“ ist beides nicht.",
     "description": "Options page error when a recorded single key has no XUL spelling"
   },
   "optionsSingleKeyTaken": {
