@@ -71,9 +71,6 @@ test("validateSingleKey accepts bare and Shift-only bindings", () => {
   assert.equal(validateSingleKey("S"), null);
   assert.equal(validateSingleKey("Shift+S"), null);
   assert.equal(validateSingleKey("7"), null);
-  assert.equal(validateSingleKey("F5"), null);
-  assert.equal(validateSingleKey("Space"), null);
-  assert.equal(validateSingleKey("PageDown"), null);
 });
 
 test("validateSingleKey sends modifier combinations to the commands API", () => {
@@ -85,6 +82,18 @@ test("validateSingleKey rejects keys with no XUL spelling", () => {
   assert.equal(validateSingleKey("!"), "invalid-key");
   assert.equal(validateSingleKey("F13"), "invalid-key");
   assert.equal(validateSingleKey("Enter"), "invalid-key");
+});
+
+test("validateSingleKey rejects the keys the experiment's listener cannot match", () => {
+  // Thunderbird spells these differently from the uppercased event.key the
+  // keydown listener compares against, so a binding on one would be recorded
+  // and displayed and then never fire. Rejecting at record time is the honest
+  // answer until experiments/keys learns the same aliases.
+  assert.equal(validateSingleKey("F5"), "invalid-key");
+  assert.equal(validateSingleKey("Space"), "invalid-key");
+  assert.equal(validateSingleKey("Comma"), "invalid-key");
+  assert.equal(validateSingleKey("Up"), "invalid-key");
+  assert.equal(validateSingleKey("PageDown"), "invalid-key");
 });
 
 test("COMMAND_NAMES matches the commands the manifest declares", async () => {
