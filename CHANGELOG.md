@@ -4,7 +4,7 @@ All notable changes to this project are documented here. Versions
 follow [semantic versioning](https://semver.org/) — see
 [ARCHITECTURE.md](ARCHITECTURE.md#versioning) for the project's policy.
 
-## [Unreleased]
+## [1.5.0] - 2026-09-07
 
 ### Added
 
@@ -27,6 +27,16 @@ follow [semantic versioning](https://semver.org/) — see
   on unaffected. See
   [ARCHITECTURE.md](ARCHITECTURE.md#single-key-shortcuts) for why the
   obvious XUL `<key>` implementation had to be abandoned.
+
+- New `/go [account]` slash command: jump straight to an account's inbox.
+  `/go` on its own lists the accounts; typing narrows them by name.
+  See [docs/COMMANDS.md](docs/COMMANDS.md).
+
+- New **Recreate the search window each time** option: the search window is
+  destroyed on dismissal and built fresh on the next trigger, instead of being
+  kept alive and minimized between uses, so it leaves no lingering taskbar
+  entry. Default off. See
+  [docs/settings/RECREATE_WINDOW.md](docs/settings/RECREATE_WINDOW.md).
 
 - New `/columns [name]` slash command: show or hide the columns of the message
   list (Date, Sender, Size, …) from the popup. `/columns` lists every column

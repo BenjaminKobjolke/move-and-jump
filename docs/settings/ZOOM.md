@@ -37,7 +37,8 @@ the mail window.
   `reset` message (new mode/tab/`zoom`) which re-applies zoom and re-runs the
   same `init()`. WebExtensions has no hide, so "hidden" = minimized (a taskbar
   entry persists between uses). If the window is closed manually, the next
-  trigger recreates it.
+  trigger recreates it. This reuse can be turned off with the **Recreate the
+  search window each time** option — see `docs/settings/RECREATE_WINDOW.md`.
 - **Window sizing:** because `background.js` knows the zoom up front, it
   **creates** the window already scaled (`560 × zoom` wide, `440 × zoom` min
   high) and centered — no open-time flash. The popup then measures its rendered

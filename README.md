@@ -97,10 +97,15 @@ The options page (Add-ons Manager → Move and Jump → *Preferences*)
 opens with a short explanation of the add-on and a live table of the
 current keyboard shortcuts, followed by the actual preferences:
 
-Preference                | Default
---------------------------|----------
-Case-sensitive search     | off (search is case-insensitive)
-Search in all accounts    | on (folders from all accounts are being listed)
+Preference                 | Default
+---------------------------|----------
+Case-sensitive search      | off (search is case-insensitive)
+Fuzzy search               | off (see `docs/settings/FUZZY_SEARCH.md`)
+Search in all accounts     | on (folders from all accounts are being listed)
+Resize window to fit       | on (the window grows to fit the results)
+Center window over mail    | on (otherwise the platform places it)
+Recreate window each time  | off (the window is kept minimized and reused — see `docs/settings/RECREATE_WINDOW.md`)
+Zoom (%)                   | `100` (50–200 — see `docs/settings/ZOOM.md`)
 
 ## Installation
 

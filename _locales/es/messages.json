@@ -50,6 +50,9 @@
   "optionsCenterOnParent": {
     "message": "Centrar la ventana de búsqueda sobre la ventana de correo"
   },
+  "optionsRecreateWindow": {
+    "message": "Recrear la ventana de búsqueda cada vez (en lugar de mantenerla minimizada)"
+  },
   "optionsZoom": {
     "message": "Zoom (%)"
   },

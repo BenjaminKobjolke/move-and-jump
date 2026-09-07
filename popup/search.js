@@ -747,9 +747,16 @@ let hiding = false;
 // The window is kept alive and reused (see background.js): dismissing
 // minimizes it rather than closing it, so the next trigger just
 // restores + re-inits it instead of recreating the whole window.
+// With the recreateWindow option on, dismissing destroys it instead and the
+// next trigger builds a fresh one — see docs/settings/RECREATE_WINDOW.md.
 async function hide() {
   hiding = true;
   try {
+    if (options?.recreateWindow) {
+      // Permitted because background.js creates us with allowScriptsToClose.
+      window.close();
+      return;
+    }
     const self = await messenger.windows.getCurrent();
     await messenger.windows.update(self.id, { state: "minimized" });
   } catch (hideError) {

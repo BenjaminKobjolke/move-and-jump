@@ -161,7 +161,7 @@ async function computeSearchWindowGeometry() {
       // Fall back to the platform's default placement.
     }
   }
-  return { zoom, width, height, left, top };
+  return { zoom, width, height, left, top, recreateWindow: options.recreateWindow };
 }
 
 /**
@@ -185,13 +185,25 @@ async function openSearchWindow(mode, tabId, prefill = "") {
     console.error("Move and Jump: openSearchWindow could not resolve a target mail tab");
   }
 
-  const { zoom, width, height, left, top } = await computeSearchWindowGeometry();
+  const { zoom, width, height, left, top, recreateWindow } = await computeSearchWindowGeometry();
 
   // Recover the id if the event page was suspended (searchWindowId wiped) while
   // the popup stayed open — otherwise we'd create a duplicate. See
   // findExistingSearchWindow.
   if (searchWindowId === null) {
     searchWindowId = await findExistingSearchWindow();
+  }
+
+  // With recreateWindow on, the popup closes itself on dismiss — so anything
+  // still around is a leftover from before the option was switched on (or a
+  // window the user left open). Drop it rather than reusing it.
+  if (recreateWindow && searchWindowId !== null) {
+    try {
+      await messenger.windows.remove(searchWindowId);
+    } catch {
+      // Already gone; onRemoved may or may not have fired yet.
+    }
+    searchWindowId = null;
   }
 
   // Reuse the existing window (kept alive, minimized while dismissed) instead of

@@ -1,0 +1,16 @@
+{
+  "version": "1.5.0",
+  "date": "2026-09-07",
+  "title": "Ein-Tasten-Kürzel, Nachrichtenfilterung und zwei neue Befehle",
+  "notes": [
+    "Ein-Tasten-Kürzel: Jeder Befehl kann jetzt auch auf eine einzelne Taste gelegt werden — z. B. s, g, Umschalt+G — in der neuen Spalte „Einzelne Taste“ auf der Optionsseite. Diese steht neben dem normalen Kürzel, ersetzt es nicht und bleibt inaktiv, während du in ein Textfeld tippst.",
+    "Neuer Befehl /filter: Filtert die Nachrichtenliste des Ordners, den du gerade ansiehst, live während du tippst. /body und /recipients — oder Strg+B und Strg+R beim Tippen — erweitern die durchsuchten Felder, und ein erneutes /filter ohne Suchtext löscht den Filter wieder.",
+    "Während des Filterns schrumpft das Popup auf nur das Eingabefeld und wandert in die untere rechte Ecke des Thunderbird-Fensters, damit die gefilterte Nachrichtenliste sichtbar bleibt.",
+    "Neuer Befehl /go: Springe aus dem Popup direkt in den Posteingang eines Kontos.",
+    "Neuer Befehl /columns: Zeige oder verberge die Spalten der Nachrichtenliste (Datum, Absender, Größe, …), ohne das Popup zu verlassen.",
+    "Neue Option: Das Suchfenster jedes Mal neu erstellen, statt es minimiert zu behalten, sodass zwischen den Nutzungen kein verbleibender Taskleisten-Eintrag bleibt.",
+    "Behoben: Das Drücken eines Suchkürzels, während das Suchfenster bereits geöffnet war, konnte statt dem Fokussieren des bestehenden Fensters ein zweites Fenster öffnen.",
+    "Behoben: Das Suchfenster konnte beim Anpassen an seinen Inhalt nur größer werden, aber nie kleiner.",
+    "Behoben: Das Speichern auf der Optionsseite konnte Einstellungen verwerfen, die kein eigenes Kontrollkästchen haben."
+  ]
+}

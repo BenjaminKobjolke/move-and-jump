@@ -1,0 +1,16 @@
+{
+  "version": "1.5.0",
+  "date": "2026-09-07",
+  "title": "Raccourcis à touche unique, filtrage des messages et deux nouvelles commandes",
+  "notes": [
+    "Raccourcis à touche unique : chaque commande peut désormais aussi être associée à une touche seule — s, g, Maj+G — dans la nouvelle colonne « Touche unique » de la page des options. Elle se trouve à côté du raccourci normal au lieu de le remplacer, et reste inactive pendant que vous tapez dans un champ de texte.",
+    "Nouvelle commande /filter : filtre la liste des messages du dossier que vous consultez déjà, en temps réel à mesure que vous tapez. /body et /recipients — ou Ctrl+B et Ctrl+R pendant la saisie — élargissent les champs dans lesquels il recherche, et retaper /filter seul efface le filtre.",
+    "Pendant le filtrage, la fenêtre contextuelle se réduit à la zone de saisie et se déplace dans le coin inférieur droit de la fenêtre Thunderbird, afin que la liste des messages filtrée reste visible.",
+    "Nouvelle commande /go : aller directement vers la boîte de réception d’un compte depuis la fenêtre contextuelle.",
+    "Nouvelle commande /columns : afficher ou masquer les colonnes de la liste des messages (Date, Expéditeur, Taille, …) sans quitter la fenêtre contextuelle.",
+    "Nouvelle option : recréer la fenêtre de recherche à chaque fois au lieu de la conserver minimisée, afin qu’elle ne laisse aucune entrée persistante dans la barre des tâches entre deux utilisations.",
+    "Correction : appuyer sur un raccourci de recherche alors que la fenêtre de recherche était déjà ouverte pouvait ouvrir une deuxième fenêtre au lieu de mettre au premier plan celle qui existait déjà.",
+    "Correction : la fenêtre de recherche ne pouvait que s’agrandir lorsqu’elle s’ajustait à son contenu, jamais se réduire.",
+    "Correction : l’enregistrement sur la page des options pouvait supprimer des paramètres qui n’ont pas leur propre case à cocher."
+  ]
+}

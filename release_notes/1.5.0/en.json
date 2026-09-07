@@ -1,0 +1,16 @@
+{
+  "version": "1.5.0",
+  "date": "2026-09-07",
+  "title": "Single-key shortcuts, message filtering, and two new commands",
+  "notes": [
+    "Single-key shortcuts: every command can now also be bound to a bare key — plain s, g, Shift+G — in the new Single key column on the options page. It sits alongside the normal shortcut instead of replacing it, and stays quiet while you are typing in a text field.",
+    "New /filter command: filters the message list of the folder you are already looking at, live as you type. /body and /recipients — or Ctrl+B and Ctrl+R while typing — widen the fields it searches, and a bare /filter clears it again.",
+    "While filtering, the popup shrinks to just the input and moves to the bottom-right corner of the Thunderbird window, so the message list it is filtering stays visible.",
+    "New /go command: jump straight to an account's inbox from the popup.",
+    "New /columns command: show or hide the columns of the message list (Date, Sender, Size, …) without leaving the popup.",
+    "New option: recreate the search window each time instead of keeping it minimized, so it leaves no lingering taskbar entry between uses.",
+    "Fixed: pressing a search shortcut while the search window was already open could open a second window instead of focusing the existing one.",
+    "Fixed: the search window could only ever grow when fitting itself to its content, never shrink.",
+    "Fixed: saving on the options page could discard settings that have no checkbox of their own."
+  ]
+}

@@ -212,17 +212,19 @@ free anymore.
 - **Anchoring/sizing**: gone; `openSearchWindow()` in `background.js`
   computes a centered position from `windows.getCurrent()` instead.
 - **Dismiss-on-blur**: reimplemented via `window.addEventListener("blur",
-  () => window.close())` in `search.js`. This turned out to have a
-  sharp edge: selecting a folder with **Enter** appeared to do nothing
-  (no move, no error), while clicking the exact same list item worked
-  fine. Working theory: Enter — unlike the arrow keys — causes this
-  window to lose focus as a side effect, firing the blur handler while
-  `select()`'s `sendMessage` call was still in flight and closing (and
-  destroying the JS context of) the window before the move/jump could
-  actually happen; a plain click never blurs the window, so it was
-  unaffected. Fixed with a `closing` flag set the moment a selection
-  or Escape is confirmed, which the blur handler checks before acting
-  — once we're closing on purpose, a racing blur is a no-op.
+  ...)` in `search.js`, which calls the same `hide()` every other
+  dismissal path uses. This turned out to have a sharp edge: selecting a
+  folder with **Enter** appeared to do nothing (no move, no error),
+  while clicking the exact same list item worked fine. Working theory:
+  Enter — unlike the arrow keys — causes this window to lose focus as a
+  side effect, firing the blur handler while `select()`'s `sendMessage`
+  call was still in flight and dismissing the window before the
+  move/jump could actually happen; a plain click never blurs the
+  window, so it was unaffected. Fixed with a `hiding` flag set the
+  moment a selection or Escape is confirmed, which the blur handler
+  checks before acting — once we're dismissing on purpose, a racing
+  blur is a no-op. (`hide()` itself minimizes rather than closes; see
+  the reuse note below.)
 - **`window.close()` from content script**: real popup windows block
   script-initiated close by default; `windows.create()` is called with
   `allowScriptsToClose: true` to allow it.
@@ -279,6 +281,11 @@ free anymore.
     `windows.update` and the `reset` `sendMessage` are also in **separate**
     try/catches: a failed `reset` send (popup not ready) no longer discards the
     id and creates a duplicate — only a failed `update` (window truly gone) does.
+  - Reuse is the default, not the only behaviour: the **`recreateWindow`** option
+    makes `hide()` call `window.close()` instead of minimizing (allowed because
+    the window is created with `allowScriptsToClose: true`), and makes
+    `openSearchWindow()` `windows.remove` any leftover window and skip the reuse
+    branch entirely. See `docs/settings/RECREATE_WINDOW.md`.
 
 The lesson, if you're touching this again: don't move back to
 `action.openPopup()` for this UI without re-testing keyboard focus on
@@ -427,12 +434,26 @@ that mutates `storage.local` and the toolbar tooltip.
     "b": { "folderId2": 2 }
   },
   "lastUsedFolderId": "folderId1",                    // used by the *-last commands
-  "options": {
+  "options": {                                        // see lib/options.js (DEFAULT_OPTIONS)
     "caseSensitiveSearch": false,
-    "searchAllAccounts": true
+    "fuzzySearch": false,
+    "searchAllAccounts": true,
+    "zoom": 100,                                      // percent, clamped 50-200
+    "resizeToFit": true,
+    "filterBody": false,                              // /filter field toggles, set from the popup
+    "filterRecipients": false,
+    "centerOnParent": true,
+    "recreateWindow": false,                          // close the search window on dismiss instead of minimizing it
+    "singleKeys": { "move-to-folder": "Shift+M" }     // command name -> bare-key shortcut
   }
 }
 ```
+
+`getOptions()` (`lib/options.js`) merges the stored object over
+`DEFAULT_OPTIONS`, so adding a key here never needs a storage migration — and
+the page-level writers (`options/options.js`'s `save()`, the popup's slash
+commands) merge over `getOptions()` first, so a key with no control on the page
+isn't dropped when an unrelated checkbox changes.
 
 ## Frequency-weighted search ranking and match highlighting
 
@@ -559,8 +580,9 @@ rounds of guessing specifically because the first version didn't.
   maintenance. Deliberately thin: it calls into `lib/*.js` for any
   actual logic.
 - `popup/` — `search.html`/`search.css`/`search.js`, the type-ahead UI.
-- `options/` — `options.html`/`options.js`, the two-checkbox options
-  page. Also renders a short explanatory intro and a live table of
+- `options/` — `options.html`/`options.js`, the options page: a set of
+  checkboxes and a zoom input, all backed by the single `options` object in
+  `storage.local` (`lib/options.js`). Also renders a short explanatory intro and a live table of
   the current keyboard shortcuts, built from `messenger.commands.getAll()`
   rather than hardcoded — it reflects whatever the user has actually
   rebound them to, not just the shipped defaults. This is also the

@@ -50,6 +50,9 @@
   "optionsCenterOnParent": {
     "message": "将搜索窗口居中于邮件窗口"
   },
+  "optionsRecreateWindow": {
+    "message": "每次重新创建搜索窗口（而不是保持最小化）"
+  },
   "optionsZoom": {
     "message": "缩放 (%)"
   },

@@ -155,6 +155,10 @@
     "message": "Center the search window over the mail window",
     "description": "Options page checkbox label"
   },
+  "optionsRecreateWindow": {
+    "message": "Recreate the search window each time (instead of keeping it minimized)",
+    "description": "Options page checkbox label"
+  },
   "optionsZoom": {
     "message": "Zoom (%)",
     "description": "Options page: main window zoom percentage"

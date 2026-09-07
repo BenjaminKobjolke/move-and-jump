@@ -50,6 +50,9 @@
   "optionsCenterOnParent": {
     "message": "Suchfenster über dem Mail-Fenster zentrieren"
   },
+  "optionsRecreateWindow": {
+    "message": "Suchfenster jedes Mal neu erstellen (statt es minimiert zu behalten)"
+  },
   "optionsZoom": {
     "message": "Zoom (%)"
   },

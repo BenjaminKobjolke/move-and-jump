@@ -6,6 +6,7 @@ const fuzzySearch = document.getElementById("fuzzySearch");
 const searchAllAccounts = document.getElementById("searchAllAccounts");
 const resizeToFit = document.getElementById("resizeToFit");
 const centerOnParent = document.getElementById("centerOnParent");
+const recreateWindow = document.getElementById("recreateWindow");
 const zoom = document.getElementById("zoom");
 const shortcutsTable = document.getElementById("shortcuts");
 const shortcutError = document.getElementById("shortcutError");
@@ -39,6 +40,7 @@ document.getElementById("fuzzySearchLabel").textContent = msg("optionsFuzzySearc
 document.getElementById("searchAllAccountsLabel").textContent = msg("optionsSearchAllAccounts");
 document.getElementById("resizeToFitLabel").textContent = msg("optionsResizeToFit");
 document.getElementById("centerOnParentLabel").textContent = msg("optionsCenterOnParent");
+document.getElementById("recreateWindowLabel").textContent = msg("optionsRecreateWindow");
 document.getElementById("zoomLabel").textContent = msg("optionsZoom");
 
 let isMac = false;
@@ -246,6 +248,7 @@ async function load() {
   searchAllAccounts.checked = options.searchAllAccounts;
   resizeToFit.checked = options.resizeToFit;
   centerOnParent.checked = options.centerOnParent;
+  recreateWindow.checked = options.recreateWindow;
   zoom.value = options.zoom;
 }
 
@@ -263,6 +266,7 @@ async function save() {
       searchAllAccounts: searchAllAccounts.checked,
       resizeToFit: resizeToFit.checked,
       centerOnParent: centerOnParent.checked,
+      recreateWindow: recreateWindow.checked,
       zoom: clampZoom(zoom.value),
     },
   });
@@ -273,6 +277,7 @@ fuzzySearch.addEventListener("change", save);
 searchAllAccounts.addEventListener("change", save);
 resizeToFit.addEventListener("change", save);
 centerOnParent.addEventListener("change", save);
+recreateWindow.addEventListener("change", save);
 zoom.addEventListener("change", save);
 
 load();

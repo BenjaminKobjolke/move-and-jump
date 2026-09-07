@@ -1,0 +1,16 @@
+{
+  "version": "1.5.0",
+  "date": "2026-09-07",
+  "title": "Atajos de una sola tecla, filtrado de mensajes y dos comandos nuevos",
+  "notes": [
+    "Atajos de una sola tecla: ahora todos los comandos también se pueden vincular a una tecla sola — s, g, Mayús+G — en la nueva columna Tecla única en la página de opciones. Se muestra junto al atajo normal en lugar de sustituirlo, y permanece inactivo mientras escribes en un campo de texto.",
+    "Nuevo comando /filter: filtra la lista de mensajes de la carpeta que ya estás viendo, en vivo a medida que escribes. /body y /recipients — o Ctrl+B y Ctrl+R mientras escribes — amplían los campos en los que busca, y escribir /filter de nuevo sin más lo borra.",
+    "Mientras se filtra, la ventana emergente se reduce a solo el campo de entrada y se mueve a la esquina inferior derecha de la ventana de Thunderbird, para que la lista de mensajes que está filtrando siga visible.",
+    "Nuevo comando /go: salta directamente a la bandeja de entrada de una cuenta desde la ventana emergente.",
+    "Nuevo comando /columns: muestra u oculta las columnas de la lista de mensajes (Fecha, Remitente, Tamaño, …) sin salir de la ventana emergente.",
+    "Nueva opción: recrear la ventana de búsqueda cada vez en lugar de mantenerla minimizada, para que no deje ninguna entrada persistente en la barra de tareas entre usos.",
+    "Corregido: al pulsar un atajo de búsqueda mientras la ventana de búsqueda ya estaba abierta, podía abrirse una segunda ventana en lugar de enfocarse la existente.",
+    "Corregido: la ventana de búsqueda solo podía crecer al ajustarse a su contenido; nunca podía reducirse.",
+    "Corregido: al guardar en la página de opciones se podían descartar ajustes que no tienen su propia casilla de verificación."
+  ]
+}

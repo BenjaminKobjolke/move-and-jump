@@ -52,7 +52,15 @@ jobs:
       # much longer than a CI run should block on — the public listing
       # updates whenever review actually completes, independent of
       # this workflow.
+      #
+      # DISABLED for now: releases go to GitHub only. Flip `if:` back to
+      # true (or delete the line) to resume publishing to ATN — nothing
+      # else needs changing, the secrets and the rest of the step stay as
+      # they are. While this is off, the .xpi attached to the GitHub
+      # release is UNSIGNED, so installing it needs
+      # xpinstall.signatures.required=false (see README).
       - name: Sign and submit to addons.thunderbird.net
+        if: false
         uses: kewisch/action-web-ext@v2
         with:
           cmd: sign
