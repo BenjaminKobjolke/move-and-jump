@@ -14,6 +14,14 @@ Runs `node --test "test/*.test.js"`. Each `test/<name>.test.js` file exercises
 the matching `lib/<name>.js` module (e.g. `test/commands.test.js` →
 `lib/commands.js`). Node ≥ 18 is required.
 
+`test/guards.test.js` is the one exception to both rules: it has no `lib/`
+counterpart and it stubs a minimal `messenger` and `document`, because what it
+checks is that `background.js` and `options/options.js` survive loading when the
+`keys` experiment namespace is missing or throws on property access — a failure
+that took the whole add-on down once, and that can only be reproduced by
+importing those two modules for real. Keep new tests on the normal side of this
+line unless they are guarding the same kind of load-time failure.
+
 To run a single file:
 
 ```sh

@@ -179,7 +179,10 @@ function activeMailTabId(win) {
     if (!extension?.tabManager || !nativeTab) return -1;
     return extension.tabManager.getWrapper(nativeTab)?.id ?? -1;
   } catch (error) {
-    // Not a mail tab, or the tab manager moved. The background falls back.
+    // Not a mail tab, or the tab manager moved. The background falls back, so
+    // this degrades quietly -- log it, or a moved internal looks like the
+    // command simply acting on the wrong tab.
+    console.error("Move and Jump: could not resolve the mail tab", error);
     return -1;
   }
 }
