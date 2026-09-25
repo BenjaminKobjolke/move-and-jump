@@ -12,7 +12,7 @@
       "strict_min_version": "128.0"
     }
   },
-  "permissions": ["accountsRead", "messagesRead", "messagesMove", "storage"],
+  "permissions": ["accountsRead", "messagesRead", "messagesMove", "storage", "compose", "clipboardWrite"],
   "experiment_apis": {
     "columns": {
       "schema": "experiments/columns/schema.json",
@@ -69,6 +69,18 @@
     },
     "filter-search": {
       "description": "__MSG_commandFilterSearchDescription__"
+    },
+    "copy-sender-name": {
+      "description": "__MSG_commandCopySenderNameDescription__"
+    },
+    "copy-sender-email": {
+      "description": "__MSG_commandCopySenderEmailDescription__"
+    },
+    "write-to-sender": {
+      "description": "__MSG_commandWriteToSenderDescription__"
+    },
+    "open-link": {
+      "description": "__MSG_commandOpenLinkDescription__"
     }
   },
   "options_ui": {

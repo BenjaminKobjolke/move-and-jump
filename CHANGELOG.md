@@ -4,6 +4,21 @@ All notable changes to this project are documented here. Versions
 follow [semantic versioning](https://semver.org/) — see
 [ARCHITECTURE.md](ARCHITECTURE.md#versioning) for the project's policy.
 
+## [Unreleased]
+
+### Added
+
+- **Actions on the displayed message**, as four new commands with no default
+  key (bind them on the options page, single keys included):
+  *Copy sender name*, *Copy sender email*, *Write to sender* and *Open link*.
+- **Message slash commands**: `/copy-name`, `/copy-email`, `/write`,
+  `/reply`, `/reply-all`, acting on the displayed message.
+- **`/links` slash command**: lists the displayed message's links; Enter opens
+  the selected one in the default browser. *Open link* opens the popup on it.
+- New permissions: `compose` (for *Write to sender*) and `clipboardWrite` (the
+  copy commands run without a popup). Thunderbird asks to approve them on
+  update.
+
 ## [1.5.0] - 2026-09-07
 
 ### Added

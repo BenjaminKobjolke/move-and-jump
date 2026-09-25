@@ -5,6 +5,7 @@ import { decodeImapUtf7 } from "../lib/imapUtf7.js";
 import { sortByQueryWeight } from "../lib/weights.js";
 import { findMatchRanges } from "../lib/highlight.js";
 import { parseCommand, matchCommands } from "../lib/commands.js";
+import { extractUrls, dedupeLinks } from "../lib/links.js";
 
 const heading = document.getElementById("heading");
 const input = document.getElementById("query");
@@ -50,12 +51,18 @@ let queryWeights = {};
 // Each entry is { type: "folder", folder },
 // { type: "command", command, arg, label, enabled }, or
 // { type: "column", id, label } (one message-list column), or
-// { type: "account", folder, label } (one account's inbox).
+// { type: "account", folder, label } (one account's inbox), or
+// { type: "link", url, label } (one link in the displayed message).
 let visible = [];
 // Message-list columns as last reported by the columns experiment:
 // [{ id, label, hidden }]. Empty when unavailable (no mail tab, or a
 // Thunderbird version whose internals the experiment can't read).
 let columnState = [];
+// Links in the tab's displayed message, [{ text, url }]; see loadDisplayed().
+let linkState = [];
+// Whether the tab shows exactly one message — what the message commands
+// (/copy-name, /reply, …) need to be selectable.
+let hasDisplayedMessage = false;
 let activeIndex = 0;
 // Last query handed to the mail tab's quick filter, so a /body or /recipients
 // toggle can re-apply it with the new field set.
@@ -103,6 +110,7 @@ async function init() {
     tab,
     cols,
     unified,
+    displayed,
   ] = await Promise.all([
     messenger.folders.query({}),
     messenger.accounts.list(),
@@ -119,6 +127,10 @@ async function init() {
     // Unified folders are a TB 128+ nicety; degrade to none rather than
     // failing the whole popup if this Thunderbird won't serve them.
     messenger.folders.query({ isUnified: true }).catch(() => []),
+    loadDisplayed().catch((displayError) => {
+      console.error("Move and Jump: reading the displayed message failed", displayError);
+      return { single: false, links: [] };
+    }),
   ]);
   rawFolders = folders;
   unifiedFolders = unified;
@@ -129,6 +141,8 @@ async function init() {
   queryWeights = qWeights;
   options = opts;
   columnState = cols;
+  linkState = displayed.links;
+  hasDisplayedMessage = displayed.single;
 
   applyScope();
 
@@ -305,6 +319,7 @@ function render(query) {
     // shorter is still an ordinary command row.
     if (parsed.token === "columns") renderColumns(parsed.arg);
     else if (parsed.token === "go") renderAccounts(parsed.arg);
+    else if (parsed.token === "links") renderLinks(parsed.arg);
     else renderCommands(parsed);
     return;
   }
@@ -458,6 +473,52 @@ function renderAccounts(arg) {
   moveButton.disabled = jumpButton.disabled = true;
 }
 
+/**
+ * Whether the tab shows exactly one message, and every http(s) link in it,
+ * anchors first. HTML parts give anchor text + href via DOMParser (no script
+ * runs in a parsed document); plain-text parts only have bare urls, which
+ * label themselves.
+ * @returns {Promise<{single: boolean, links: Array<{text: string, url: string}>}>}
+ */
+async function loadDisplayed() {
+  if (tabId === undefined) return { single: false, links: [] };
+  // MV3: getDisplayedMessages returns a MessageList; the singular call is MV2-only.
+  const { messages = [] } = await messenger.messageDisplay.getDisplayedMessages(tabId);
+  if (messages.length !== 1) return { single: false, links: [] };
+  const [message] = messages;
+  const parts = await messenger.messages.listInlineTextParts(message.id);
+  const links = [];
+  for (const part of parts) {
+    if (part.contentType === "text/html") {
+      const doc = new DOMParser().parseFromString(part.content, "text/html");
+      for (const anchor of doc.querySelectorAll("a[href]")) {
+        links.push({ text: anchor.textContent.replace(/\s+/g, " ").trim(), url: anchor.href });
+      }
+    } else {
+      for (const url of extractUrls(part.content)) links.push({ text: url, url });
+    }
+  }
+  return { single: true, links: dedupeLinks(links) };
+}
+
+/** The `/links` rows, substring-filtered by `arg` on text and url. */
+function renderLinks(arg) {
+  const needle = arg.toLowerCase();
+  const entries = linkState.map(({ text, url }) => ({
+    type: "link",
+    url,
+    label: text && text !== url ? `${text} — ${url}` : url,
+  }));
+  renderRows(entries.filter((entry) => entry.label.toLowerCase().includes(needle)));
+  highlight();
+
+  empty.textContent = messenger.i18n.getMessage(
+    entries.length === 0 ? "commandLinksUnavailable" : "popupNoCommands",
+  );
+  empty.hidden = visible.length !== 0;
+  moveButton.disabled = jumpButton.disabled = true;
+}
+
 function renderCommands({ token, arg }) {
   renderRows(matchCommands(token).map((command) => commandEntry(command, arg)));
   // Which fields the filter searches, and the shortcuts that flip the optional
@@ -479,6 +540,15 @@ function renderCommands({ token, arg }) {
   // Move/Jump act on folders, not commands.
   moveButton.disabled = jumpButton.disabled = true;
 }
+
+// i18n keys can't hold the commands' hyphens, hence a map.
+const MESSAGE_ACTION_LABELS = {
+  "copy-name": "commandCopyName",
+  "copy-email": "commandCopyEmail",
+  write: "commandWrite",
+  reply: "commandReply",
+  "reply-all": "commandReplyAll",
+};
 
 const onOff = (value) => messenger.i18n.getMessage(value ? "onState" : "offState");
 
@@ -533,6 +603,19 @@ function commandEntry(command, arg) {
       // switches the list to the accounts themselves (see renderAccounts).
       enabled = goEntries().length > 0;
       label = messenger.i18n.getMessage(enabled ? "commandGoHint" : "commandGoUnavailable");
+      break;
+    case "links":
+      // Same two-level shape: completing the name lists the links themselves.
+      enabled = linkState.length > 0;
+      label = messenger.i18n.getMessage(enabled ? "commandLinksHint" : "commandLinksUnavailable");
+      break;
+    default:
+      if (command.messageAction) {
+        enabled = hasDisplayedMessage;
+        label = messenger.i18n.getMessage(
+          enabled ? MESSAGE_ACTION_LABELS[command.name] : "commandMessageUnavailable",
+        );
+      }
       break;
   }
   return { type: "command", command, arg, label, enabled };
@@ -606,6 +689,17 @@ async function activate(entry) {
     input.focus();
     return;
   }
+  if (entry.type === "link") {
+    try {
+      await messenger.windows.openDefaultBrowser(entry.url);
+    } catch (openError) {
+      console.error("Move and Jump: opening link failed", openError);
+      error.hidden = false;
+      return;
+    }
+    hide();
+    return;
+  }
   if (entry.type === "account") {
     // Same path as picking the folder out of the list by hand, so the
     // recents/weights bookkeeping and the error row come along unchanged.
@@ -624,6 +718,10 @@ async function activate(entry) {
   }
   if (entry.type === "command") {
     if (entry.enabled === false) return;
+    if (entry.command.messageAction) {
+      runMessageAction(entry.command.name);
+      return;
+    }
     switch (entry.command.name) {
       case "zoom": {
         const valid = entry.arg !== "" && !Number.isNaN(Number(entry.arg));
@@ -688,6 +786,12 @@ async function activate(entry) {
         updatePlacement();
         input.focus();
         return;
+      case "links":
+        input.value = "/links ";
+        render(input.value);
+        updatePlacement();
+        input.focus();
+        return;
     }
     await messenger.storage.local.set({ options });
     input.value = "";
@@ -709,10 +813,10 @@ async function activate(entry) {
 function completeActive() {
   const entry = visible[activeIndex];
   if (!entry) return;
-  // Column and account rows have nothing useful to complete to — the input
+  // Column, account and link rows have nothing useful to complete to — the input
   // already reads "/columns …" / "/go …" and completing to a name would just
   // re-filter the same list.
-  if (entry.type === "column" || entry.type === "account") return;
+  if (entry.type === "column" || entry.type === "account" || entry.type === "link") return;
   const text =
     entry.type === "command"
       ? `/${entry.command.name}${entry.command.takesArg ? " " : ""}`
@@ -762,6 +866,25 @@ async function hide() {
   } catch (hideError) {
     console.error("Move and Jump: hide failed", hideError);
   }
+}
+
+/**
+ * Run a message command (/copy-name, /reply, …) in background.js — the same
+ * code the keyboard commands use — then hide, or show the error row.
+ */
+async function runMessageAction(action) {
+  error.hidden = true;
+  hiding = true;
+  try {
+    const response = await messenger.runtime.sendMessage({ type: "message-action", action, tabId });
+    if (response?.ok === false) throw new Error(response.error);
+  } catch (actionError) {
+    console.error("Move and Jump: message action failed", actionError);
+    hiding = false;
+    error.hidden = false;
+    return;
+  }
+  hide();
 }
 
 async function select(actionMode, folder) {

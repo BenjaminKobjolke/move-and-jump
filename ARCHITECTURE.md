@@ -603,6 +603,8 @@ rounds of guessing specifically because the first version didn't.
   - `weights.js` — track and sort by per-folder usage counts, both
     global and per-typed-query-prefix.
   - `highlight.js` — find where a query matches in a displayed label.
+  - `links.js` — pull http(s) urls out of a message's plain text and
+    dedupe them, for `/links`.
   - `keys.js` — recognise and validate the modifier-less shortcuts
     `commands` refuses (see [Single-key shortcuts][sk]); also the list
     of command names shared with `background.js`.

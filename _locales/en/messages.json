@@ -23,6 +23,22 @@
     "message": "Filter the displayed message list",
     "description": "manifest.json commands.filter-search description; no default key, assign one on the options page"
   },
+  "commandCopySenderNameDescription": {
+    "message": "Copy the displayed message's sender name",
+    "description": "manifest.json commands.copy-sender-name description; no default key"
+  },
+  "commandCopySenderEmailDescription": {
+    "message": "Copy the displayed message's sender email address",
+    "description": "manifest.json commands.copy-sender-email description; no default key"
+  },
+  "commandWriteToSenderDescription": {
+    "message": "Write a new message to the displayed message's sender",
+    "description": "manifest.json commands.write-to-sender description; no default key"
+  },
+  "commandOpenLinkDescription": {
+    "message": "Open a link from the displayed message in the browser",
+    "description": "manifest.json commands.open-link description; no default key; opens the popup in /links mode"
+  },
   "actionTitle": {
     "message": "Move and Jump",
     "description": "Toolbar button tooltip / title"
@@ -114,6 +130,38 @@
   "commandGoUnified": {
     "message": "Go to $1 — all accounts",
     "description": "Popup /go row for one unified folder. $1 is the folder name, e.g. Inbox"
+  },
+  "commandLinksHint": {
+    "message": "Open a link from the message — press Enter to list links",
+    "description": "Popup slash-command row: /links with no argument"
+  },
+  "commandCopyName": {
+    "message": "Copy sender name",
+    "description": "Popup slash-command row: /copy-name"
+  },
+  "commandCopyEmail": {
+    "message": "Copy sender email",
+    "description": "Popup slash-command row: /copy-email"
+  },
+  "commandWrite": {
+    "message": "Write new message to sender",
+    "description": "Popup slash-command row: /write"
+  },
+  "commandReply": {
+    "message": "Reply to sender",
+    "description": "Popup slash-command row: /reply"
+  },
+  "commandReplyAll": {
+    "message": "Reply to all",
+    "description": "Popup slash-command row: /reply-all"
+  },
+  "commandMessageUnavailable": {
+    "message": "Message actions — no single displayed message",
+    "description": "Popup slash-command row for /copy-name, /copy-email, /write, /reply, /reply-all when not exactly one message is displayed"
+  },
+  "commandLinksUnavailable": {
+    "message": "Links — no displayed message with links",
+    "description": "Popup slash-command row: /links when there is no single displayed message, or it has no links"
   },
   "commandColumnsHint": {
     "message": "Message list columns — press Enter to list them",

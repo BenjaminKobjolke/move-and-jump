@@ -19,6 +19,12 @@ another command.
 | `/sensitive`      | Toggle case-sensitive search                                 |
 | `/columns [name]` | Show/hide message-list columns (Date, From, …)               |
 | `/go [name]`      | Jump to an inbox, a unified folder, or all unread             |
+| `/links [text]`   | Open a link from the displayed message in the browser        |
+| `/copy-name`      | Copy the displayed message's sender name                     |
+| `/copy-email`     | Copy the displayed message's sender email                    |
+| `/write`          | New message to the displayed message's sender                |
+| `/reply`          | Reply to the displayed message's sender                      |
+| `/reply-all`      | Reply to all on the displayed message                        |
 
 `/columns` is the odd one out: its state belongs to Thunderbird, not to this
 add-on (see [Toggling columns](#toggling-columns)).
@@ -125,6 +131,36 @@ knowing:
 Unified folders are a Thunderbird 128+ feature and `folders.query({})` skips
 them by design, so they are fetched separately; on a Thunderbird that won't
 serve them the extra rows are simply absent and the account inboxes still work.
+
+## Opening links with `/links`
+
+Two levels deep like `/go`. The completed `/links ` lists every http(s) link in
+the message displayed in the mail tab, one row each: `anchor text — url` for
+HTML links, just the url for bare links in plain text. Duplicates are shown
+once. An argument filters by substring on the whole row: `/links invoice`.
+Enter (or a click) opens the link with `windows.openDefaultBrowser()` and
+hides the popup.
+
+The `open-link` shortcut opens the popup straight into this list. With no single
+displayed message, or one without links, the row reads `Links — no displayed
+message with links` and is not selectable.
+
+Links come from `messages.listInlineTextParts()` (decoded body parts): HTML
+parts go through `DOMParser` and yield `a[href]`, plain parts go through
+`extractUrls()`; `dedupeLinks()` drops non-http(s) and repeats. Both helpers are
+in `lib/links.js`, tested in `test/links.test.js`.
+
+## Message commands
+
+`/copy-name`, `/copy-email`, `/write`, `/reply` and `/reply-all` act on the
+message displayed in the mail tab and then hide the popup. They are marked
+`messageAction` in `lib/commands.js`; the popup sends
+`{ type: "message-action", action, tabId }` and `background.js` runs it from
+`MESSAGE_ACTIONS` — the same helpers the `copy-sender-*` / `write-to-sender`
+keyboard commands use. `/reply` and `/reply-all` use `compose.beginReply()`.
+With no single displayed message the rows read `Message actions — no single
+displayed message` and are not selectable. `/reply` lists both reply rows;
+`/reply-` narrows to reply-all.
 
 ## Using it
 

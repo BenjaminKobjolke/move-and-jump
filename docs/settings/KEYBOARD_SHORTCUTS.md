@@ -21,6 +21,16 @@ replace each other.
 | `move-last` | `Ctrl+Alt+N` | Move email to last-used folder (no UI) |
 | `jump-last` | `Ctrl+Alt+H` | Jump to last-used folder (no UI) |
 | `filter-search` | *(none)* | Open the popup in [`/filter`](../FILTER_EMAILS.md) mode |
+| `copy-sender-name` | *(none)* | Copy the displayed message's sender name (falls back to the address) |
+| `copy-sender-email` | *(none)* | Copy the displayed message's sender address |
+| `write-to-sender` | *(none)* | New message to the displayed message's sender |
+| `open-link` | *(none)* | Open the popup in [`/links`](../COMMANDS.md#opening-links-with-links) mode |
+
+The four message commands act on the **displayed** message — the preview pane,
+or a message opened in its own tab/window. With no message or several selected
+they do nothing (a `Move and Jump:` error in the console says why). A single key
+does not fire while focus is inside the message body or in a standalone message
+window; use a normal shortcut there.
 
 No command ships with a default **single key** — that column starts empty.
 Picking a letter is left to you, because most plain letters already mean

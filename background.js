@@ -315,6 +315,59 @@ async function actOnLastFolder(mode, tabId) {
 }
 
 /**
+ * The message shown in `tabId` — the preview pane of a mail tab, or a message
+ * opened in its own tab/window. Null (logged) when there isn't exactly one.
+ */
+async function getDisplayedMessage(tabId) {
+  const resolvedTabId = tabId ?? (await getActiveTab())?.id;
+  // MV3 has no getDisplayedMessage (singular); getDisplayedMessages returns a
+  // MessageList. Exactly one, or it's ambiguous which sender is meant.
+  const { messages = [] } =
+    resolvedTabId === undefined
+      ? {}
+      : await messenger.messageDisplay.getDisplayedMessages(resolvedTabId);
+  const message = messages.length === 1 ? messages[0] : null;
+  if (!message) console.error("Move and Jump: no single displayed message in tab", resolvedTabId);
+  return message;
+}
+
+/** Copy the displayed message's sender name ("name") or address ("email"). */
+async function copySender(tabId, field) {
+  const message = await getDisplayedMessage(tabId);
+  if (!message) return;
+  const [sender] = await messenger.messengerUtilities.parseMailboxString(message.author);
+  if (!sender) return;
+  // A sender with no display name still copies something useful.
+  const text = field === "name" ? sender.name || sender.email : sender.email;
+  // Background has no user gesture; the clipboardWrite permission covers that.
+  await navigator.clipboard.writeText(text);
+}
+
+async function writeToSender(tabId) {
+  const message = await getDisplayedMessage(tabId);
+  if (message) await messenger.compose.beginNew({ to: [message.author] });
+}
+
+/** @param {"replyToSender"|"replyToAll"} replyType */
+async function replyTo(tabId, replyType) {
+  const message = await getDisplayedMessage(tabId);
+  if (message) await messenger.compose.beginReply(message.id, replyType);
+}
+
+/**
+ * The popup's message slash commands (/copy-name, /write, /reply, …), keyed by
+ * command name. Run here rather than in the popup so they share one code path
+ * with the keyboard commands.
+ */
+const MESSAGE_ACTIONS = {
+  "copy-name": (tabId) => copySender(tabId, "name"),
+  "copy-email": (tabId) => copySender(tabId, "email"),
+  write: writeToSender,
+  reply: (tabId) => replyTo(tabId, "replyToSender"),
+  "reply-all": (tabId) => replyTo(tabId, "replyToAll"),
+};
+
+/**
  * Run one of the add-on's commands. Shared by the two ways a command can be
  * triggered from the keyboard: Thunderbird's own `commands` API, and the
  * single-key bindings from experiments/keys. Both hand us the mail tab up
@@ -336,6 +389,15 @@ function dispatchCommand(command, tabId) {
       return actOnLastFolder("move", tabId);
     case "jump-last":
       return actOnLastFolder("jump", tabId);
+    // Act on the displayed message rather than on folders; no default keys.
+    case "copy-sender-name":
+      return copySender(tabId, "name");
+    case "copy-sender-email":
+      return copySender(tabId, "email");
+    case "write-to-sender":
+      return writeToSender(tabId);
+    case "open-link":
+      return openSearchWindow("move", tabId, "/links ");
     default:
       return undefined;
   }
@@ -423,6 +485,15 @@ messenger.action.onClicked.addListener((tab) => openSearchWindow("move", tab.id)
 messenger.runtime.onMessage.addListener((message) => {
   if (message?.type === "select") {
     return handleSelection(message.mode, message.folderId, message.tabId, message.query);
+  }
+  if (message?.type === "message-action" && MESSAGE_ACTIONS[message.action]) {
+    return MESSAGE_ACTIONS[message.action](message.tabId).then(
+      () => ({ ok: true }),
+      (error) => {
+        console.error("Move and Jump: message action failed", message.action, error);
+        return { ok: false, error: String(error) };
+      },
+    );
   }
   if (message?.type === "resize") {
     return resizeSearchWindow(message.height, message.zoom, message.place);

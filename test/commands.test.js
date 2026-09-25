@@ -28,8 +28,8 @@ test("matchCommands prefix-matches by command name", () => {
   assert.deepEqual(matchCommands("s").map((c) => c.name), ["sensitive"]);
   assert.deepEqual(matchCommands("z").map((c) => c.name), ["zoom"]);
   assert.deepEqual(matchCommands("b").map((c) => c.name), ["body"]);
-  assert.deepEqual(matchCommands("r").map((c) => c.name), ["recipients"]);
-  assert.deepEqual(matchCommands("c").map((c) => c.name), ["columns"]);
+  assert.deepEqual(matchCommands("rec").map((c) => c.name), ["recipients"]);
+  assert.deepEqual(matchCommands("col").map((c) => c.name), ["columns"]);
 });
 
 test("an ambiguous prefix matches every command sharing it", () => {
@@ -47,11 +47,22 @@ test("bare slash (empty token) matches every command", () => {
     "sensitive",
     "columns",
     "go",
+    "links",
+    "copy-name",
+    "copy-email",
+    "write",
+    "reply",
+    "reply-all",
   ]);
 });
 
 test("parseCommand keeps a column name as the argument", () => {
   assert.deepEqual(parseCommand("/columns da"), { token: "columns", arg: "da" });
+});
+
+test("\"/reply\" lists both reply commands, \"/reply-\" only reply-all", () => {
+  assert.deepEqual(matchCommands("reply").map((c) => c.name), ["reply", "reply-all"]);
+  assert.deepEqual(matchCommands("reply-").map((c) => c.name), ["reply-all"]);
 });
 
 test("no command matches an unknown token", () => {
