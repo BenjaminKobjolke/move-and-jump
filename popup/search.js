@@ -545,6 +545,7 @@ function renderCommands({ token, arg }) {
 const MESSAGE_ACTION_LABELS = {
   "copy-name": "commandCopyName",
   "copy-email": "commandCopyEmail",
+  "copy-subject": "commandCopySubject",
   write: "commandWrite",
   reply: "commandReply",
   "reply-all": "commandReplyAll",

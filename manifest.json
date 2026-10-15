@@ -76,6 +76,9 @@
     "copy-sender-email": {
       "description": "__MSG_commandCopySenderEmailDescription__"
     },
+    "copy-subject": {
+      "description": "__MSG_commandCopySubjectDescription__"
+    },
     "write-to-sender": {
       "description": "__MSG_commandWriteToSenderDescription__"
     },

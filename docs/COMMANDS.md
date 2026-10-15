@@ -22,6 +22,7 @@ another command.
 | `/links [text]`   | Open a link from the displayed message in the browser        |
 | `/copy-name`      | Copy the displayed message's sender name                     |
 | `/copy-email`     | Copy the displayed message's sender email                    |
+| `/copy-subject`   | Copy the displayed message's subject                         |
 | `/write`          | New message to the displayed message's sender                |
 | `/reply`          | Reply to the displayed message's sender                      |
 | `/reply-all`      | Reply to all on the displayed message                        |

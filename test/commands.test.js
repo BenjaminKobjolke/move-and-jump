@@ -50,6 +50,7 @@ test("bare slash (empty token) matches every command", () => {
     "links",
     "copy-name",
     "copy-email",
+    "copy-subject",
     "write",
     "reply",
     "reply-all",

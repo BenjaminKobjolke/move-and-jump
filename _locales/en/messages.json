@@ -31,6 +31,10 @@
     "message": "Copy the displayed message's sender email address",
     "description": "manifest.json commands.copy-sender-email description; no default key"
   },
+  "commandCopySubjectDescription": {
+    "message": "Copy the displayed message's subject",
+    "description": "manifest.json commands.copy-subject description; no default key"
+  },
   "commandWriteToSenderDescription": {
     "message": "Write a new message to the displayed message's sender",
     "description": "manifest.json commands.write-to-sender description; no default key"
@@ -143,6 +147,10 @@
     "message": "Copy sender email",
     "description": "Popup slash-command row: /copy-email"
   },
+  "commandCopySubject": {
+    "message": "Copy subject",
+    "description": "Popup slash-command row: /copy-subject"
+  },
   "commandWrite": {
     "message": "Write new message to sender",
     "description": "Popup slash-command row: /write"
@@ -157,7 +165,7 @@
   },
   "commandMessageUnavailable": {
     "message": "Message actions — no single displayed message",
-    "description": "Popup slash-command row for /copy-name, /copy-email, /write, /reply, /reply-all when not exactly one message is displayed"
+    "description": "Popup slash-command row for /copy-name, /copy-email, /copy-subject, /write, /reply, /reply-all when not exactly one message is displayed"
   },
   "commandLinksUnavailable": {
     "message": "Links — no displayed message with links",

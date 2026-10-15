@@ -8,10 +8,11 @@ follow [semantic versioning](https://semver.org/) — see
 
 ### Added
 
-- **Actions on the displayed message**, as four new commands with no default
+- **Actions on the displayed message**, as five new commands with no default
   key (bind them on the options page, single keys included):
-  *Copy sender name*, *Copy sender email*, *Write to sender* and *Open link*.
-- **Message slash commands**: `/copy-name`, `/copy-email`, `/write`,
+  *Copy sender name*, *Copy sender email*, *Copy subject*, *Write to sender*
+  and *Open link*.
+- **Message slash commands**: `/copy-name`, `/copy-email`, `/copy-subject`, `/write`,
   `/reply`, `/reply-all`, acting on the displayed message.
 - **`/links` slash command**: lists the displayed message's links; Enter opens
   the selected one in the default browser. *Open link* opens the popup on it.

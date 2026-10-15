@@ -343,6 +343,11 @@ async function copySender(tabId, field) {
   await navigator.clipboard.writeText(text);
 }
 
+async function copySubject(tabId) {
+  const message = await getDisplayedMessage(tabId);
+  if (message) await navigator.clipboard.writeText(message.subject);
+}
+
 async function writeToSender(tabId) {
   const message = await getDisplayedMessage(tabId);
   if (message) await messenger.compose.beginNew({ to: [message.author] });
@@ -362,6 +367,7 @@ async function replyTo(tabId, replyType) {
 const MESSAGE_ACTIONS = {
   "copy-name": (tabId) => copySender(tabId, "name"),
   "copy-email": (tabId) => copySender(tabId, "email"),
+  "copy-subject": copySubject,
   write: writeToSender,
   reply: (tabId) => replyTo(tabId, "replyToSender"),
   "reply-all": (tabId) => replyTo(tabId, "replyToAll"),
@@ -394,6 +400,8 @@ function dispatchCommand(command, tabId) {
       return copySender(tabId, "name");
     case "copy-sender-email":
       return copySender(tabId, "email");
+    case "copy-subject":
+      return copySubject(tabId);
     case "write-to-sender":
       return writeToSender(tabId);
     case "open-link":
