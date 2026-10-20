@@ -42,24 +42,30 @@ performs steps 2–7 below in order:
    `web-ext build`). If any of 3–5 fails it rolls the bump back with
    `tools\windows\version_unbump.bat`;
 6. asks **Commit, tag and push?** — commits `RELEASE (extension): <nextLabel>`,
-   tags `<nextLabel>` and pushes both.
+   tags `<nextLabel>` and pushes both;
+7. asks **Create GitHub Release <nextLabel>?** — runs `gh release create` on
+   the pushed tag, with `web-ext-artifacts/move-and-jump-<nextLabel>.xpi`
+   attached and `release_notes/<nextLabel>/en.json` (title + bullets) as the
+   body. Needs the `gh` CLI, logged in (`gh auth login`).
 
-There is no publish gate: the pushed tag is the publish step (see step 7).
-Tags made this way are **bare** (`1.5.1`, not `v1.5.1`) and lightweight; the
-release workflow accepts both forms and takes the GitHub release body from
-`release_notes/<version>/en.json`, falling back to the tag annotation only when
-that file is missing.
+Tags made this way are **bare** (`1.5.1`, not `v1.5.1`) and lightweight. The
+GitHub release is created on this machine, not by CI: GitHub Actions has never
+run in this repository, so the release workflow is only a check if it ever does.
 
 Before running it, move the `## [Unreleased]` block of CHANGELOG.md under a
 `## [<nextLabel>]` heading — the script does not touch the changelog. For a
 minor or major release, use the manual steps below; the script only bumps the
 patch.
 
-The completed artifact is `web-ext-artifacts/move-and-jump-<version>.xpi`, but
-nothing on this machine uploads it: CI rebuilds from the tagged commit. To
-retry publishing an existing release without rebuilding or bumping, re-run the
-workflow for its tag on GitHub, or delete and re-push the tag
-(`git push origin :<label>` then `git push origin <label>`).
+The completed artifact is `web-ext-artifacts/move-and-jump-<version>.xpi`. To
+retry the GitHub release of an existing build without rebuilding or bumping:
+
+```bat
+gh release create <label> web-ext-artifacts\move-and-jump-<label>.xpi --title <label> --notes-file <notes.md>
+```
+
+If the release already exists, `gh release upload <label> <xpi> --clobber`
+replaces the asset.
 
 ## 1. Get the current version
 
@@ -221,8 +227,9 @@ Pushing the `v*.*.*` tag triggers
 1. verifies the tag matches `manifest.json`'s version (a mismatch fails the run
    before anything is published);
 2. runs `npm test`, `npm run build`;
-3. creates a **GitHub release** whose body is the tag's own annotation message,
-   with the `.xpi` attached.
+3. nothing else: the GitHub release is created locally (by
+   `tools\release_create.bat`, or by hand with `gh release create`), because
+   Actions has never run in this repository.
 
 ### addons.thunderbird.net publishing is currently DISABLED
 
@@ -241,12 +248,9 @@ While it is off:
 - the public ATN listing stays frozen at whatever version was last published
   through it.
 
-Two consequences worth remembering:
+Worth remembering:
 
-- The GitHub release body comes from `release_notes/<version>/en.json`. Only
-  when that file is missing does the workflow use the tag annotation, so a
-  hand-made tag without notes **must be annotated** (`git tag -a … -m …`).
-- The tag message is user-facing. Reuse the `title` and `notes` from
+- The GitHub release body is user-facing. Reuse the `title` and `notes` from
   `release_notes/<nextLabel>/en.json`.
 
 Nothing is published until the tag is pushed, so a build can be inspected and
