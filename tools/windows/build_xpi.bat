@@ -7,6 +7,6 @@ popd
 if %ERR% neq 0 (
     echo.
     echo Build failed with code %ERR%.
-    pause
+    if not defined TICKETS_WATCHER_COMMAND_RUN pause
 )
 exit /b %ERR%
