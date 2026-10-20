@@ -3,7 +3,7 @@
 // listing all read it — and package.json is rewritten in lockstep so it can't
 // drift out of sync again (it sat at 1.2.0 while the add-on shipped 1.4.2).
 //
-// Usage: node tools/version.mjs get | bump [patch|minor|major] | set <x.y.z>
+// Usage: node tools/version.mjs get | bump [patch|minor|major] | unbump | set <x.y.z>
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -19,6 +19,17 @@ export function nextVersion(current, level = "patch") {
   if (level === "minor") return `${major}.${minor + 1}.0`;
   if (level === "patch") return `${major}.${minor}.${patch + 1}`;
   throw new Error(`Unknown bump level: ${level}`);
+}
+
+/**
+ * Undo a patch bump: `release-tool create` bumps only the patch and calls the
+ * rollback bat with no arguments, so it can't pass the old version to `set`.
+ */
+export function previousPatch(current) {
+  if (!SEMVER.test(current)) throw new Error(`Not a semver version: ${current}`);
+  const [major, minor, patch] = current.split(".").map(Number);
+  if (patch === 0) throw new Error(`Cannot unbump ${current}: patch is already 0`);
+  return `${major}.${minor}.${patch - 1}`;
 }
 
 const current = () => JSON.parse(readFileSync(ROOT + "manifest.json", "utf8")).version;
@@ -42,8 +53,9 @@ function write(next) {
 function main([command, arg]) {
   if (command === "get") return current();
   if (command === "bump") return write(nextVersion(current(), arg ?? "patch"));
+  if (command === "unbump") return write(previousPatch(current()));
   if (command === "set") return write(arg);
-  console.error("usage: node tools/version.mjs get | bump [patch|minor|major] | set <x.y.z>");
+  console.error("usage: node tools/version.mjs get | bump [patch|minor|major] | unbump | set <x.y.z>");
   process.exit(1);
 }
 

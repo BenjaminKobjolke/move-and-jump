@@ -1,0 +1,11 @@
+{
+  "version": "1.5.1",
+  "date": "2026-10-20",
+  "title": "Plus de façons d’agir sur les messages",
+  "notes": [
+    "Nouvelles actions sur les messages : copier le nom ou l’adresse e-mail de l’expéditeur, ou l’objet, écrire à l’expéditeur, répondre ou répondre à tous directement depuis le message affiché.",
+    "La nouvelle commande /links répertorie les liens du message affiché pour vous permettre d’ouvrir celui de votre choix dans votre navigateur par défaut.",
+    "Enregistrez toutes les pièces jointes du message affiché directement dans votre dossier Téléchargements grâce à la nouvelle commande Save attachments ou à /save-attachments.",
+    "Utilisez /navigate-top pour revenir en haut de la liste des messages ou du corps du message en cours de rédaction."
+  ]
+}

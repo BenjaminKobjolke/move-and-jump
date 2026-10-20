@@ -7,6 +7,8 @@ on:
   push:
     tags:
       - "v*.*.*"
+      # Bare-version tags (1.5.1) are what tools/release_create.bat pushes.
+      - "[0-9]+.[0-9]+.[0-9]+"
 
 permissions:
   contents: write
@@ -41,7 +43,8 @@ jobs:
           echo "VERSION=$MANIFEST_VERSION" >> "$GITHUB_ENV"
 
       - run: npm test
-      - run: npm run lint
+      # No `npm run lint`: web-ext lint is the Firefox linter and always
+      # errors on Thunderbird's experiment_apis (MANIFEST_FIELD_PRIVILEGED).
       - run: npm run build
 
       # Submits the built .xpi to addons.thunderbird.net for signing
@@ -71,19 +74,23 @@ jobs:
           apiSecret: ${{ secrets.ATN_API_SECRET }}
           approvalTimeout: 0
 
-      # Uses the tag's own annotation as the release notes (so `git
-      # tag -a vX.Y.Z -m "..."` is what actually shows up on the
-      # GitHub release) rather than generating anything from commit
-      # history — a lightweight (non-annotated) tag has no message,
-      # so `%(contents)` would come back empty; always tag releases
-      # with `-a` and a real -m message.
+      # Release notes come from release_notes/<version>/en.json (title +
+      # notes bullets), the same file the add-on bundles. tools/release_create.bat
+      # pushes a lightweight tag, whose %(contents) would just be the commit
+      # message, so the tag annotation is only the fallback for a hand-made
+      # `git tag -a` release without an en.json.
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG_MESSAGE=$(git tag -l --format='%(contents)' "${GITHUB_REF_NAME}")
+          NOTES_FILE="release_notes/${VERSION}/en.json"
+          if [ -f "$NOTES_FILE" ]; then
+            BODY=$(node -e 'const n = require("./" + process.argv[1]); console.log(`# ${n.title}\n\n` + n.notes.map((x) => `- ${x}`).join("\n"))' "$NOTES_FILE")
+          else
+            BODY=$(git tag -l --format='%(contents)' "${GITHUB_REF_NAME}")
+          fi
           NOTES=$(printf '%s\n\nFull changelog: https://github.com/%s/blob/main/CHANGELOG.md' \
-            "$TAG_MESSAGE" "${{ github.repository }}")
+            "$BODY" "${{ github.repository }}")
           gh release create "${GITHUB_REF_NAME}" web-ext-artifacts/*.xpi \
             --title "${GITHUB_REF_NAME}" \
             --notes "$NOTES"

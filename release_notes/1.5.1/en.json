@@ -1,0 +1,11 @@
+{
+  "version": "1.5.1",
+  "date": "2026-10-20",
+  "title": "More ways to act on messages",
+  "notes": [
+    "New message actions: copy a sender's name, email address, or subject, write to the sender, reply, and reply all directly from the displayed message.",
+    "New /links command lists the links in the displayed message so you can open the one you want in your default browser.",
+    "Save every attachment from the displayed message straight to your Downloads folder with the new Save attachments command or /save-attachments.",
+    "Use /navigate-top to jump to the top of the message list or compose body."
+  ]
+}

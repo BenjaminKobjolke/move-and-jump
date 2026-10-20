@@ -21,6 +21,46 @@ kept in lockstep by the version tool purely so it can't drift again (it sat at
 > project reads the version and ships the **next patch version**. Its
 > "increment the build number" step is `tools\windows\version_bump.bat`.
 
+## One-command release: `tools\release_create.bat`
+
+```bat
+tools\release_create.bat              :: full patch release
+tools\release_create.bat --internal   :: internal test build, no notes
+tools\release_create.bat --dry-run    :: preview every step, change nothing
+```
+
+It runs `release-tool create` (`D:\GIT\BenjaminKobjolke\release-tool`),
+configured by [tools/release_create.ini](../tools/release_create.ini), and
+performs steps 2–7 below in order:
+
+1. computes the next **patch** label from `version_get.bat`;
+2. has Codex author `release_notes/<nextLabel>/en.json` if it is missing;
+3. bumps the version — `release-tool create` owns the bump, via
+   `tools\windows\version_bump.bat`, exactly once per release;
+4. translates the notes (`translate_release_notes.bat`);
+5. builds with `tools\windows\build_release.bat` (`npm test`,
+   `web-ext build`). If any of 3–5 fails it rolls the bump back with
+   `tools\windows\version_unbump.bat`;
+6. asks **Commit, tag and push?** — commits `RELEASE (extension): <nextLabel>`,
+   tags `<nextLabel>` and pushes both.
+
+There is no publish gate: the pushed tag is the publish step (see step 7).
+Tags made this way are **bare** (`1.5.1`, not `v1.5.1`) and lightweight; the
+release workflow accepts both forms and takes the GitHub release body from
+`release_notes/<version>/en.json`, falling back to the tag annotation only when
+that file is missing.
+
+Before running it, move the `## [Unreleased]` block of CHANGELOG.md under a
+`## [<nextLabel>]` heading — the script does not touch the changelog. For a
+minor or major release, use the manual steps below; the script only bumps the
+patch.
+
+The completed artifact is `web-ext-artifacts/move-and-jump-<version>.xpi`, but
+nothing on this machine uploads it: CI rebuilds from the tagged commit. To
+retry publishing an existing release without rebuilding or bumping, re-run the
+workflow for its tag on GitHub, or delete and re-push the tag
+(`git push origin :<label>` then `git push origin <label>`).
+
 ## 1. Get the current version
 
 ```bat
@@ -138,12 +178,16 @@ Runs `npm run build -- --overwrite-dest` (i.e. `web-ext build`) and produces:
 web-ext-artifacts/move-and-jump-<nextLabel>.xpi
 ```
 
-Before building, run the same checks CI does:
+Before building, run the same check CI does:
 
 ```sh
 npm test        # node --test test/*.test.js
-npm run lint    # web-ext lint
 ```
+
+`npm run lint` (web-ext lint) is informational only and not a release gate:
+it is the Firefox linter and always reports `MANIFEST_FIELD_PRIVILEGED` for
+Thunderbird's `experiment_apis`, plus warnings for Thunderbird-only
+permissions.
 
 **Release notes are bundled automatically.** `web-ext build` packages
 everything not listed in `ignoreFiles` in
@@ -176,7 +220,7 @@ Pushing the `v*.*.*` tag triggers
 
 1. verifies the tag matches `manifest.json`'s version (a mismatch fails the run
    before anything is published);
-2. runs `npm test`, `npm run lint`, `npm run build`;
+2. runs `npm test`, `npm run build`;
 3. creates a **GitHub release** whose body is the tag's own annotation message,
    with the `.xpi` attached.
 
@@ -199,8 +243,9 @@ While it is off:
 
 Two consequences worth remembering:
 
-- The tag **must be annotated** (`git tag -a … -m …`). A lightweight tag has no
-  message, so the GitHub release body comes out empty.
+- The GitHub release body comes from `release_notes/<version>/en.json`. Only
+  when that file is missing does the workflow use the tag annotation, so a
+  hand-made tag without notes **must be annotated** (`git tag -a … -m …`).
 - The tag message is user-facing. Reuse the `title` and `notes` from
   `release_notes/<nextLabel>/en.json`.
 

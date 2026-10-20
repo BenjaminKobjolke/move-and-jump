@@ -6,6 +6,8 @@ follow [semantic versioning](https://semver.org/) — see
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-10-20
+
 ### Added
 
 - **Actions on the displayed message**, as five new commands with no default

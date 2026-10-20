@@ -1,0 +1,11 @@
+{
+  "version": "1.5.1",
+  "date": "2026-10-20",
+  "title": "Weitere Möglichkeiten, mit Nachrichten zu interagieren",
+  "notes": [
+    "Neue Aktionen für Nachrichten: Den Namen, die E-Mail-Adresse oder den Betreff eines Absenders kopieren, dem Absender schreiben, antworten oder allen direkt über die angezeigte Nachricht antworten.",
+    "Der neue Befehl /links listet die Links in der angezeigten Nachricht auf, damit du den gewünschten Link in deinem Standardbrowser öffnen kannst.",
+    "Speichere alle Anhänge der angezeigten Nachricht direkt in deinem Downloads-Ordner – mit dem neuen Befehl „Anhänge speichern“ oder /save-attachments.",
+    "Mit /navigate-top springst du an den Anfang der Nachrichtenliste oder des Nachrichtentexts."
+  ]
+}

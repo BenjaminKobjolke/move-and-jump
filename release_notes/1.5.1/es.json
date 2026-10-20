@@ -1,0 +1,11 @@
+{
+  "version": "1.5.1",
+  "date": "2026-10-20",
+  "title": "Más formas de actuar sobre los mensajes",
+  "notes": [
+    "Nuevas acciones para los mensajes: copia el nombre o la dirección de correo electrónico del remitente, o el asunto; escribe al remitente, responde o responde a todos directamente desde el mensaje mostrado.",
+    "El nuevo comando /links muestra los enlaces del mensaje mostrado para que puedas abrir el que quieras en tu navegador predeterminado.",
+    "Guarda todos los archivos adjuntos del mensaje mostrado directamente en la carpeta Descargas con el nuevo comando Guardar archivos adjuntos o /save-attachments.",
+    "Usa /navigate-top para ir al principio de la lista de mensajes o del cuerpo del mensaje que estás redactando."
+  ]
+}
