@@ -25,7 +25,7 @@ test("parseCommand keeps spaces inside a multi-term argument", () => {
 
 test("matchCommands prefix-matches by command name", () => {
   assert.deepEqual(matchCommands("a").map((c) => c.name), ["all"]);
-  assert.deepEqual(matchCommands("s").map((c) => c.name), ["sensitive"]);
+  assert.deepEqual(matchCommands("se").map((c) => c.name), ["sensitive"]);
   assert.deepEqual(matchCommands("z").map((c) => c.name), ["zoom"]);
   assert.deepEqual(matchCommands("b").map((c) => c.name), ["body"]);
   assert.deepEqual(matchCommands("rec").map((c) => c.name), ["recipients"]);
@@ -51,9 +51,11 @@ test("bare slash (empty token) matches every command", () => {
     "copy-name",
     "copy-email",
     "copy-subject",
+    "save-attachments",
     "write",
     "reply",
     "reply-all",
+    "navigate-top",
   ]);
 });
 

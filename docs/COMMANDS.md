@@ -23,9 +23,11 @@ another command.
 | `/copy-name`      | Copy the displayed message's sender name                     |
 | `/copy-email`     | Copy the displayed message's sender email                    |
 | `/copy-subject`   | Copy the displayed message's subject                         |
+| `/save-attachments` | Save the displayed message's attachments to Downloads      |
 | `/write`          | New message to the displayed message's sender                |
 | `/reply`          | Reply to the displayed message's sender                      |
 | `/reply-all`      | Reply to all on the displayed message                        |
+| `/navigate-top`   | Go to the top of the message list, or of the compose body    |
 
 `/columns` is the odd one out: its state belongs to Thunderbird, not to this
 add-on (see [Toggling columns](#toggling-columns)).
@@ -153,21 +155,46 @@ in `lib/links.js`, tested in `test/links.test.js`.
 
 ## Message commands
 
-`/copy-name`, `/copy-email`, `/write`, `/reply` and `/reply-all` act on the
+`/copy-name`, `/copy-email`, `/save-attachments`, `/write`, `/reply` and `/reply-all` act on the
 message displayed in the mail tab and then hide the popup. They are marked
 `messageAction` in `lib/commands.js`; the popup sends
 `{ type: "message-action", action, tabId }` and `background.js` runs it from
 `MESSAGE_ACTIONS` — the same helpers the `copy-sender-*` / `write-to-sender`
 keyboard commands use. `/reply` and `/reply-all` use `compose.beginReply()`.
+
+`/save-attachments` writes every attachment straight into the **Downloads
+folder**, no dialog: `messages.listAttachments()` → `getAttachmentFile()` →
+`downloads.download()` with `conflictAction: "uniquify"` (an existing name gets
+a number). Reserved filename characters (`\ / : * ? " < > |`) become `_`.
+Attachments are read in parallel, and its `MESSAGE_ACTIONS` entry does **not**
+wait for them: reading a large file out of the message takes a moment, and the
+popup should hide immediately. The flip side is that a failed save only shows
+in the console (`Move and Jump: saving attachments failed`), never as the
+popup's error row. Needs the `downloads` permission.
 With no single displayed message the rows read `Message actions — no single
 displayed message` and are not selectable. `/reply` lists both reply rows;
 `/reply-` narrows to reply-all.
+
+## Going to the top with `/navigate-top`
+
+In a mail tab it selects the **first row** of the message list and scrolls to
+it — same as Thunderbird's Home key, so the preview pane follows. Opened from a
+**compose window** (e.g. `Ctrl+Shift+N` there, or a key bound to the
+`navigate-top` command), it puts the caret at the start of the body and scrolls
+it to the top. Either way the popup hides.
+
+Neither is possible through the stable API, so it is backed by a small
+Experiment, `experiments/navigate/` (`navigate.top(tabId)`): about:3pane's
+`threadTree` for the list, the compose window's editor for the body. Like
+`/columns` it is internal API; a failure resolves `false` and does nothing.
+The popup sends it through the `message-action` round-trip; background.js runs
+`navigateTop()`.
 
 ## Using it
 
 - Type `/` alone to list **all** commands (discoverable — no need to memorize
   them).
-- Commands prefix-match on name, like folder search: `/a` → `all`, `/s` →
+- Commands prefix-match on name, like folder search: `/a` → `all`, `/se` →
   `sensitive`, `/z` → `zoom`, `/b` → `body`. An ambiguous prefix lists every
   match: `/f` shows both `filter` and `fuzzy` (and filters nothing until the
   name is complete).
@@ -263,6 +290,7 @@ the leading slash still finds it. No folders become unreachable.
 ## Relevant files
 
 - `experiments/columns/` — the `/columns` Experiment API (schema + implementation)
+- `experiments/navigate/` — the `/navigate-top` Experiment API
 - `lib/commands.js` — `parseCommand`, `matchCommands`, the `COMMANDS` list
 - `lib/folders.js` — `filterByAccount`, `inboxFolders`, `orderUnified` (the
   `/go` lookups)

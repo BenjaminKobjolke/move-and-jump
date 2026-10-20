@@ -348,6 +348,31 @@ async function copySubject(tabId) {
   if (message) await navigator.clipboard.writeText(message.subject);
 }
 
+/** Save every attachment of the displayed message into the Downloads folder. */
+async function saveAttachments(tabId) {
+  const message = await getDisplayedMessage(tabId);
+  if (!message) return;
+  const attachments = await messenger.messages.listAttachments(message.id);
+  if (attachments.length === 0) {
+    console.error("Move and Jump: displayed message has no attachments", message.id);
+    return;
+  }
+  // In parallel: reading a large attachment out of the message is the slow part.
+  await Promise.all(
+    attachments.map(async (attachment) => {
+      const file = await messenger.messages.getAttachmentFile(message.id, attachment.partName);
+      // ponytail: blob URLs are not revoked; the suspended event page frees them.
+      // Revoke on downloads.onChanged if memory ever shows up.
+      await messenger.downloads.download({
+        url: URL.createObjectURL(file),
+        // downloads.download() rejects path separators and reserved characters.
+        filename: attachment.name.replace(/[\\/:*?"<>|]/g, "_"),
+        conflictAction: "uniquify",
+      });
+    }),
+  );
+}
+
 async function writeToSender(tabId) {
   const message = await getDisplayedMessage(tabId);
   if (message) await messenger.compose.beginNew({ to: [message.author] });
@@ -360,6 +385,23 @@ async function replyTo(tabId, replyType) {
 }
 
 /**
+ * Go to the top of the message list (mail tab) or the compose body (compose
+ * tab), via experiments/navigate. Accessed guarded, like keysApi below: a
+ * failed experiment must not take the background down.
+ */
+async function navigateTop(tabId) {
+  let api = null;
+  try {
+    api = messenger.navigate ?? null;
+  } catch (error) {
+    // Experiment failed to register.
+  }
+  if (!api || !(await api.top(tabId ?? -1))) {
+    console.error("Move and Jump: navigate-top not available in tab", tabId);
+  }
+}
+
+/**
  * The popup's message slash commands (/copy-name, /write, /reply, …), keyed by
  * command name. Run here rather than in the popup so they share one code path
  * with the keyboard commands.
@@ -368,9 +410,17 @@ const MESSAGE_ACTIONS = {
   "copy-name": (tabId) => copySender(tabId, "name"),
   "copy-email": (tabId) => copySender(tabId, "email"),
   "copy-subject": copySubject,
+  // Not awaited, so the popup hides at once instead of waiting on large files.
+  // A failure then only reaches the console, not the popup's error row.
+  "save-attachments": async (tabId) => {
+    saveAttachments(tabId).catch((error) =>
+      console.error("Move and Jump: saving attachments failed", error),
+    );
+  },
   write: writeToSender,
   reply: (tabId) => replyTo(tabId, "replyToSender"),
   "reply-all": (tabId) => replyTo(tabId, "replyToAll"),
+  "navigate-top": navigateTop,
 };
 
 /**
@@ -402,10 +452,15 @@ function dispatchCommand(command, tabId) {
       return copySender(tabId, "email");
     case "copy-subject":
       return copySubject(tabId);
+    case "save-attachments":
+      return saveAttachments(tabId);
     case "write-to-sender":
       return writeToSender(tabId);
     case "open-link":
       return openSearchWindow("move", tabId, "/links ");
+    // Works in a compose window too: commands.onCommand hands us its tab.
+    case "navigate-top":
+      return navigateTop(tabId);
     default:
       return undefined;
   }

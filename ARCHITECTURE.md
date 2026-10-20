@@ -163,7 +163,9 @@ against a `messenger.keys` that throws and asserts they survive.
 
 The general rule for this add-on: the core feature must never be able
 to fail because a privileged Experiment did. `columns` follows the
-same rule by only ever being called from inside a `try`/`catch`.
+same rule by only ever being called from inside a `try`/`catch`, and
+`navigate` by being resolved inside one (`navigateTop()` in
+`background.js`) and returning `false` instead of throwing.
 
 [tbkeys]: https://github.com/wshanks/tbkeys
 
@@ -608,12 +610,14 @@ rounds of guessing specifically because the first version didn't.
   - `keys.js` — recognise and validate the modifier-less shortcuts
     `commands` refuses (see [Single-key shortcuts][sk]); also the list
     of command names shared with `background.js`.
-- `experiments/` — the two privileged WebExtension Experiments, each a
-  `schema.json` plus an `implementation.js`. Both reach into
-  Thunderbird's internals, so both feature-detect everything and
+- `experiments/` — the three privileged WebExtension Experiments, each a
+  `schema.json` plus an `implementation.js`. All reach into
+  Thunderbird's internals, so all feature-detect everything and
   degrade to "unavailable" rather than throwing:
   - `columns/` — message-list column visibility, for `/columns`.
   - `keys/` — single-key shortcuts.
+  - `navigate/` — top of the message list or compose body, for
+    `/navigate-top`.
 - `test/` — unit tests for everything in `lib/`, using Node's
   built-in `node:test` (see below).
 - `icons/` — `icon.svg` source plus generated PNGs (via `rsvg-convert`).

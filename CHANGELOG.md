@@ -12,12 +12,18 @@ follow [semantic versioning](https://semver.org/) — see
   key (bind them on the options page, single keys included):
   *Copy sender name*, *Copy sender email*, *Copy subject*, *Write to sender*
   and *Open link*.
-- **Message slash commands**: `/copy-name`, `/copy-email`, `/copy-subject`, `/write`,
+- **Message slash commands**: `/copy-name`, `/copy-email`, `/copy-subject`,
+  `/save-attachments`, `/write`,
   `/reply`, `/reply-all`, acting on the displayed message.
+- **`/navigate-top`** (and a `navigate-top` command, no default key): go to
+  the top of the message list, or of the compose body in a compose window.
 - **`/links` slash command**: lists the displayed message's links; Enter opens
   the selected one in the default browser. *Open link* opens the popup on it.
-- New permissions: `compose` (for *Write to sender*) and `clipboardWrite` (the
-  copy commands run without a popup). Thunderbird asks to approve them on
+- **Save attachments** command / `/save-attachments`: saves every attachment
+  of the displayed message straight into the Downloads folder (duplicate names
+  get a number).
+- New permissions: `compose` (for *Write to sender*), `clipboardWrite` (the
+  copy commands run without a popup) and `downloads` (*Save attachments*). Thunderbird asks to approve them on
   update.
 
 ## [1.5.0] - 2026-09-07

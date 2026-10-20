@@ -546,6 +546,7 @@ const MESSAGE_ACTION_LABELS = {
   "copy-name": "commandCopyName",
   "copy-email": "commandCopyEmail",
   "copy-subject": "commandCopySubject",
+  "save-attachments": "commandSaveAttachments",
   write: "commandWrite",
   reply: "commandReply",
   "reply-all": "commandReplyAll",
@@ -609,6 +610,10 @@ function commandEntry(command, arg) {
       // Same two-level shape: completing the name lists the links themselves.
       enabled = linkState.length > 0;
       label = messenger.i18n.getMessage(enabled ? "commandLinksHint" : "commandLinksUnavailable");
+      break;
+    case "navigate-top":
+      enabled = tabId !== undefined;
+      label = messenger.i18n.getMessage("commandNavigateTop");
       break;
     default:
       if (command.messageAction) {
@@ -719,7 +724,9 @@ async function activate(entry) {
   }
   if (entry.type === "command") {
     if (entry.enabled === false) return;
-    if (entry.command.messageAction) {
+    // navigate-top rides the same background round-trip as the message
+    // actions (see MESSAGE_ACTIONS in background.js).
+    if (entry.command.messageAction || entry.command.name === "navigate-top") {
       runMessageAction(entry.command.name);
       return;
     }

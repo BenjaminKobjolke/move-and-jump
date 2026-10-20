@@ -24,10 +24,12 @@ replace each other.
 | `copy-sender-name` | *(none)* | Copy the displayed message's sender name (falls back to the address) |
 | `copy-sender-email` | *(none)* | Copy the displayed message's sender address |
 | `copy-subject` | *(none)* | Copy the displayed message's subject |
+| `save-attachments` | *(none)* | Save the displayed message's attachments to the Downloads folder |
 | `write-to-sender` | *(none)* | New message to the displayed message's sender |
 | `open-link` | *(none)* | Open the popup in [`/links`](../COMMANDS.md#opening-links-with-links) mode |
+| `navigate-top` | *(none)* | Go to the top of the message list, or of the compose body in a compose window |
 
-The five message commands act on the **displayed** message — the preview pane,
+The six message commands act on the **displayed** message — the preview pane,
 or a message opened in its own tab/window. With no message or several selected
 they do nothing (a `Move and Jump:` error in the console says why). A single key
 does not fire while focus is inside the message body or in a standalone message

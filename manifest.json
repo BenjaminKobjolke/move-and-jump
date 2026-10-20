@@ -12,7 +12,7 @@
       "strict_min_version": "128.0"
     }
   },
-  "permissions": ["accountsRead", "messagesRead", "messagesMove", "storage", "compose", "clipboardWrite"],
+  "permissions": ["accountsRead", "messagesRead", "messagesMove", "storage", "compose", "clipboardWrite", "downloads"],
   "experiment_apis": {
     "columns": {
       "schema": "experiments/columns/schema.json",
@@ -28,6 +28,14 @@
         "scopes": ["addon_parent"],
         "paths": [["keys"]],
         "script": "experiments/keys/implementation.js"
+      }
+    },
+    "navigate": {
+      "schema": "experiments/navigate/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "paths": [["navigate"]],
+        "script": "experiments/navigate/implementation.js"
       }
     }
   },
@@ -79,11 +87,17 @@
     "copy-subject": {
       "description": "__MSG_commandCopySubjectDescription__"
     },
+    "save-attachments": {
+      "description": "__MSG_commandSaveAttachmentsDescription__"
+    },
     "write-to-sender": {
       "description": "__MSG_commandWriteToSenderDescription__"
     },
     "open-link": {
       "description": "__MSG_commandOpenLinkDescription__"
+    },
+    "navigate-top": {
+      "description": "__MSG_commandNavigateTopDescription__"
     }
   },
   "options_ui": {

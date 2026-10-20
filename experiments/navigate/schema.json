@@ -1,0 +1,20 @@
+[
+  {
+    "namespace": "navigate",
+    "functions": [
+      {
+        "name": "top",
+        "type": "function",
+        "description": "Go to the top: first row of a mail tab's message list, or start of a compose body. Resolves false when the tab is neither.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "tabId",
+            "type": "integer",
+            "description": "Mail or compose tab to act on; -1 means the front mail window."
+          }
+        ]
+      }
+    ]
+  }
+]

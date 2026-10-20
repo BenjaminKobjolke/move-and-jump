@@ -35,6 +35,14 @@
     "message": "Copy the displayed message's subject",
     "description": "manifest.json commands.copy-subject description; no default key"
   },
+  "commandNavigateTopDescription": {
+    "message": "Go to the top of the message list, or of the compose body",
+    "description": "manifest.json commands.navigate-top description; no default key"
+  },
+  "commandSaveAttachmentsDescription": {
+    "message": "Save the displayed message's attachments to the Downloads folder",
+    "description": "manifest.json commands.save-attachments description; no default key"
+  },
   "commandWriteToSenderDescription": {
     "message": "Write a new message to the displayed message's sender",
     "description": "manifest.json commands.write-to-sender description; no default key"
@@ -151,6 +159,10 @@
     "message": "Copy subject",
     "description": "Popup slash-command row: /copy-subject"
   },
+  "commandSaveAttachments": {
+    "message": "Save attachments to Downloads",
+    "description": "Popup slash-command row: /save-attachments"
+  },
   "commandWrite": {
     "message": "Write new message to sender",
     "description": "Popup slash-command row: /write"
@@ -163,9 +175,13 @@
     "message": "Reply to all",
     "description": "Popup slash-command row: /reply-all"
   },
+  "commandNavigateTop": {
+    "message": "Go to top — message list, or compose body",
+    "description": "Popup slash-command row: /navigate-top"
+  },
   "commandMessageUnavailable": {
     "message": "Message actions — no single displayed message",
-    "description": "Popup slash-command row for /copy-name, /copy-email, /copy-subject, /write, /reply, /reply-all when not exactly one message is displayed"
+    "description": "Popup slash-command row for /copy-name, /copy-email, /copy-subject, /save-attachments, /write, /reply, /reply-all when not exactly one message is displayed"
   },
   "commandLinksUnavailable": {
     "message": "Links — no displayed message with links",
