@@ -7,8 +7,8 @@
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "start": "web-ext run -c web-ext-config.cjs --firefox-binary thunderbird",
-    "build": "web-ext build -c web-ext-config.cjs --filename \"move-and-jump-{version}.xpi\"",
-    "lint": "web-ext lint -c web-ext-config.cjs",
+    "build": "web-ext build -c web-ext-config.cjs --filename \"move-and-jump-{version}.xpi\" --overwrite-dest",
+    "lint": "web-ext lint -c web-ext-config.cjs --output json | node tools/check_web_ext_lint.js",
     "test": "node --test \"test/*.test.js\""
   },
   "devDependencies": {
