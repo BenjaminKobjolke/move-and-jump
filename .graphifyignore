@@ -1,0 +1,13 @@
+/.git/
+/.github/
+/_locales/
+/claude-plans/
+/docs/
+/icons/
+/node_modules/
+/release_notes/
+/test/
+/tickets/
+/tmp/
+/tools/
+/web-ext-artifacts/
