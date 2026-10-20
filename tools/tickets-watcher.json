@@ -5,11 +5,18 @@
   "command_check_scripts": [
     "release_create.bat"
   ],
-  "analysis_commands": [],
+  "analysis_commands": [
+    "npm run lint"
+  ],
   "analysis_commands_seen": {
     "scripts": [
       "release_create.bat"
     ],
     "tests": true
+  },
+  "analysis_command_states": {
+    "npm run lint": {
+      "test": "green"
+    }
   }
 }
