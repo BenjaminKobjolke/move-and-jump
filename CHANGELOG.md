@@ -14,6 +14,10 @@ follow [semantic versioning](https://semver.org/) — see
   [docs/settings/SENDER_SUGGESTIONS.md](docs/settings/SENDER_SUGGESTIONS.md).
 - Sender move history is forgotten after a year without a move from that sender.
 
+### Fixed
+
+- Closing the last mail window no longer leaves Thunderbird running in the background because of the minimized search window.
+
 ## [1.5.1] - 2026-10-20
 
 ### Added

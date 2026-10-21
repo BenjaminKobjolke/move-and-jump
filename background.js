@@ -24,10 +24,24 @@ let searchWindowId = null;
 // Parent (mail) window geometry captured at open time, so the popup can be
 // re-centered after it resizes itself — see resizeSearchWindow.
 let searchWindowParent = null;
-messenger.windows.onRemoved.addListener((windowId) => {
+messenger.windows.onRemoved.addListener(async (windowId) => {
   if (windowId === searchWindowId) {
     searchWindowId = null;
     searchWindowParent = null;
+    return;
+  }
+
+  // The kept-alive (minimized) search popup would otherwise be the last
+  // window standing and keep Thunderbird running after the user closes
+  // the main window.
+  const wins = await messenger.windows.getAll();
+  if (wins.some((w) => w.type === "normal")) return;
+  const leftover = searchWindowId ?? (await findExistingSearchWindow());
+  if (leftover === null) return;
+  try {
+    await messenger.windows.remove(leftover);
+  } catch {
+    // Already gone.
   }
 });
 
