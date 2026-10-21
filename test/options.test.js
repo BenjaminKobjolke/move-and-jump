@@ -12,6 +12,7 @@ function fakeStorage(stored) {
 
 test("returns defaults when nothing is stored", async () => {
   assert.deepEqual(await getOptions(fakeStorage({})), DEFAULT_OPTIONS);
+  assert.equal(DEFAULT_OPTIONS.senderSuggestions, true);
 });
 
 test("stored options override defaults", async () => {

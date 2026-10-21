@@ -32,6 +32,14 @@
   "popupNoMatches": {
     "message": "Keine passenden Ordner"
   },
+  "popupSenderTag": {
+    "message": "Absender",
+    "description": "Small tag on a folder previously used for this sender"
+  },
+  "popupSenderTagTitle": {
+    "message": "Zuvor für diesen Absender verwendet",
+    "description": "Tooltip for the sender folder tag"
+  },
   "popupError": {
     "message": "Etwas ist schiefgelaufen — Details in der Browser-Konsole."
   },
@@ -49,6 +57,10 @@
   },
   "optionsCenterOnParent": {
     "message": "Suchfenster über dem Mail-Fenster zentrieren"
+  },
+  "optionsSenderSuggestions": {
+    "message": "Zuletzt für den Absender verwendete Ordner vorschlagen und vorauswählen",
+    "description": "Options page checkbox label"
   },
   "optionsRecreateWindow": {
     "message": "Suchfenster jedes Mal neu erstellen (statt es minimiert zu behalten)"

@@ -32,6 +32,14 @@
   "popupNoMatches": {
     "message": "No hay carpetas coincidentes"
   },
+  "popupSenderTag": {
+    "message": "remitente",
+    "description": "Small tag on a folder previously used for this sender"
+  },
+  "popupSenderTagTitle": {
+    "message": "Usada antes para este remitente",
+    "description": "Tooltip for the sender folder tag"
+  },
   "popupError": {
     "message": "Algo salió mal — consulte la consola del navegador para más detalles."
   },
@@ -49,6 +57,10 @@
   },
   "optionsCenterOnParent": {
     "message": "Centrar la ventana de búsqueda sobre la ventana de correo"
+  },
+  "optionsSenderSuggestions": {
+    "message": "Sugerir y preseleccionar las carpetas usadas más recientemente para el remitente",
+    "description": "Options page checkbox label"
   },
   "optionsRecreateWindow": {
     "message": "Recrear la ventana de búsqueda cada vez (en lugar de mantenerla minimizada)"

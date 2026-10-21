@@ -6,6 +6,13 @@ follow [semantic versioning](https://semver.org/) — see
 
 ## [Unreleased]
 
+### Added
+
+- Sender-aware move suggestions: remember up to three recent destinations per
+  sender, put them first in the move popup and preselect the latest one. The
+  options page can turn the feature off. See
+  [docs/settings/SENDER_SUGGESTIONS.md](docs/settings/SENDER_SUGGESTIONS.md).
+
 ## [1.5.1] - 2026-10-20
 
 ### Added

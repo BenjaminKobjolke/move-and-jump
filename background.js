@@ -1,4 +1,4 @@
-import { pushRecent } from "./lib/recent.js";
+import { pushRecent, MAX_SENDER_FOLDERS } from "./lib/recent.js";
 import { DEFAULT_OPTIONS, getOptions, clampZoom } from "./lib/options.js";
 import { COMMAND_NAMES } from "./lib/keys.js";
 import { decodeImapUtf7 } from "./lib/imapUtf7.js";
@@ -62,6 +62,31 @@ async function performMove(folderId, tabId) {
     folderId,
     { isUserAction: true },
   );
+  try {
+    await recordSenders(messages, folderId);
+  } catch (error) {
+    console.error("Move and Jump: recording sender folders failed", error);
+  }
+}
+
+async function recordSenders(messages, folderId) {
+  if (!(await getOptions(messenger.storage.local)).senderSuggestions) return;
+  const emails = new Set();
+  for (const message of messages) {
+    const [sender] = await messenger.messengerUtilities.parseMailboxString(message.author);
+    if (sender?.email) emails.add(sender.email.toLowerCase());
+  }
+  if (emails.size === 0) return;
+  const { senderFolders = {} } = await messenger.storage.local.get("senderFolders");
+  // shortcut: senderFolders grows by one key per sender ever moved, cap/prune if storage size shows up.
+  for (const email of emails) {
+    senderFolders[email] = pushRecent(
+      senderFolders[email] ?? [],
+      folderId,
+      MAX_SENDER_FOLDERS,
+    );
+  }
+  await messenger.storage.local.set({ senderFolders });
 }
 
 async function performJump(folderId, tabId) {

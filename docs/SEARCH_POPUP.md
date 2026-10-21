@@ -37,6 +37,18 @@ On open the initial view lists **recent folders** (from
 `recentFolders` in `messenger.storage.local`). Typing switches to filtered,
 ranked matches over the in-scope folders.
 
+### Sender suggestions
+
+In move mode, if all selected messages share one sender, the popup puts that
+sender's most recently used destination folders before the normal recents and
+marks them with a sender tag. The newest destination is preselected, so Enter
+moves there. While typing, matching sender folders rise above the usual
+query-weight order, with the other matches retaining their order. Mixed senders
+and jump mode have no sender suggestions. The **Suggest and preselect the
+folders last used for the sender** option controls both recording and display;
+turning it off preserves history for later. See
+[`settings/SENDER_SUGGESTIONS.md`](settings/SENDER_SUGGESTIONS.md).
+
 ## Keyboard
 
 | Key             | Action                                                    |

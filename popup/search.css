@@ -136,6 +136,22 @@ li.active {
   color: var(--active-fg);
 }
 
+li.sender {
+  border-left: 2px solid var(--active-bg);
+  padding-left: 6px;
+}
+
+.sender-tag {
+  float: right;
+  margin-left: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+li.active .sender-tag {
+  color: inherit;
+}
+
 /* A slash-command row that can't run yet (e.g. "/zoom" with no value). */
 li.disabled {
   color: var(--muted);

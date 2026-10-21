@@ -32,6 +32,14 @@
   "popupNoMatches": {
     "message": "没有匹配的文件夹"
   },
+  "popupSenderTag": {
+    "message": "发件人",
+    "description": "Small tag on a folder previously used for this sender"
+  },
+  "popupSenderTagTitle": {
+    "message": "之前用于此发件人",
+    "description": "Tooltip for the sender folder tag"
+  },
   "popupError": {
     "message": "出错了——详情请查看浏览器控制台。"
   },
@@ -49,6 +57,10 @@
   },
   "optionsCenterOnParent": {
     "message": "将搜索窗口居中于邮件窗口"
+  },
+  "optionsSenderSuggestions": {
+    "message": "建议并预先选择最近用于该发件人的文件夹",
+    "description": "Options page checkbox label"
   },
   "optionsRecreateWindow": {
     "message": "每次重新创建搜索窗口（而不是保持最小化）"

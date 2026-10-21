@@ -435,6 +435,9 @@ that mutates `storage.local` and the toolbar tooltip.
     "archi": { "folderId1": 5 },
     "b": { "folderId2": 2 }
   },
+  "senderFolders": {                                  // sender email -> up to 3 destination folder ids, newest first
+    "sender@example.com": ["folderId1", "folderId2"]
+  },
   "lastUsedFolderId": "folderId1",                    // used by the *-last commands
   "options": {                                        // see lib/options.js (DEFAULT_OPTIONS)
     "caseSensitiveSearch": false,
@@ -445,6 +448,7 @@ that mutates `storage.local` and the toolbar tooltip.
     "filterBody": false,                              // /filter field toggles, set from the popup
     "filterRecipients": false,
     "centerOnParent": true,
+    "senderSuggestions": true,                         // remember and suggest move folders for one sender
     "recreateWindow": false,                          // close the search window on dismiss instead of minimizing it
     "singleKeys": { "move-to-folder": "Shift+M" }     // command name -> bare-key shortcut
   }

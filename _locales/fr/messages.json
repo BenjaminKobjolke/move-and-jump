@@ -32,6 +32,14 @@
   "popupNoMatches": {
     "message": "Aucun dossier correspondant"
   },
+  "popupSenderTag": {
+    "message": "expéditeur",
+    "description": "Small tag on a folder previously used for this sender"
+  },
+  "popupSenderTagTitle": {
+    "message": "Déjà utilisé pour cet expéditeur",
+    "description": "Tooltip for the sender folder tag"
+  },
   "popupError": {
     "message": "Une erreur s'est produite — consultez la console du navigateur pour plus de détails."
   },
@@ -49,6 +57,10 @@
   },
   "optionsCenterOnParent": {
     "message": "Centrer la fenêtre de recherche sur la fenêtre de courrier"
+  },
+  "optionsSenderSuggestions": {
+    "message": "Suggérer et présélectionner les dossiers récemment utilisés pour l’expéditeur",
+    "description": "Options page checkbox label"
   },
   "optionsRecreateWindow": {
     "message": "Recréer la fenêtre de recherche à chaque fois (au lieu de la garder réduite)"

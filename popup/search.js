@@ -3,6 +3,7 @@ import { filterByAccount, inboxFolders, orderUnified } from "../lib/folders.js";
 import { getOptions, clampZoom } from "../lib/options.js";
 import { decodeImapUtf7 } from "../lib/imapUtf7.js";
 import { sortByQueryWeight } from "../lib/weights.js";
+import { prioritize } from "../lib/recent.js";
 import { findMatchRanges } from "../lib/highlight.js";
 import { parseCommand, matchCommands } from "../lib/commands.js";
 import { extractUrls, dedupeLinks } from "../lib/links.js";
@@ -46,6 +47,7 @@ let activeTab;
 let recentIds = [];
 let allFolders = [];
 let recentFolders = [];
+let senderIds = [];
 let folderWeights = {};
 let queryWeights = {};
 // Each entry is { type: "folder", folder },
@@ -144,6 +146,11 @@ async function init() {
   linkState = displayed.links;
   hasDisplayedMessage = displayed.single;
 
+  senderIds =
+    options.senderSuggestions && mode === "move" && tabId !== undefined
+      ? await loadSenderFolderIds().catch(() => [])
+      : [];
+
   applyScope();
 
   render(input.value);
@@ -159,6 +166,23 @@ async function init() {
   // mode, so move out of the message list's way right away. After applyZoom()
   // so the corner placement is the last geometry sent.
   updatePlacement();
+}
+
+async function loadSenderFolderIds() {
+  const { messages = [] } = await messenger.mailTabs.getSelectedMessages(tabId);
+  if (messages.length === 0) return [];
+  const emails = new Set();
+  for (const message of messages) {
+    const senders = await messenger.messengerUtilities.parseMailboxString(message.author);
+    if (!senders.some((sender) => sender?.email)) return [];
+    for (const sender of senders) {
+      if (sender?.email) emails.add(sender.email.toLowerCase());
+    }
+  }
+  if (emails.size !== 1) return [];
+  const [email] = emails;
+  const { senderFolders = {} } = await messenger.storage.local.get("senderFolders");
+  return senderFolders[email] ?? [];
 }
 
 /**
@@ -190,7 +214,15 @@ function applyScope() {
   showAccountPrefix = new Set(allFolders.map((folder) => folder.accountId)).size > 1;
 
   const byId = new Map(allFolders.map((folder) => [folder.id, folder]));
-  recentFolders = recentIds.map((id) => byId.get(id)).filter(Boolean);
+  const senderFolders = senderIds.map((id) => byId.get(id)).filter(Boolean);
+  const recentIdsWithSenders = new Set(senderIds);
+  recentFolders = [
+    ...senderFolders,
+    ...recentIds
+      .filter((id) => !recentIdsWithSenders.has(id))
+      .map((id) => byId.get(id))
+      .filter(Boolean),
+  ];
 }
 
 /** Where background.js was last told to put this window: "center" or "corner". */
@@ -326,23 +358,37 @@ function render(query) {
 
   const trimmed = query.trim();
   const folders = trimmed
-    ? sortByQueryWeight(
-        filterFolders(allFolders, trimmed, {
-          caseSensitive: options.caseSensitiveSearch,
-          fuzzy: options.fuzzySearch,
-        }),
-        queryWeights,
-        folderWeights,
-        trimmed,
+    ? prioritize(
+        sortByQueryWeight(
+          filterFolders(allFolders, trimmed, {
+            caseSensitive: options.caseSensitiveSearch,
+            fuzzy: options.fuzzySearch,
+          }),
+          queryWeights,
+          folderWeights,
+          trimmed,
+        ),
+        senderIds,
       )
     : recentFolders;
   visible = folders.map((folder) => ({ type: "folder", folder }));
   activeIndex = 0;
 
   list.innerHTML = "";
+  const senderIdSet = new Set(senderIds);
   for (const entry of visible) {
     const item = document.createElement("li");
+    if (senderIdSet.has(entry.folder.id)) {
+      item.classList.add("sender");
+    }
     appendHighlighted(item, folderLabel(entry.folder), trimmed);
+    if (senderIdSet.has(entry.folder.id)) {
+      const tag = document.createElement("span");
+      tag.className = "sender-tag";
+      tag.textContent = messenger.i18n.getMessage("popupSenderTag");
+      tag.title = messenger.i18n.getMessage("popupSenderTagTitle");
+      item.append(tag);
+    }
     item.addEventListener("mousedown", (event) => {
       event.preventDefault();
       activate(entry);

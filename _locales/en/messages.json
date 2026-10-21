@@ -75,6 +75,14 @@
     "message": "No matching folders",
     "description": "Shown when a search query has no results"
   },
+  "popupSenderTag": {
+    "message": "sender",
+    "description": "Small tag on a folder previously used for this sender"
+  },
+  "popupSenderTagTitle": {
+    "message": "Used before for this sender",
+    "description": "Tooltip for the sender folder tag"
+  },
   "popupNoCommands": {
     "message": "No matching commands",
     "description": "Shown when a slash-command query matches no command"
@@ -225,6 +233,10 @@
   },
   "optionsCenterOnParent": {
     "message": "Center the search window over the mail window",
+    "description": "Options page checkbox label"
+  },
+  "optionsSenderSuggestions": {
+    "message": "Suggest and preselect the folders last used for the sender",
     "description": "Options page checkbox label"
   },
   "optionsRecreateWindow": {
