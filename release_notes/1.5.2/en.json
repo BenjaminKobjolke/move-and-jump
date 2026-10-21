@@ -1,0 +1,10 @@
+{
+  "version": "1.5.2",
+  "date": "2026-10-21",
+  "title": "Smarter move suggestions",
+  "notes": [
+    "The move popup now remembers up to three folders you recently used for each sender, puts them first, and preselects the latest one.",
+    "Sender suggestions can be turned off in the options, and sender move history is automatically forgotten after a year of inactivity.",
+    "Fixed Thunderbird staying open in the background after you close the last mail window while the search popup is minimized."
+  ]
+}

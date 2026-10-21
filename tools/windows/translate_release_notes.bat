@@ -6,11 +6,13 @@ rem the translator names each output file after the code it is given.
 setlocal
 pushd "%~dp0..\.."
 for %%I in (.) do set "PROJECT_ROOT=%%~fI"
-if not defined GPT_JSON_TRANSLATOR_DIR (
-    echo GPT_JSON_TRANSLATOR_DIR must point to the GPT-json-translator checkout.
+rem Machine-specific paths are kept out of git: config.bat is a local copy of config_example.bat.
+if not exist "%~dp0..\config.bat" (
+    echo tools\config.bat not found. Copy tools\config_example.bat to tools\config.bat and adjust it.
     set "ERR=1"
     goto failed
 )
+call "%~dp0..\config.bat"
 if not exist "%GPT_JSON_TRANSLATOR_DIR%\.venv\Scripts\python.exe" (
     echo Translator Python executable not found under "%GPT_JSON_TRANSLATOR_DIR%".
     set "ERR=1"

@@ -1,0 +1,10 @@
+{
+  "version": "1.5.2",
+  "date": "2026-10-21",
+  "title": "Sugerencias de traslado más inteligentes",
+  "notes": [
+    "La ventana emergente para trasladar mensajes ahora recuerda hasta tres carpetas que hayas usado recientemente para cada remitente, las muestra primero y preselecciona la más reciente.",
+    "Puedes desactivar las sugerencias de remitentes en las opciones. Además, el historial de traslados por remitente se borra automáticamente tras un año de inactividad.",
+    "Se ha corregido un problema que hacía que Thunderbird siguiera abierto en segundo plano al cerrar la última ventana de correo mientras la ventana emergente de búsqueda estaba minimizada."
+  ]
+}

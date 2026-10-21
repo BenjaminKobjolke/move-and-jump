@@ -1,0 +1,10 @@
+{
+  "version": "1.5.2",
+  "date": "2026-10-21",
+  "title": "Intelligentere Verschiebevorschläge",
+  "notes": [
+    "Das Verschiebe-Popup merkt sich jetzt für jeden Absender bis zu drei Ordner, die du zuletzt verwendet hast, zeigt sie zuerst an und wählt den zuletzt verwendeten Ordner voraus.",
+    "Absendervorschläge lassen sich in den Optionen deaktivieren. Der Verschiebeverlauf eines Absenders wird nach einem Jahr ohne Aktivität automatisch gelöscht.",
+    "Es wurde behoben, dass Thunderbird im Hintergrund geöffnet blieb, wenn du das letzte E-Mail-Fenster geschlossen hattest, während das Such-Popup minimiert war."
+  ]
+}

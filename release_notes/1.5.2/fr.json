@@ -1,0 +1,10 @@
+{
+  "version": "1.5.2",
+  "date": "2026-10-21",
+  "title": "Suggestions de déplacement plus intelligentes",
+  "notes": [
+    "La fenêtre contextuelle de déplacement mémorise désormais jusqu’à trois dossiers récemment utilisés pour chaque expéditeur, les affiche en premier et présélectionne le dernier utilisé.",
+    "Les suggestions d’expéditeurs peuvent être désactivées dans les options, et l’historique des déplacements par expéditeur est automatiquement effacé après un an d’inactivité.",
+    "Correction d’un problème qui laissait Thunderbird ouvert en arrière-plan après la fermeture de la dernière fenêtre de courrier lorsque la fenêtre contextuelle de recherche était réduite."
+  ]
+}
