@@ -5,6 +5,7 @@
   "command_check_scripts": [
     "config.bat",
     "config_example.bat",
+    "graphify_update.bat",
     "release_create.bat"
   ],
   "analysis_commands": [

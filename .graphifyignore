@@ -11,3 +11,8 @@
 /tmp/
 /tools/
 /web-ext-artifacts/
+*.md
+*.json
+LICENSE
+/graphify-out/
+/.claude/
