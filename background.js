@@ -1,4 +1,8 @@
-import { pushRecent, MAX_SENDER_FOLDERS } from "./lib/recent.js";
+import {
+  pushRecent,
+  MAX_SENDER_FOLDERS,
+  pruneSenders,
+} from "./lib/recent.js";
 import { DEFAULT_OPTIONS, getOptions, clampZoom } from "./lib/options.js";
 import { COMMAND_NAMES } from "./lib/keys.js";
 import { decodeImapUtf7 } from "./lib/imapUtf7.js";
@@ -77,16 +81,21 @@ async function recordSenders(messages, folderId) {
     if (sender?.email) emails.add(sender.email.toLowerCase());
   }
   if (emails.size === 0) return;
-  const { senderFolders = {} } = await messenger.storage.local.get("senderFolders");
-  // shortcut: senderFolders grows by one key per sender ever moved, cap/prune if storage size shows up.
+  const { senderFolders = {}, senderUsedAt = {} } = await messenger.storage.local.get([
+    "senderFolders",
+    "senderUsedAt",
+  ]);
+  const now = Date.now();
   for (const email of emails) {
     senderFolders[email] = pushRecent(
       senderFolders[email] ?? [],
       folderId,
       MAX_SENDER_FOLDERS,
     );
+    senderUsedAt[email] = now;
   }
-  await messenger.storage.local.set({ senderFolders });
+  const pruned = pruneSenders(senderFolders, senderUsedAt, now);
+  await messenger.storage.local.set(pruned);
 }
 
 async function performJump(folderId, tabId) {

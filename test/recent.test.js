@@ -5,6 +5,8 @@ import {
   prioritize,
   MAX_RECENT,
   MAX_SENDER_FOLDERS,
+  SENDER_RETENTION_MS,
+  pruneSenders,
 } from "../lib/recent.js";
 
 test("adds a new folder to the front", () => {
@@ -64,4 +66,63 @@ test("pushRecent caps sender history at three folders", () => {
     "a",
     "b",
   ]);
+});
+
+test("pruneSenders keeps senders used within the retention window", () => {
+  const now = 1_000_000;
+  const result = pruneSenders({ alice: ["inbox"] }, { alice: now - SENDER_RETENTION_MS }, now);
+  assert.deepEqual(result, {
+    senderFolders: { alice: ["inbox"] },
+    senderUsedAt: { alice: now - SENDER_RETENTION_MS },
+  });
+});
+
+test("pruneSenders drops senders older than the retention window from both maps", () => {
+  const now = 1_000_000;
+  const result = pruneSenders(
+    { alice: ["inbox"], bob: ["archive"] },
+    { alice: now - SENDER_RETENTION_MS - 1, bob: now },
+    now,
+  );
+  assert.deepEqual(result, {
+    senderFolders: { bob: ["archive"] },
+    senderUsedAt: { bob: now },
+  });
+});
+
+test("pruneSenders keeps senders exactly at the retention boundary", () => {
+  const now = 1_000_000;
+  const result = pruneSenders(
+    { alice: ["inbox"] },
+    { alice: now - SENDER_RETENTION_MS },
+    now,
+  );
+  assert.deepEqual(result.senderFolders, { alice: ["inbox"] });
+});
+
+test("pruneSenders stamps legacy senders without a timestamp", () => {
+  const now = 1_000_000;
+  const result = pruneSenders({ alice: ["inbox"] }, {}, now);
+  assert.deepEqual(result, {
+    senderFolders: { alice: ["inbox"] },
+    senderUsedAt: { alice: now },
+  });
+});
+
+test("pruneSenders drops timestamp entries without folders", () => {
+  const result = pruneSenders({}, { orphan: 999 }, 1_000);
+  assert.deepEqual(result, { senderFolders: {}, senderUsedAt: {} });
+});
+
+test("pruneSenders does not mutate its inputs", () => {
+  const senderFolders = { alice: ["inbox"] };
+  const senderUsedAt = {};
+  pruneSenders(senderFolders, senderUsedAt, 1_000);
+  assert.deepEqual(senderFolders, { alice: ["inbox"] });
+  assert.deepEqual(senderUsedAt, {});
+});
+
+test("pruneSenders honors a custom retention window", () => {
+  const result = pruneSenders({ alice: ["inbox"] }, { alice: 899 }, 1_000, 100);
+  assert.deepEqual(result, { senderFolders: {}, senderUsedAt: {} });
 });

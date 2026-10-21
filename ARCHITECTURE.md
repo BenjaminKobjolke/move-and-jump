@@ -438,6 +438,9 @@ that mutates `storage.local` and the toolbar tooltip.
   "senderFolders": {                                  // sender email -> up to 3 destination folder ids, newest first
     "sender@example.com": ["folderId1", "folderId2"]
   },
+  "senderUsedAt": {                                   // sender email -> timestamp (epoch ms) of last moved mail
+    "sender@example.com": 1792571706000
+  },
   "lastUsedFolderId": "folderId1",                    // used by the *-last commands
   "options": {                                        // see lib/options.js (DEFAULT_OPTIONS)
     "caseSensitiveSearch": false,
@@ -454,6 +457,11 @@ that mutates `storage.local` and the toolbar tooltip.
   }
 }
 ```
+
+Sender history is pruned when a move is recorded: senders unused for more
+than 365 days are removed from both `senderFolders` and `senderUsedAt`.
+Legacy sender entries without a timestamp are stamped on the first move after
+this retention rule is introduced.
 
 `getOptions()` (`lib/options.js`) merges the stored object over
 `DEFAULT_OPTIONS`, so adding a key here never needs a storage migration — and

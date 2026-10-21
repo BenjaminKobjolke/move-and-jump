@@ -12,6 +12,7 @@ follow [semantic versioning](https://semver.org/) — see
   sender, put them first in the move popup and preselect the latest one. The
   options page can turn the feature off. See
   [docs/settings/SENDER_SUGGESTIONS.md](docs/settings/SENDER_SUGGESTIONS.md).
+- Sender move history is forgotten after a year without a move from that sender.
 
 ## [1.5.1] - 2026-10-20
 

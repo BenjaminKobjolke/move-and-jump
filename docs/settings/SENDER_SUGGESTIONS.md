@@ -24,6 +24,7 @@ preselect the folders last used for the sender**:
 
 - **Stored:** `senderFolders` in `messenger.storage.local` maps each
   lowercased sender email address to up to three folder ids, most recent first.
+  Senders unused for a year are forgotten when another move is recorded.
 - **Recorded:** after a move succeeds, `performMove()` records the destination
   once for each distinct sender in the moved messages. Move-last uses the same
   path; jump never records sender history.
