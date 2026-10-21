@@ -44,7 +44,8 @@ All of them, same as before: **Escape**, the **Cancel** button, clicking away
   `findExistingSearchWindow` after the event page was suspended) is removed with
   `windows.remove` and the reuse branch is skipped, so a normal
   `windows.create` runs. The existing `windows.onRemoved` listener clears
-  `searchWindowId` / `searchWindowParent`, so no extra teardown was needed.
+  `searchWindowId` / `searchWindowParent`. It also closes the kept-alive popup
+  once no mail window remains.
 - **Everything else is unchanged:** zoom, **Resize the search window to fit the
   results**, and **Center the search window over the mail window** apply to the
   recreated window exactly as they do to a reused one (see

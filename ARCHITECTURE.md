@@ -273,7 +273,8 @@ free anymore.
   it — restores (it minimizes rather than closes on dismiss) + focuses it
   and sends the popup a `reset` message to re-point its mode/tab/zoom —
   rather than piling up windows. The window is tracked in `searchWindowId`
-  (`background.js`), cleared via `windows.onRemoved`.
+  (`background.js`), cleared via `windows.onRemoved`. That listener also closes
+  the kept-alive popup once no `normal` window remains.
   - `searchWindowId` lives in memory, but the background is a **non-persistent
     MV3 event page** (`manifest.json`) — Gecko suspends it after a short idle,
     wiping that variable while the popup keeps living. Relying on it alone let
