@@ -27,3 +27,14 @@ they are intentionally referenced, not imported.
 
 
 This project's graphify code directory is the repo root (.); non-code files are excluded by .graphifyignore.
+
+## Post-Implementation Code Analysis
+
+After any feature, finished plan, or bug fix, run the changed-files analyzer and fix issues it reports:
+
+```powershell
+cd 'D:\GIT\BenjaminKobjolke\thunderbird\move-and-jump'
+cmd /c '.\tools\analyze_changed_and_new_files.bat'
+```
+
+The changed-files run uses `--only-changed`, including new and modified source files while skipping deleted files. Run `tools\analyze_code.bat` for a whole-project audit, before a release or merge, after shared-code refactors, or when the working tree has no changed source files. Analyzer reports are written as per-rule CSV files under `code_analysis_results\`; a missing CSV means that rule found no issues.
