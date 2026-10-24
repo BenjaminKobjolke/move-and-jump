@@ -5,21 +5,34 @@
   "command_check_scripts": [
     "config.bat",
     "config_example.bat",
+    "analyze_code.bat",
+    "analyze_changed_and_new_files.bat",
+    "analyze_code_config.bat",
+    "analyze_code_config.example.bat",
     "graphify_update.bat",
     "release_create.bat"
   ],
   "analysis_commands": [
-    "npm run lint"
+    "npm run lint",
+    "tools\\analyze_changed_and_new_files.bat"
   ],
+  "analysis_command_kinds": {
+    "npm run lint": "test",
+    "tools\\analyze_changed_and_new_files.bat": "code_quality"
+  },
   "analysis_commands_seen": {
     "scripts": [
-      "release_create.bat"
+      "release_create.bat",
+      "analyze_changed_and_new_files.bat"
     ],
     "tests": true
   },
   "analysis_command_states": {
     "npm run lint": {
       "test": "green"
+    },
+    "tools\\analyze_changed_and_new_files.bat": {
+      "code_quality": "green"
     }
   },
   "analysis_code_quality_answered": true
