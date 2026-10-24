@@ -14,4 +14,5 @@ tmp/commit_msg.tmp
 code_analysis_results/
 .reasonix/
 tools/config.bat
+tools/analyze_code_config.bat
 coding-rules.json
