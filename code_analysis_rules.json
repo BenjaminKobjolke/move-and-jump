@@ -1,0 +1,32 @@
+{
+  "log_level": "all",
+  "global_exclude_paths": [
+    "code_analysis_results"
+  ],
+  "max_lines_per_file": {
+    "enabled": true,
+    "warning": 300,
+    "error": 500
+  },
+  "pmd_duplicates": {
+    "enabled": true,
+    "minimum_tokens": 100
+  },
+  "pmd_similar_code": {
+    "enabled": false,
+    "minimum_tokens": 100,
+    "ignore_identifiers": true,
+    "ignore_literals": true,
+    "ignore_annotations": false
+  },
+  "eslint_analyze": {
+    "enabled": true,
+    "config_mode": "auto",
+    "exclude_patterns": [
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      "coverage/**"
+    ]
+  }
+}
