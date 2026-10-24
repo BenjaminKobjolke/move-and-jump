@@ -21,5 +21,6 @@
     "npm run lint": {
       "test": "green"
     }
-  }
+  },
+  "analysis_code_quality_answered": true
 }
