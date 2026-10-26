@@ -117,8 +117,15 @@ tab's **message** list instead of the folder list.
 ## Relevant files
 
 - `popup/search.html` — markup (heading, input, list, actions)
-- `popup/search.js` — all popup logic: `init`, `applyScope`, `render`,
-  `renderCommands`, `activate`, `completeActive` (Tab), `select`, `applyZoom`
+- `popup/search.js` — startup, event listeners, and the reusable-window reset message
+- `popup/state.js` — shared popup elements and mutable state
+- `popup/load.js` — `init`, `applyScope`, and Thunderbird data loading
+- `popup/render.js` — folder filtering, highlighting, and `render`
+- `popup/commandRows.js` — slash-command row construction and rendering
+- `popup/actions.js` — `activate`, `completeActive` (Tab), and `select`
+- `popup/window.js` — sizing, placement, `hide`, and `applyZoom`
+- `popup/filter.js` — `applyFilter` and filter-field toggles
+- `popup/rows.js` / `popup/subLists.js` — shared rows and command sublists
 - `popup/search.css` — layout, active/disabled rows, light/dark theming
 - `lib/match.js` — `filterFolders` (substring matching)
 - `lib/weights.js` — `sortByQueryWeight` (learned ranking)

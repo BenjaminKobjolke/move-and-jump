@@ -101,7 +101,7 @@ no options-page checkbox: these are the only UI.
 
 ## How it works
 
-`applyFilter(query)` in `popup/search.js` calls
+`applyFilter(query)` in `popup/filter.js` calls
 
 ```js
 messenger.mailTabs.setQuickFilter(tabId, { text: { text, author, subject, recipients, body } })
@@ -130,11 +130,14 @@ close while the popup is open.
   `openSearchWindow(mode, tabId, "/filter ")`, which passes the text on as the
   popup's `prefill` URL parameter (or in the `reset` message when the window is
   reused)
-- `popup/search.js` — `initialPrefill`, `applyFilter`, `toggleFilterField`, `isFilterMode`,
-  `updatePlacement`/`requestResize` (the corner move), the
-  `filter`/`body`/`recipients` cases in `commandEntry` and `activate`, the field
-  hint row in `renderCommands`, and the live-filter + Ctrl+B/Ctrl+R hooks in the
+- `popup/search.js` — `initialPrefill` and the live-filter + Ctrl+B/Ctrl+R hooks in its
   `input`/`keydown` listeners
+- `popup/filter.js` — `applyFilter`, `toggleFilterField`, and `isFilterMode`
+- `popup/window.js` — `updatePlacement`/`requestResize` (the corner move), the
+  popup's corner placement and sizing
+- `popup/commandRows.js` — the `filter`/`body`/`recipients` command rows and the
+  field hint row
+- `popup/actions.js` — the matching command activation behavior
 - `lib/commands.js` — `filter` (takes an argument), `body`, `recipients`
 - `lib/options.js` — `filterBody`, `filterRecipients` defaults
 - `_locales/en/messages.json` — `commandFilterSet`, `commandFilterClear`,

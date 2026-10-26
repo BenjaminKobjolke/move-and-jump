@@ -237,7 +237,7 @@ the leading slash still finds it. No folders become unreachable.
   `matchCommands(token)` returns the commands whose name starts with `token`
   (bare `""` matches all). Being DOM-free, it's unit-tested in
   `test/commands.test.js`.
-- **Rendering:** `render()` (`popup/search.js`) calls `parseCommand` first; on a
+- **Rendering:** `render()` (`popup/render.js`) calls `parseCommand` first; on a
   match it hands off to `renderCommands`, which builds one list row per matching
   command via `commandEntry(command, arg)`. Command rows are plain text (no
   `<mark>` highlight) and disable the Move/Jump buttons.
@@ -270,7 +270,7 @@ the leading slash still finds it. No folders become unreachable.
   break on a Thunderbird upgrade; every access is feature-detected and wrapped,
   and a failure degrades to an empty list (disabled row), never an exception.
   `columns.list(tabId)` / `columns.toggle(tabId, id)` both return the full
-  `[{ id, label, hidden }]` list; `popup/search.js` caches it in `columnState`
+  `[{ id, label, hidden }]` list; `popup/load.js` caches it in shared `columnState`
   (refreshed by `init()`, so window reuse re-reads it) and `renderColumns()`
   turns it into rows. `renderRows()` is the row-building helper shared with
   `renderCommands()`. `updatePlacement()` sends `place: "corner"` for the
@@ -282,7 +282,7 @@ the leading slash still finds it. No folders become unreachable.
   `messenger.folders.query({})` and `messenger.accounts.list()` under
   `accountsRead`. It adds one query, `folders.query({ isUnified: true })`, since
   the plain query omits unified folders; a rejection degrades to `[]`.
-  `goEntries()` (`popup/search.js`) builds the whole row list once — the unread
+  `goEntries()` (`popup/subLists.js`) builds the whole row list once — the unread
   row, then `inboxFolders()` over the **unscoped** `rawFolders` paired with
   account names, then `orderUnified()` over the unified folders (both helpers in
   `lib/folders.js`) — and gives each row a `key` for `renderAccounts()` to
@@ -307,8 +307,12 @@ the leading slash still finds it. No folders become unreachable.
   `/go` lookups)
 - `lib/identities.js` — `filterIdentities` for `/from`
 - `lib/options.js` — shared `clampZoom`
-- `popup/search.js` — `renderCommands`, `goEntries`, `renderAccounts`,
-  `commandEntry`, `activate`, `applyScope`, `applyZoom`, `applyFilter`
+- `popup/commandRows.js` — `renderCommands` and `commandEntry`
+- `popup/subLists.js` — `goEntries` and `renderAccounts`
+- `popup/actions.js` — `activate` and `select`
+- `popup/load.js` — `applyScope`
+- `popup/window.js` — `applyZoom` and `updatePlacement`
+- `popup/filter.js` — `applyFilter` and filter-field toggles
 - `docs/FILTER_EMAILS.md` — the `/filter` semantics in full
 - `popup/search.css` — `li.disabled` styling for unrunnable command rows
 - `_locales/*/messages.json` — command label strings

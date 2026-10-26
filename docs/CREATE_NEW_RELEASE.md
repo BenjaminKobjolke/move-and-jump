@@ -288,11 +288,12 @@ alongside `/columns`, `/filter` and `/go` — see
    the one piece of new plumbing the feature needs.
 2. **Register the command** in [lib/commands.js](../lib/commands.js):
    `{ name: "whatsnew" }`. It takes no argument.
-3. **Load and render** in [popup/search.js](../popup/search.js): a
-   `renderWhatsNew(offset)` alongside the existing `renderColumns` / `renderGo`,
-   reading `release_notes/<index[offset]>/<locale>.json` and falling back to
-   `en.json` on a failed fetch. Reuse the `/columns` pattern of a command that
-   keeps the popup open and re-renders in place.
+3. **Load and render** in the popup modules: `popup/search.js` wires popup events,
+   `popup/render.js` dispatches views, and `popup/subLists.js` owns `renderColumns`.
+   Add `renderWhatsNew(offset)` beside the sublist renderers, reading
+   `release_notes/<index[offset]>/<locale>.json` and falling back to `en.json` on
+   a failed fetch. Reuse the `/columns` pattern of a command that keeps the popup
+   open and re-renders in place.
 4. **Locale strings** for the command description and the Older/Newer rows go in
    `_locales/en/messages.json`, then through the add-on's usual translation
    pass.

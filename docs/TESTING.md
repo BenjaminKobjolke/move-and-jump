@@ -28,7 +28,7 @@ To run a single file:
 node --test test/commands.test.js
 ```
 
-These tests are DOM-free by design — anything touching `popup/search.js`,
+These tests are DOM-free by design — anything touching `popup/` modules,
 `messenger.*`, or the browser is verified manually (below).
 
 ## Lint

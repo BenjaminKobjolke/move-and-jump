@@ -214,7 +214,7 @@ free anymore.
 - **Anchoring/sizing**: gone; `openSearchWindow()` in `background.js`
   computes a centered position from `windows.getCurrent()` instead.
 - **Dismiss-on-blur**: reimplemented via `window.addEventListener("blur",
-  ...)` in `search.js`, which calls the same `hide()` every other
+  ...)` in `search.js`, which calls the shared `hide()` in `popup/window.js` every other
   dismissal path uses. This turned out to have a sharp edge: selecting a
   folder with **Enter** appeared to do nothing (no move, no error),
   while clicking the exact same list item worked fine. Working theory:
@@ -301,7 +301,7 @@ Two related UI additions on top of the design above:
 
 - **Explicit action buttons.** The search window always shows Move,
   Jump, and Cancel buttons rather than being locked into whichever
-  mode it was opened in. `select()` in `search.js` now takes an
+  mode it was opened in. `select()` in `popup/actions.js` now takes an
   explicit `actionMode` parameter instead of reading the module-level
   `mode` constant directly — Enter and clicking a list item still use
   `mode` (whichever the window opened in), but the two buttons pass
@@ -314,7 +314,7 @@ Two related UI additions on top of the design above:
   Enter key, so this seemed like the more coherent choice.
 - **Account-name disambiguation.** Folder names commonly repeat across
   accounts ("Inbox", "Sent", …), which was ambiguous in the folder
-  list. `search.js` now fetches `messenger.accounts.list()` alongside
+  list. `popup/load.js` now fetches `messenger.accounts.list()` alongside
   `folders.query()` and attaches each folder's account name as an
   `accountName` field. Two consequences: `lib/match.js` gained a
   fourth (lowest-priority) ranking tier that matches against
@@ -322,12 +322,12 @@ Two related UI additions on top of the design above:
   things down; and the rendered label becomes `"<Account>: <path>"`
   instead of just `<path>`, but *only* when more than one distinct
   `accountId` is actually present among the currently-scoped folders
-  (`showAccountPrefix` in `search.js`) — with `searchAllAccounts`
+  (`showAccountPrefix` in `popup/state.js`) — with `searchAllAccounts`
   turned off, or with only one account configured, there's no
   ambiguity to resolve, so the prefix would just be noise.
 - **Move/jump failures are no longer silent.** `handleSelection()` in
   `background.js` returns `{ok: true}` or `{ok: false, error}`, and
-  `select()` in `search.js` checks that response before closing the
+  `select()` in `popup/actions.js` checks that response before closing the
   window — on failure it shows a generic `#error` message inline
   (`popupError`) and leaves the window open (via the same `closing`
   flag the blur-race guard uses, reset back to `false`) instead of
@@ -351,7 +351,7 @@ search results and the toolbar tooltip.
 `lib/imapUtf7.js` decodes it back to plain Unicode, dependency-free
 (no external base64/text-decoding library — just `atob`, which is a
 standard global in both Node's test runner and WebExtension pages).
-It's applied in exactly two places: `popup/search.js` decodes
+It's applied in exactly two places: `popup/load.js` decodes
 `folder.name`/`folder.path` once, right when building `allFolders` in
 `init()` (so display, search ranking, and the recent-folders list all
 see the decoded form transparently, no changes needed anywhere else);
@@ -371,7 +371,7 @@ someone else's system — font size, DPI, and OS text-scale settings
 all change how tall the same content actually renders, so no single
 guessed number holds up across environments.
 
-`measureRequiredWindowHeight()` in `search.js` measures this from the
+`measureRequiredWindowHeight()` in `popup/window.js` measures this from the
 real, rendered DOM instead of guessing: it briefly toggles a
 `.measuring` class (see `search.css`) that lifts the folder list's
 height/overflow constraints, reads `document.documentElement.scrollHeight`
@@ -490,7 +490,7 @@ Two small, related additions, both implemented as pure functions in
   screen). Returns `null` if the query is blank, or — a real edge
   case — if a folder matched via its account name but the account
   prefix isn't currently shown (`showAccountPrefix` is false), so the
-  query doesn't appear in the label at all; `search.js` falls back to
+  query doesn't appear in the label at all; `popup/render.js` falls back to
   plain unhighlighted text in that case rather than forcing a highlight
   that isn't there.
 
@@ -501,7 +501,7 @@ around `lib/match.js` and `ROADMAP.md`):
 - **Weight is the primary sort key for search hits, full stop** —
   not a tie-breaker within `lib/match.js`'s existing name/path/account
   match-quality tiers. Those tiers still decide *which* folders match a
-  query at all (`filterFolders()` is completely unchanged); `search.js`
+  query at all (`filterFolders()` is completely unchanged); `popup/render.js`
   just re-sorts that result set by weight afterward. A frequently-used
   folder that only matches on path can now rank above a rarely-used
   folder that matches on name.
@@ -511,7 +511,7 @@ around `lib/match.js` and `ROADMAP.md`):
   already-working feature alone rather than conflating recency and
   frequency into one ranking.
 
-`search.js` builds the highlighted `<li>` content with real DOM nodes
+`popup/render.js` builds the highlighted `<li>` content with real DOM nodes
 (`document.createTextNode` for the non-matching parts, a `<mark>`
 element for the match) rather than `innerHTML`, consistent with the
 rest of the popup. `<mark>` is styled with `color: var(--active-bg)` +
@@ -594,7 +594,8 @@ rounds of guessing specifically because the first version didn't.
   `messenger.mailTabs`/`messenger.messages` APIs, MRU + tooltip
   maintenance. Deliberately thin: it calls into `lib/*.js` for any
   actual logic.
-- `popup/` — `search.html`/`search.css`/`search.js`, the type-ahead UI.
+- `popup/` — `search.html`/`search.css` plus `search.js` and focused ES modules for state,
+  loading, rendering, actions, filtering, and window behavior.
 - `options/` — `options.html`/`options.js`, the options page: a set of
   checkboxes and a zoom input, all backed by the single `options` object in
   `storage.local` (`lib/options.js`). Also renders a short explanatory intro and a live table of
@@ -608,7 +609,7 @@ rounds of guessing specifically because the first version didn't.
   one click away via the *Preferences* button, is where a fuller
   explanation can actually live.
 - `lib/` — pure, dependency-free logic shared by `background.js`,
-  `popup/search.js`, and `options/options.js`:
+  popup modules, and `options/options.js`:
   - `match.js` — filter/rank folders against a query.
   - `recent.js` — MRU list maintenance (push-to-front, dedupe, cap).
   - `folders.js` — restrict a folder list to one account.
