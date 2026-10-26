@@ -7,7 +7,13 @@ export default [
       sourceType: "module",
       globals: {
         browser: "readonly",
+        console: "readonly",
         messenger: "readonly",
+        document: "readonly",
+        DOMParser: "readonly",
+        getComputedStyle: "readonly",
+        URLSearchParams: "readonly",
+        window: "readonly",
       },
     },
     rules: {
