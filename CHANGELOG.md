@@ -8,6 +8,8 @@ follow [semantic versioning](https://semver.org/) — see
 
 ### Added
 
+- New `/from [text]` slash command in compose windows: list sender identities,
+  filter by name/email/label, and switch the From identity from the keyboard.
 - Sender-aware move suggestions: remember up to three recent destinations per
   sender, put them first in the move popup and preselect the latest one. The
   options page can turn the feature off. See

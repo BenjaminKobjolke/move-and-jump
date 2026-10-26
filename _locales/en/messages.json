@@ -155,6 +155,25 @@
     "message": "Open a link from the message — press Enter to list links",
     "description": "Popup slash-command row: /links with no argument"
   },
+  "commandFromHint": {
+    "message": "Change sender — press Enter to list identities",
+    "description": "Popup slash-command row: /from with no argument"
+  },
+  "commandFromUnavailable": {
+    "message": "Sender — only in a compose window",
+    "description": "Popup slash-command row: /from when no compose identities are available"
+  },
+  "commandFromIdentity": {
+    "message": "From: $1$",
+    "description": "Popup row for one compose sender identity",
+    "placeholders": {
+      "identity": { "content": "$1", "example": "Benjamin Kobjolke <benjamin@example.com> (Work)" }
+    }
+  },
+  "commandFromCurrent": {
+    "message": "current",
+    "description": "Marker for the active compose sender identity"
+  },
   "commandCopyName": {
     "message": "Copy sender name",
     "description": "Popup slash-command row: /copy-name"

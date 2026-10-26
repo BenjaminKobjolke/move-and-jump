@@ -33,7 +33,7 @@ test("matchCommands prefix-matches by command name", () => {
 });
 
 test("an ambiguous prefix matches every command sharing it", () => {
-  assert.deepEqual(matchCommands("f").map((c) => c.name), ["filter", "fuzzy"]);
+  assert.deepEqual(matchCommands("f").map((c) => c.name), ["filter", "fuzzy", "from"]);
 });
 
 test("bare slash (empty token) matches every command", () => {
@@ -48,6 +48,7 @@ test("bare slash (empty token) matches every command", () => {
     "columns",
     "go",
     "links",
+    "from",
     "copy-name",
     "copy-email",
     "copy-subject",

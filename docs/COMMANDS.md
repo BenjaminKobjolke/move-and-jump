@@ -20,6 +20,7 @@ another command.
 | `/columns [name]` | Show/hide message-list columns (Date, From, …)               |
 | `/go [name]`      | Jump to an inbox, a unified folder, or all unread             |
 | `/links [text]`   | Open a link from the displayed message in the browser        |
+| `/from [text]`    | Change the compose window's sender identity                  |
 | `/copy-name`      | Copy the displayed message's sender name                     |
 | `/copy-email`     | Copy the displayed message's sender email                    |
 | `/copy-subject`   | Copy the displayed message's subject                         |
@@ -152,6 +153,16 @@ Links come from `messages.listInlineTextParts()` (decoded body parts): HTML
 parts go through `DOMParser` and yield `a[href]`, plain parts go through
 `extractUrls()`; `dedupeLinks()` drops non-http(s) and repeats. Both helpers are
 in `lib/links.js`, tested in `test/links.test.js`.
+
+## Changing the sender with `/from`
+
+`/from` is two levels deep like `/go` and `/links`: completing the command
+lists the sender identities available in the compose window, with the active
+identity marked. Type one or more terms to filter across identity name, email,
+and label; every term must match, regardless of order. Enter switches the
+compose window's From identity through `compose.setComposeDetails()` and hides
+the popup. The command is available only in a compose window; elsewhere its
+row is disabled.
 
 ## Message commands
 
@@ -294,6 +305,7 @@ the leading slash still finds it. No folders become unreachable.
 - `lib/commands.js` — `parseCommand`, `matchCommands`, the `COMMANDS` list
 - `lib/folders.js` — `filterByAccount`, `inboxFolders`, `orderUnified` (the
   `/go` lookups)
+- `lib/identities.js` — `filterIdentities` for `/from`
 - `lib/options.js` — shared `clampZoom`
 - `popup/search.js` — `renderCommands`, `goEntries`, `renderAccounts`,
   `commandEntry`, `activate`, `applyScope`, `applyZoom`, `applyFilter`
@@ -301,3 +313,4 @@ the leading slash still finds it. No folders become unreachable.
 - `popup/search.css` — `li.disabled` styling for unrunnable command rows
 - `_locales/*/messages.json` — command label strings
 - `test/commands.test.js` — parse/match unit tests
+- `test/identities.test.js` — identity-search unit tests

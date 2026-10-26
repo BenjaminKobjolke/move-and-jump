@@ -7,6 +7,7 @@ import { prioritize } from "../lib/recent.js";
 import { findMatchRanges } from "../lib/highlight.js";
 import { parseCommand, matchCommands } from "../lib/commands.js";
 import { extractUrls, dedupeLinks } from "../lib/links.js";
+import { filterIdentities } from "../lib/identities.js";
 
 const heading = document.getElementById("heading");
 const input = document.getElementById("query");
@@ -54,7 +55,8 @@ let queryWeights = {};
 // { type: "command", command, arg, label, enabled }, or
 // { type: "column", id, label } (one message-list column), or
 // { type: "account", folder, label } (one account's inbox), or
-// { type: "link", url, label } (one link in the displayed message).
+// { type: "link", url, label } (one link in the displayed message), or
+// { type: "identity", identityId, label } (one compose sender identity).
 let visible = [];
 // Message-list columns as last reported by the columns experiment:
 // [{ id, label, hidden }]. Empty when unavailable (no mail tab, or a
@@ -62,6 +64,8 @@ let visible = [];
 let columnState = [];
 // Links in the tab's displayed message, [{ text, url }]; see loadDisplayed().
 let linkState = [];
+// Compose sender identities loaded once when the popup opens.
+let identityState = { currentId: undefined, identities: [] };
 // Whether the tab shows exactly one message — what the message commands
 // (/copy-name, /reply, …) need to be selectable.
 let hasDisplayedMessage = false;
@@ -113,6 +117,7 @@ async function init() {
     cols,
     unified,
     displayed,
+    identities,
   ] = await Promise.all([
     messenger.folders.query({}),
     messenger.accounts.list(),
@@ -133,6 +138,7 @@ async function init() {
       console.error("Move and Jump: reading the displayed message failed", displayError);
       return { single: false, links: [] };
     }),
+    loadIdentities().catch(() => ({ currentId: undefined, identities: [] })),
   ]);
   rawFolders = folders;
   unifiedFolders = unified;
@@ -144,6 +150,7 @@ async function init() {
   options = opts;
   columnState = cols;
   linkState = displayed.links;
+  identityState = identities;
   hasDisplayedMessage = displayed.single;
 
   senderIds =
@@ -352,6 +359,7 @@ function render(query) {
     if (parsed.token === "columns") renderColumns(parsed.arg);
     else if (parsed.token === "go") renderAccounts(parsed.arg);
     else if (parsed.token === "links") renderLinks(parsed.arg);
+    else if (parsed.token === "from") renderIdentities(parsed.arg);
     else renderCommands(parsed);
     return;
   }
@@ -407,7 +415,7 @@ async function listColumns() {
   try {
     // -1: no mail tab known — the experiment falls back to the front mail window.
     return (await messenger.columns.list(tabId ?? -1)) ?? [];
-  } catch (columnsError) {
+  } catch {
     return [];
   }
 }
@@ -547,6 +555,22 @@ async function loadDisplayed() {
   return { single: true, links: dedupeLinks(links) };
 }
 
+/** Read the active compose identity and the identities available in this profile. */
+async function loadIdentities() {
+  if (tabId === undefined) return { currentId: undefined, identities: [] };
+  const details = await messenger.compose.getComposeDetails(tabId);
+  const identities = await messenger.identities.list();
+  return {
+    currentId: details.identityId,
+    identities: identities.map((identity) => ({
+      id: String(identity.id ?? ""),
+      name: String(identity.name ?? ""),
+      email: String(identity.email ?? ""),
+      label: String(identity.label ?? ""),
+    })),
+  };
+}
+
 /** The `/links` rows, substring-filtered by `arg` on text and url. */
 function renderLinks(arg) {
   const needle = arg.toLowerCase();
@@ -560,6 +584,32 @@ function renderLinks(arg) {
 
   empty.textContent = messenger.i18n.getMessage(
     entries.length === 0 ? "commandLinksUnavailable" : "popupNoCommands",
+  );
+  empty.hidden = visible.length !== 0;
+  moveButton.disabled = jumpButton.disabled = true;
+}
+
+/** The `/from` rows, matching all query terms across identity fields. */
+function renderIdentities(arg) {
+  const entries = filterIdentities(identityState.identities, arg).map((identity) => {
+    const email = identity.email ? ` <${identity.email}>` : "";
+    const label = identity.label ? ` (${identity.label})` : "";
+    const identityText = `${identity.name}${email}${label}`;
+    const rowLabel = messenger.i18n.getMessage("commandFromIdentity", [identityText]);
+    return {
+      type: "identity",
+      identityId: identity.id,
+      label:
+        identity.id === identityState.currentId
+          ? `${rowLabel} (${messenger.i18n.getMessage("commandFromCurrent")})`
+          : rowLabel,
+    };
+  });
+  renderRows(entries);
+  highlight();
+
+  empty.textContent = messenger.i18n.getMessage(
+    identityState.identities.length === 0 ? "commandFromUnavailable" : "popupNoCommands",
   );
   empty.hidden = visible.length !== 0;
   moveButton.disabled = jumpButton.disabled = true;
@@ -657,6 +707,13 @@ function commandEntry(command, arg) {
       enabled = linkState.length > 0;
       label = messenger.i18n.getMessage(enabled ? "commandLinksHint" : "commandLinksUnavailable");
       break;
+    case "from":
+      // Completing the name lists sender identities for a compose tab.
+      enabled = identityState.identities.length > 0;
+      label = messenger.i18n.getMessage(
+        enabled ? "commandFromHint" : "commandFromUnavailable",
+      );
+      break;
     case "navigate-top":
       enabled = tabId !== undefined;
       label = messenger.i18n.getMessage("commandNavigateTop");
@@ -746,6 +803,16 @@ async function activate(entry) {
       await messenger.windows.openDefaultBrowser(entry.url);
     } catch (openError) {
       console.error("Move and Jump: opening link failed", openError);
+      error.hidden = false;
+      return;
+    }
+    hide();
+    return;
+  }
+  if (entry.type === "identity") {
+    try {
+      await messenger.compose.setComposeDetails(tabId, { identityId: entry.identityId });
+    } catch {
       error.hidden = false;
       return;
     }
@@ -846,6 +913,12 @@ async function activate(entry) {
         updatePlacement();
         input.focus();
         return;
+      case "from":
+        input.value = "/from ";
+        render(input.value);
+        updatePlacement();
+        input.focus();
+        return;
     }
     await messenger.storage.local.set({ options });
     input.value = "";
@@ -870,7 +943,12 @@ function completeActive() {
   // Column, account and link rows have nothing useful to complete to — the input
   // already reads "/columns …" / "/go …" and completing to a name would just
   // re-filter the same list.
-  if (entry.type === "column" || entry.type === "account" || entry.type === "link") return;
+  if (
+    entry.type === "column" ||
+    entry.type === "account" ||
+    entry.type === "link" ||
+    entry.type === "identity"
+  ) return;
   const text =
     entry.type === "command"
       ? `/${entry.command.name}${entry.command.takesArg ? " " : ""}`
