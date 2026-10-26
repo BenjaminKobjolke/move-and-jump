@@ -1,6 +1,6 @@
 {
   "files": {
-    "TICKETS_WATCHER_COMMANDS.md": 2
+    "TICKETS_WATCHER_COMMANDS.md": 3
   },
   "command_check_scripts": [
     "config.bat",
@@ -14,7 +14,8 @@
   ],
   "analysis_commands": [
     "npm run lint",
-    "tools\\analyze_changed_and_new_files.bat"
+    "tools\\analyze_changed_and_new_files.bat",
+    "tools\\analyze_code.bat"
   ],
   "analysis_command_kinds": {
     "npm run lint": "test",
@@ -22,8 +23,14 @@
   },
   "analysis_commands_seen": {
     "scripts": [
-      "release_create.bat",
-      "analyze_changed_and_new_files.bat"
+      "analyze_changed_and_new_files.bat",
+      "analyze_code.bat",
+      "analyze_code_config.bat",
+      "analyze_code_config.example.bat",
+      "config.bat",
+      "config_example.bat",
+      "graphify_update.bat",
+      "release_create.bat"
     ],
     "tests": true
   },
