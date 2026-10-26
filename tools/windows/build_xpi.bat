@@ -1,7 +1,7 @@
 @echo off
 setlocal
 pushd "%~dp0..\.."
-call npm run build -- --overwrite-dest
+call npm run build
 set ERR=%ERRORLEVEL%
 popd
 if %ERR% neq 0 (
