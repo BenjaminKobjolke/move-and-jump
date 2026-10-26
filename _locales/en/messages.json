@@ -164,11 +164,8 @@
     "description": "Popup slash-command row: /from when no compose identities are available"
   },
   "commandFromIdentity": {
-    "message": "From: $1$",
-    "description": "Popup row for one compose sender identity",
-    "placeholders": {
-      "identity": { "content": "$1", "example": "Benjamin Kobjolke <benjamin@example.com> (Work)" }
-    }
+    "message": "From: $1",
+    "description": "Popup row for one compose sender identity. $1 is the identity, e.g. Name <email> (label)"
   },
   "commandFromCurrent": {
     "message": "current",
