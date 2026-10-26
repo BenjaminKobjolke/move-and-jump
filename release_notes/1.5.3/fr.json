@@ -1,0 +1,9 @@
+{
+  "version": "1.5.3",
+  "date": "2026-10-26",
+  "title": "Changer plus rapidement d’expéditeur",
+  "notes": [
+    "Dans les fenêtres de rédaction, la nouvelle commande /from vous permet de rechercher des identités d’expéditeur par nom, adresse e-mail ou libellé, puis de changer d’identité d’expéditeur au clavier.",
+    "Dans le sélecteur, les identités d’expéditeur affichent désormais clairement leur nom complet, leur adresse e-mail et leur libellé."
+  ]
+}

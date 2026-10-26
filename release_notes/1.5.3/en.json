@@ -1,0 +1,9 @@
+{
+  "version": "1.5.3",
+  "date": "2026-10-26",
+  "title": "Faster sender switching",
+  "notes": [
+    "In compose windows, the new /from command lets you search sender identities by name, email address, or label and switch the From identity from the keyboard.",
+    "Sender identity choices now show their full name, email address, and label clearly in the picker."
+  ]
+}

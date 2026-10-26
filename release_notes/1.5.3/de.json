@@ -1,0 +1,9 @@
+{
+  "version": "1.5.3",
+  "date": "2026-10-26",
+  "title": "Schnellerer Wechsel des Absenders",
+  "notes": [
+    "In Verfassen-Fenstern kannst du mit dem neuen Befehl /from Absenderidentitäten nach Name, E-Mail-Adresse oder Bezeichnung suchen und die Absenderidentität per Tastatur wechseln.",
+    "Bei der Auswahl der Absenderidentität werden jetzt der vollständige Name, die E-Mail-Adresse und die Bezeichnung deutlich angezeigt."
+  ]
+}

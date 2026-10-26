@@ -1,0 +1,9 @@
+{
+  "version": "1.5.3",
+  "date": "2026-10-26",
+  "title": "Cambio más rápido de remitente",
+  "notes": [
+    "En las ventanas de redacción, el nuevo comando /from te permite buscar identidades de remitente por nombre, dirección de correo electrónico o etiqueta, y cambiar la identidad del remitente desde el teclado.",
+    "Ahora, en el selector, las opciones de identidad del remitente muestran claramente el nombre completo, la dirección de correo electrónico y la etiqueta."
+  ]
+}
