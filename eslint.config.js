@@ -13,12 +13,31 @@ export default [
         DOMParser: "readonly",
         getComputedStyle: "readonly",
         URLSearchParams: "readonly",
+        URL: "readonly",
+        atob: "readonly",
+        navigator: "readonly",
         window: "readonly",
       },
     },
     rules: {
       "no-unused-vars": ["warn", { args: "none" }],
       "no-undef": "error",
+    },
+  },
+  {
+    files: ["tools/**/*.js", "tools/**/*.mjs"],
+    languageOptions: {
+      globals: {
+        process: "readonly",
+      },
+    },
+  },
+  {
+    files: ["**/*.cjs"],
+    languageOptions: {
+      globals: {
+        module: "readonly",
+      },
     },
   },
   {
