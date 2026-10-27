@@ -1,4 +1,3 @@
-/* eslint-env mozilla/browser-window */
 /* global ChromeUtils, Services */
 
 // Experiment API: go to the top of the message list or the compose body.

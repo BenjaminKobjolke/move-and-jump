@@ -1,4 +1,3 @@
-/* eslint-env mozilla/browser-window */
 /* global ChromeUtils, Services */
 
 // Experiment API: message-list column visibility.

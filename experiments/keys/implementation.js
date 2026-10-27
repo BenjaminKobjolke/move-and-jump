@@ -1,4 +1,3 @@
-/* eslint-env mozilla/browser-window */
 /* global ChromeUtils, Services, Cc, Ci */
 
 // The capture-phase listener enables single-key bindings that commands rejects.
