@@ -1,44 +1,7 @@
 /* eslint-env mozilla/browser-window */
-/* global ChromeUtils, ExtensionCommon, Services, Cc, Ci */
+/* global ChromeUtils, Services, Cc, Ci */
 
-// Experiment API: single-key shortcuts.
-//
-// Thunderbird's stable `commands` API cannot express a binding without a
-// Ctrl/Alt/Command/MacCtrl modifier — ShortcutUtils.validate() returns
-// MODIFIER_REQUIRED for both "S" and "Shift+S" (see lib/keys.js for the exact
-// rule). Plain `s`/`g`, the way Nostalgy worked, are therefore out of reach
-// there, and [API Request] bug 1591730 has been open since 2019.
-//
-// The obvious way to get them anyway is to build XUL <key> elements, the way
-// Thunderbird builds its own single letters in mainKeySet.inc.xhtml and the way
-// ExtensionShortcuts builds the ones `commands` does support. That does not
-// work, and it fails silently. Measured on 153.2.0:
-//
-//   own keyset, key="s", no modifiers ......... never fires
-//   own keyset, key="s", modifiers="alt" ...... fires
-//   inside Thunderbird's own mailKeys keyset ... never fires
-//   exact clone of a working built-in <key>,
-//     only the letter changed ................. never fires
-//   the built-in itself ....................... fires
-//
-// So a modifier-less <key> inserted at runtime is not picked up, however it is
-// built or wherever it is put, while the same element with a modifier is. Only
-// keys present when the window's handler chain was first built work without
-// one. That rules the whole approach out for this feature.
-//
-// What works is a plain keydown listener on the mail window, which is also what
-// tbkeys does. The one thing that had to be checked is whether it sees keys
-// pressed in the message list, since Thunderbird 115 moved that into an
-// about:3pane document inside a <browser>. It does, and the event arrives with
-// the real inner element as its target (ul#folderTree, not the browser), which
-// is what makes the "is the user typing" test below possible.
-//
-// The cost of not going through Thunderbird's key handling is that the quiet-
-// while-typing behaviour is no longer free — isTypingContext() has to earn it.
-//
-// Everything here is internal API and can change with any Thunderbird release.
-// Every access is feature-detected and wrapped: on failure the bindings are
-// simply not installed and the options page says so, rather than breaking.
+// The capture-phase listener enables single-key bindings that commands rejects.
 
 var { ExtensionCommon } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionCommon.sys.mjs",
@@ -86,19 +49,9 @@ const TEXT_ENTRY_TAGS = new Set([
   "moz-input-text",
   "account-hub-container",
   "imconversation",
-  // A remote <browser> (a rendered message body, an account-setup page) never
-  // lets its keydown reach us anyway; when one is itself the target, the focus
-  // is inside content we cannot inspect, so stay out of the way.
   "browser",
 ]);
 
-/**
- * Whether a keystroke on this element is text being typed rather than a
- * shortcut. Going through Thunderbird's own <key> handling would have given us
- * this for free — chrome key handlers run after the focused element, so an
- * editor that consumed the keystroke has already stopped it. A DOM listener
- * runs first and has to ask.
- */
 function isTypingContext(target) {
   if (!target) return false;
   const tag = (target.localName || "").toLowerCase();
@@ -106,7 +59,7 @@ function isTypingContext(target) {
   try {
     if (target.isContentEditable) return true;
     if (target.ownerDocument?.designMode === "on") return true;
-  } catch (error) {
+  } catch {
     // Cross-origin or already-detached node; treat as not-typing.
   }
   return false;
@@ -121,19 +74,6 @@ function normalizeModifiers(value) {
     .join(",");
 }
 
-/**
- * The Thunderbird key element a shortcut would shadow, or null.
- *
- * This is ShortcutUtils.isSystem() with two changes: it reports which key was
- * hit rather than just that one was, and it compares modifiers normalized
- * instead of by exact attribute match, so a locale or a Thunderbird version
- * that spells them differently can't produce a false "no conflict".
- *
- * Still worth reporting even though we no longer install <key> elements
- * ourselves: those are exactly the bindings our listener will be taking the
- * keystroke away from.
- * @returns {string|null} an identifier for the shadowed key, for display
- */
 function systemKeyFor(win, shortcut) {
   const parts = shortcut.split("+");
   const chromeKey = parts.pop();
@@ -152,10 +92,6 @@ function systemKeyFor(win, shortcut) {
   return null;
 }
 
-/**
- * The shortcut string a keydown event stands for, in the spelling register()
- * was given ("S", "Shift+S"), or null if it can't be a single-key binding.
- */
 function shortcutForEvent(event) {
   if (event.ctrlKey || event.altKey || event.metaKey) return null;
   const key = event.key;
@@ -173,30 +109,24 @@ function shortcutForEvent(event) {
  * @returns {number} tab id, or -1 when it can't be resolved
  */
 function activeMailTabId(win) {
-  try {
-    const extension = ExtensionParent.GlobalManager.getExtension(EXTENSION_ID);
-    const nativeTab = win.document.getElementById("tabmail")?.currentTabInfo;
-    if (!extension?.tabManager || !nativeTab) return -1;
-    return extension.tabManager.getWrapper(nativeTab)?.id ?? -1;
-  } catch (error) {
-    // Not a mail tab, or the tab manager moved. The background falls back, so
-    // this degrades quietly -- log it, or a moved internal looks like the
-    // command simply acting on the wrong tab.
-    console.error("Move and Jump: could not resolve the mail tab", error);
-    return -1;
-  }
+  const extension = ExtensionParent.GlobalManager.getExtension(EXTENSION_ID);
+  const nativeTab = win.document.getElementById("tabmail")?.currentTabInfo;
+  if (!extension?.tabManager || !nativeTab) return -1;
+  return extension.tabManager.getWrapper(nativeTab)?.id ?? -1;
 }
 
 async function emit(id, win) {
   const tabId = activeMailTabId(win);
   if (fires.size === 0) await wakeBackground();
+  const errors = [];
   for (const fire of fires) {
     try {
       await fire.async(id, tabId);
     } catch (error) {
-      console.error("Move and Jump: keys.onCommand delivery failed", error);
+      errors.push(error);
     }
   }
+  if (errors.length > 0) throw errors[0];
 }
 
 function handlerFor(win) {
@@ -211,16 +141,13 @@ function handlerFor(win) {
       if (!shortcut) return;
       const id = shortcuts.get(shortcut);
       if (!id) return;
-      // originalTarget is the real inner node; target can be retargeted at a
-      // shadow-DOM or browser boundary, which would hide the text field.
       if (isTypingContext(event.originalTarget || event.target)) return;
 
-      // Claim the keystroke: we listen in the capture phase, ahead of
-      // Thunderbird's own key handling, which skips events already handled.
-      // This is what lets a user bind a letter Thunderbird already uses.
       event.preventDefault();
       event.stopPropagation();
-      emit(id, win);
+      emit(id, win).catch((error) =>
+        console.error("Move and Jump: single-key handler failed", error),
+      );
     } catch (error) {
       console.error("Move and Jump: single-key handler failed", error);
     }
@@ -232,7 +159,7 @@ function detachFromWindow(win) {
   if (!handler) return;
   try {
     win.removeEventListener("keydown", handler, true);
-  } catch (error) {
+  } catch {
     // Window already torn down.
   }
 }
@@ -302,17 +229,13 @@ function delay(ms) {
  * re-register, which it does at every start (see applySingleKeys).
  */
 async function wakeBackground() {
-  try {
-    const extension = ExtensionParent.GlobalManager.getExtension(EXTENSION_ID);
-    if (!extension?.wakeupBackground) return;
-    await extension.wakeupBackground();
-    for (let i = 0; i < 20 && fires.size === 0; i++) await delay(25);
-  } catch (error) {
-    console.error("Move and Jump: could not wake the background", error);
-  }
+  const extension = ExtensionParent.GlobalManager.getExtension(EXTENSION_ID);
+  if (!extension?.wakeupBackground) return;
+  await extension.wakeupBackground();
+  for (let i = 0; i < 20 && fires.size === 0; i++) await delay(25);
 }
 
-var keys = class extends ExtensionCommon.ExtensionAPI {
+globalThis.keys = class extends ExtensionCommon.ExtensionAPI {
   getAPI(context) {
     return {
       keys: {

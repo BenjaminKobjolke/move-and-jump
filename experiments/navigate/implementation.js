@@ -1,5 +1,5 @@
 /* eslint-env mozilla/browser-window */
-/* global ChromeUtils, ExtensionCommon, Services */
+/* global ChromeUtils, Services */
 
 // Experiment API: go to the top of the message list or the compose body.
 //
@@ -50,19 +50,19 @@ function nativeWindow(context, tabId) {
       const win = nativeTab?.chromeBrowser?.contentWindow;
       if (win?.threadTree) return win;
     }
-  } catch (error) {
+  } catch {
     // Tab gone — fall through to the front mail window.
   }
   try {
     // ponytail: same front-window fallback as experiments/columns.
     const mail = Services.wm.getMostRecentWindow("mail:3pane");
     return mail?.document.getElementById("tabmail")?.currentAbout3Pane ?? null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
 
-var navigate = class extends ExtensionCommon.ExtensionAPI {
+globalThis.navigate = class extends ExtensionCommon.ExtensionAPI {
   getAPI(context) {
     return {
       navigate: {

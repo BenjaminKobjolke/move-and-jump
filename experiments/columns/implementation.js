@@ -1,5 +1,5 @@
 /* eslint-env mozilla/browser-window */
-/* global ChromeUtils, ExtensionCommon, Services */
+/* global ChromeUtils, Services */
 
 // Experiment API: message-list column visibility.
 //
@@ -30,7 +30,7 @@ function about3Pane(context, tabId) {
       const win = nativeTab?.chromeBrowser?.contentWindow;
       if (win?.threadPane) return win;
     }
-  } catch (error) {
+  } catch {
     // Tab gone or not a mail tab — fall through to the front window.
   }
   try {
@@ -39,7 +39,7 @@ function about3Pane(context, tabId) {
     const mail = Services.wm.getMostRecentWindow("mail:3pane");
     const win = mail?.document.getElementById("tabmail")?.currentAbout3Pane;
     return win?.threadPane ? win : null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -51,7 +51,7 @@ async function labelFor(win, column) {
     try {
       const value = await win.document.l10n.formatValue(id);
       if (value) return value;
-    } catch (error) {
+    } catch {
       // Unknown Fluent id (e.g. a column added by another add-on).
     }
   }
@@ -70,7 +70,7 @@ async function listColumns(win) {
   );
 }
 
-var columns = class extends ExtensionCommon.ExtensionAPI {
+globalThis.columns = class extends ExtensionCommon.ExtensionAPI {
   getAPI(context) {
     return {
       columns: {
