@@ -14,8 +14,7 @@
   ],
   "analysis_commands": [
     "npm run lint",
-    "tools\\analyze_changed_and_new_files.bat",
-    "tools\\analyze_code.bat"
+    "tools\\analyze_changed_and_new_files.bat"
   ],
   "analysis_command_kinds": {
     "npm run lint": "test",
@@ -45,5 +44,6 @@
       "code_quality": "green"
     }
   },
-  "analysis_code_quality_answered": true
+  "analysis_code_quality_answered": true,
+  "project_id": 12348
 }
