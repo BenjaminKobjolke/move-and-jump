@@ -1,0 +1,10 @@
+{
+  "version": "1.5.4",
+  "date": "2026-10-29",
+  "title": "Des suggestions d’expéditeurs plus pertinentes",
+  "notes": [
+    "Les suggestions de déplacement affichent désormais en premier les dossiers les plus récents pour chaque expéditeur. Vous pouvez ainsi classer plus rapidement les messages des personnes que vous connaissez. Vous pouvez désactiver les suggestions par expéditeur dans les options.",
+    "L’historique des déplacements pour un expéditeur est automatiquement effacé après un an sans déplacement de message de sa part.",
+    "Le déplacement d’un message ouvert dans son propre onglet fonctionne désormais de manière fiable. De plus, la fermeture de la dernière fenêtre de courrier ne laisse plus Thunderbird tourner en arrière-plan."
+  ]
+}

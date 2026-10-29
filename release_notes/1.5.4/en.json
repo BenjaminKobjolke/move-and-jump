@@ -1,0 +1,10 @@
+{
+  "version": "1.5.4",
+  "date": "2026-10-29",
+  "title": "Smarter sender suggestions",
+  "notes": [
+    "Move suggestions now put your most recent folders for the sender first, so messages from familiar people are quicker to file. You can turn sender suggestions off in the options.",
+    "Sender move history is automatically forgotten after a year without a move from that sender.",
+    "Moving a message opened in its own tab now works reliably, and closing the last mail window no longer leaves Thunderbird running in the background."
+  ]
+}

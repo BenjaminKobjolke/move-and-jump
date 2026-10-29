@@ -1,0 +1,10 @@
+{
+  "version": "1.5.4",
+  "date": "2026-10-29",
+  "title": "Intelligentere Absendervorschläge",
+  "notes": [
+    "Bei Verschiebevorschlägen werden jetzt zuerst die Ordner angezeigt, in die du zuletzt Nachrichten von diesem Absender verschoben hast. So lassen sich Nachrichten von vertrauten Absendern schneller ablegen. Du kannst Absendervorschläge in den Einstellungen deaktivieren.",
+    "Der Verschiebeverlauf eines Absenders wird automatisch gelöscht, wenn ein Jahr lang keine Nachricht von diesem Absender verschoben wurde.",
+    "Das Verschieben einer Nachricht, die in einem eigenen Tab geöffnet ist, funktioniert jetzt zuverlässig. Außerdem läuft Thunderbird nach dem Schließen des letzten Mailfensters nicht mehr im Hintergrund weiter."
+  ]
+}

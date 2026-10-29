@@ -1,0 +1,10 @@
+{
+  "version": "1.5.4",
+  "date": "2026-10-29",
+  "title": "Sugerencias de remitentes más inteligentes",
+  "notes": [
+    "Las sugerencias para mover mensajes ahora muestran primero las carpetas que has usado más recientemente para ese remitente, para que puedas archivar más rápido los mensajes de personas conocidas. Puedes desactivar las sugerencias de remitentes en las opciones.",
+    "El historial de movimientos de un remitente se olvida automáticamente si pasa un año sin mover ningún mensaje de ese remitente.",
+    "Ahora puedes mover sin problemas un mensaje abierto en su propia pestaña, y cerrar la última ventana de correo ya no deja Thunderbird ejecutándose en segundo plano."
+  ]
+}
