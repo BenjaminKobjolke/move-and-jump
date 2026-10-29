@@ -58,7 +58,12 @@ async function performMove(folderId, tabId) {
     console.error("Move and Jump: performMove called with no tabId, nothing to move");
     return;
   }
-  const { messages } = await messenger.mailTabs.getSelectedMessages(tabId);
+  // A message opened in its own tab is not a mail tab; mailTabs rejects its id.
+  const tab = await messenger.tabs.get(tabId);
+  const { messages } =
+    tab.type === "mail"
+      ? await messenger.mailTabs.getSelectedMessages(tabId)
+      : await messenger.messageDisplay.getDisplayedMessages(tabId);
   if (messages.length === 0) return;
   await messenger.messages.move(
     messages.map((message) => message.id),
