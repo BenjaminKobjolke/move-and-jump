@@ -1,0 +1,8 @@
+{
+  "version": "1.5.5",
+  "date": "2026-11-01",
+  "title": "Open message attachments faster",
+  "notes": [
+    "New /open-attachments command: open a lone attachment with its default program, or filter and choose one when a message has several."
+  ]
+}

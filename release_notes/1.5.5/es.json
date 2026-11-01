@@ -1,0 +1,8 @@
+{
+  "version": "1.5.5",
+  "date": "2026-11-01",
+  "title": "Abre más rápido los archivos adjuntos de los mensajes",
+  "notes": [
+    "Nuevo comando /open-attachments: abre un único archivo adjunto con el programa predeterminado o filtra y elige uno cuando un mensaje tenga varios."
+  ]
+}

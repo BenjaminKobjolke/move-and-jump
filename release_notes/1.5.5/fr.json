@@ -1,0 +1,8 @@
+{
+  "version": "1.5.5",
+  "date": "2026-11-01",
+  "title": "Ouvrir les pièces jointes des messages plus rapidement",
+  "notes": [
+    "Nouvelle commande /open-attachments : ouvrez une pièce jointe unique avec son programme par défaut, ou filtrez et choisissez-en une lorsqu’un message en contient plusieurs."
+  ]
+}

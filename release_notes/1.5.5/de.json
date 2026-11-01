@@ -1,0 +1,8 @@
+{
+  "version": "1.5.5",
+  "date": "2026-11-01",
+  "title": "Nachrichtenanhänge schneller öffnen",
+  "notes": [
+    "Neuer Befehl /open-attachments: Öffne einen einzelnen Anhang mit dem Standardprogramm oder filtere und wähle einen aus, wenn eine Nachricht mehrere Anhänge enthält."
+  ]
+}
