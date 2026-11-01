@@ -90,6 +90,9 @@
     "save-attachments": {
       "description": "__MSG_commandSaveAttachmentsDescription__"
     },
+    "open-attachments": {
+      "description": "__MSG_commandOpenAttachmentsDescription__"
+    },
     "write-to-sender": {
       "description": "__MSG_commandWriteToSenderDescription__"
     },

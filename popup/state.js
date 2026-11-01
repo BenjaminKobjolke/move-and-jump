@@ -35,6 +35,8 @@ export const state = {
   columnState: [],
   // Links in the displayed message, populated by loadDisplayed().
   linkState: [],
+  // Attachments in the displayed message, populated by loadDisplayed().
+  attachmentState: { messageId: undefined, attachments: [] },
   // Compose identities are loaded once each time the popup opens.
   identityState: { currentId: undefined, identities: [] },
   hasDisplayedMessage: false,

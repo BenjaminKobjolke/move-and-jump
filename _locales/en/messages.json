@@ -43,6 +43,10 @@
     "message": "Save the displayed message's attachments to the Downloads folder",
     "description": "manifest.json commands.save-attachments description; no default key"
   },
+  "commandOpenAttachmentsDescription": {
+    "message": "Open an attachment of the displayed message with its default program",
+    "description": "manifest.json commands.open-attachments description; no default key"
+  },
   "commandWriteToSenderDescription": {
     "message": "Write a new message to the displayed message's sender",
     "description": "manifest.json commands.write-to-sender description; no default key"
@@ -186,6 +190,29 @@
   "commandSaveAttachments": {
     "message": "Save attachments to Downloads",
     "description": "Popup slash-command row: /save-attachments"
+  },
+  "commandOpenAttachmentsHint": {
+    "message": "Open an attachment — press Enter (one opens directly, several are listed)",
+    "description": "Popup slash-command row: /open-attachments with attachments available"
+  },
+  "commandOpenAttachmentsUnavailable": {
+    "message": "Attachments — no displayed message with attachments",
+    "description": "Popup slash-command row and empty state when there are no displayed-message attachments"
+  },
+  "commandOpenAttachmentFile": {
+    "message": "Open: $NAME$ ($SIZE$)",
+    "description": "Popup row for one attachment; name and size are shown",
+    "placeholders": {
+      "name": { "content": "$1", "example": "report.pdf" },
+      "size": { "content": "$2", "example": "3.4 MB" }
+    }
+  },
+  "commandOpenAttachmentFileNoSize": {
+    "message": "Open: $NAME$",
+    "description": "Popup row for an attachment whose size is unavailable",
+    "placeholders": {
+      "name": { "content": "$1", "example": "report.pdf" }
+    }
   },
   "commandWrite": {
     "message": "Write new message to sender",

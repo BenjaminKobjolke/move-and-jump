@@ -1,6 +1,7 @@
 // Handles popup selection, command activation, and folder actions.
 import { error, input, state } from "./state.js";
 import { clampZoom } from "../lib/options.js";
+import { ATTACHMENT_ACTION, attachmentAction } from "../lib/attachments.js";
 import { render } from "./render.js";
 import { applyFilter, toggleFilterField } from "./filter.js";
 import { applyScope } from "./load.js";
@@ -34,6 +35,21 @@ export async function activate(entry) {
       await messenger.windows.openDefaultBrowser(entry.url);
     } catch (openError) {
       console.error("Move and Jump: opening link failed", openError);
+      error.hidden = false;
+      return;
+    }
+    hide();
+    return;
+  }
+  if (entry.type === "attachment") {
+    try {
+      await messenger.messages.openAttachment(
+        state.attachmentState.messageId,
+        entry.partName,
+        state.tabId,
+      );
+    } catch (openError) {
+      console.error("Move and Jump: opening attachment failed", openError);
       error.hidden = false;
       return;
     }
@@ -144,6 +160,19 @@ export async function activate(entry) {
         updatePlacement();
         input.focus();
         return;
+      case "open-attachments":
+        if (attachmentAction(state.attachmentState.attachments.length) === ATTACHMENT_ACTION.OPEN) {
+          await activate({
+            type: "attachment",
+            partName: state.attachmentState.attachments[0].partName,
+          });
+          return;
+        }
+        input.value = "/open-attachments ";
+        render(input.value);
+        updatePlacement();
+        input.focus();
+        return;
       case "from":
         input.value = "/from ";
         render(input.value);
@@ -178,6 +207,7 @@ export function completeActive() {
     entry.type === "column" ||
     entry.type === "account" ||
     entry.type === "link" ||
+    entry.type === "attachment" ||
     entry.type === "identity"
   ) return;
   const text =

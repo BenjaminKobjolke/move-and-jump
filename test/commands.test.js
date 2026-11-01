@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseCommand, matchCommands } from "../lib/commands.js";
+import { parseCommand, matchCommands, createCommandDispatcher } from "../lib/commands.js";
 
 test("parseCommand splits token and argument", () => {
   assert.deepEqual(parseCommand("/zoom 120"), { token: "zoom", arg: "120" });
@@ -53,6 +53,7 @@ test("bare slash (empty token) matches every command", () => {
     "copy-email",
     "copy-subject",
     "save-attachments",
+    "open-attachments",
     "write",
     "reply",
     "reply-all",
@@ -75,4 +76,55 @@ test("no command matches an unknown token", () => {
 
 test("matchCommands(\"g\") matches only go", () => {
   assert.deepEqual(matchCommands("g").map((c) => c.name), ["go"]);
+});
+
+test("command dispatcher routes the message commands and search commands", async () => {
+  const calls = [];
+  const action = (name) => (...args) => calls.push([name, ...args]);
+  const dispatch = createCommandDispatcher({
+    openSearchWindow: action("search"),
+    actOnLastFolder: action("last"),
+    messageActions: {
+      copySender: action("copySender"),
+      copySubject: action("copySubject"),
+      saveAttachments: action("saveAttachments"),
+      openAttachments: action("openAttachments"),
+      writeToSender: action("writeToSender"),
+      navigateTop: action("navigateTop"),
+    },
+  });
+
+  dispatch("move-search", 3);
+  dispatch("jump-search", 3);
+  dispatch("filter-search", 3);
+  dispatch("move-last", 3);
+  dispatch("jump-last", 3);
+  dispatch("copy-sender-name", 3);
+  dispatch("copy-sender-email", 3);
+  dispatch("copy-subject", 3);
+  dispatch("save-attachments", 3);
+  dispatch("open-attachments", 3);
+  dispatch("write-to-sender", 3);
+  dispatch("open-link", 3);
+  dispatch("navigate-top", 3);
+  assert.equal(dispatch("unknown", 3), undefined);
+
+  assert.deepEqual(calls.map(([name, ...args]) => [
+    name,
+    ...args.map((arg) => typeof arg === "function" ? "<callback>" : arg),
+  ]), [
+    ["search", "move", 3],
+    ["search", "jump", 3],
+    ["search", "move", 3, "/filter "],
+    ["last", "move", 3],
+    ["last", "jump", 3],
+    ["copySender", 3, "name"],
+    ["copySender", 3, "email"],
+    ["copySubject", 3],
+    ["saveAttachments", 3],
+    ["openAttachments", 3, "<callback>"],
+    ["writeToSender", 3],
+    ["search", "move", 3, "/links "],
+    ["navigateTop", 3],
+  ]);
 });

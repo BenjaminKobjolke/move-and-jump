@@ -38,7 +38,11 @@ export async function init() {
     messenger.folders.query({ isUnified: true }).catch(() => []),
     loadDisplayed().catch((displayError) => {
       console.error("Move and Jump: reading the displayed message failed", displayError);
-      return { single: false, links: [] };
+      return {
+        single: false,
+        links: [],
+        attachments: { messageId: undefined, attachments: [] },
+      };
     }),
     loadIdentities().catch(() => ({ currentId: undefined, identities: [] })),
   ]);
@@ -52,6 +56,7 @@ export async function init() {
   state.options = opts;
   state.columnState = cols;
   state.linkState = displayed.links;
+  state.attachmentState = displayed.attachments;
   state.identityState = identities;
   state.hasDisplayedMessage = displayed.single;
 
@@ -149,15 +154,26 @@ async function listColumns() {
  * anchors first. HTML parts give anchor text + href via DOMParser (no script
  * runs in a parsed document); plain-text parts only have bare urls, which
  * label themselves.
- * @returns {Promise<{single: boolean, links: Array<{text: string, url: string}>}>}
+ * @returns {Promise<{single: boolean, links: Array<{text: string, url: string}>, attachments: {messageId: string|number|undefined, attachments: Array<{name: string, partName: string, size: number|undefined}>}}>}
  */
 async function loadDisplayed() {
-  if (state.tabId === undefined) return { single: false, links: [] };
+  const emptyAttachments = { messageId: undefined, attachments: [] };
+  if (state.tabId === undefined) return { single: false, links: [], attachments: emptyAttachments };
   // MV3: getDisplayedMessages returns a MessageList; the singular call is MV2-only.
   const { messages = [] } = await messenger.messageDisplay.getDisplayedMessages(state.tabId);
-  if (messages.length !== 1) return { single: false, links: [] };
+  if (messages.length !== 1) return { single: false, links: [], attachments: emptyAttachments };
   const [message] = messages;
-  const parts = await messenger.messages.listInlineTextParts(message.id);
+  const [parts, listedAttachments] = await Promise.all([
+    messenger.messages.listInlineTextParts(message.id),
+    messenger.messages.listAttachments(message.id),
+  ]);
+  const attachments = Array.isArray(listedAttachments)
+    ? listedAttachments.map(({ name, partName, size }) => ({
+        name: String(name ?? ""),
+        partName,
+        size,
+      }))
+    : [];
   const links = [];
   for (const part of parts) {
     if (part.contentType === "text/html") {
@@ -169,7 +185,11 @@ async function loadDisplayed() {
       for (const url of extractUrls(part.content)) links.push({ text: url, url });
     }
   }
-  return { single: true, links: dedupeLinks(links) };
+  return {
+    single: true,
+    links: dedupeLinks(links),
+    attachments: { messageId: message.id, attachments },
+  };
 }
 
 /** Read the active compose identity and the identities available in this profile. */

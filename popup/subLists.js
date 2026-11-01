@@ -1,6 +1,7 @@
 // Renders the popup's column, account, link, and identity sublists.
 import { empty, jumpButton, moveButton, state } from "./state.js";
 import { filterIdentities } from "../lib/identities.js";
+import { filterAttachments, formatSize } from "../lib/attachments.js";
 import { inboxFolders, orderUnified } from "../lib/folders.js";
 import { highlight, onOff, renderRows } from "./rows.js";
 
@@ -107,6 +108,33 @@ export function renderLinks(arg) {
 
   empty.textContent = messenger.i18n.getMessage(
     entries.length === 0 ? "commandLinksUnavailable" : "popupNoCommands",
+  );
+  empty.hidden = state.visible.length !== 0;
+  moveButton.disabled = jumpButton.disabled = true;
+}
+
+/** The `/open-attachments` rows, matching every term against the file name. */
+export function renderAttachments(arg) {
+  const entries = filterAttachments(state.attachmentState.attachments, arg).map(
+    ({ name, partName, size }) => {
+      const sizeLabel = formatSize(size);
+      return {
+        type: "attachment",
+        partName,
+        label: messenger.i18n.getMessage(
+          sizeLabel ? "commandOpenAttachmentFile" : "commandOpenAttachmentFileNoSize",
+          sizeLabel ? [name, sizeLabel] : [name],
+        ),
+      };
+    },
+  );
+  renderRows(entries);
+  highlight();
+
+  empty.textContent = messenger.i18n.getMessage(
+    state.attachmentState.attachments.length === 0
+      ? "commandOpenAttachmentsUnavailable"
+      : "popupNoCommands",
   );
   empty.hidden = state.visible.length !== 0;
   moveButton.disabled = jumpButton.disabled = true;

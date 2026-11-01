@@ -5,7 +5,13 @@ import { prioritize } from "../lib/recent.js";
 import { sortByQueryWeight } from "../lib/weights.js";
 import { findMatchRanges } from "../lib/highlight.js";
 import { parseCommand } from "../lib/commands.js";
-import { renderAccounts, renderColumns, renderIdentities, renderLinks } from "./subLists.js";
+import {
+  renderAccounts,
+  renderAttachments,
+  renderColumns,
+  renderIdentities,
+  renderLinks,
+} from "./subLists.js";
 import { renderCommands } from "./commandRows.js";
 import { highlight } from "./rows.js";
 
@@ -56,6 +62,7 @@ export function render(query) {
     if (parsed.token === "columns") renderColumns(parsed.arg);
     else if (parsed.token === "go") renderAccounts(parsed.arg);
     else if (parsed.token === "links") renderLinks(parsed.arg);
+    else if (parsed.token === "open-attachments") renderAttachments(parsed.arg);
     else if (parsed.token === "from") renderIdentities(parsed.arg);
     else renderCommands(parsed);
     return;

@@ -73,6 +73,12 @@ function commandEntry(command, arg) {
       enabled = state.linkState.length > 0;
       label = messenger.i18n.getMessage(enabled ? "commandLinksHint" : "commandLinksUnavailable");
       break;
+    case "open-attachments":
+      enabled = state.attachmentState.attachments.length > 0;
+      label = messenger.i18n.getMessage(
+        enabled ? "commandOpenAttachmentsHint" : "commandOpenAttachmentsUnavailable",
+      );
+      break;
     case "from":
       // Completing the name lists sender identities for a compose tab.
       enabled = state.identityState.identities.length > 0;

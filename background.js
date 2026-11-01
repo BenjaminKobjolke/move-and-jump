@@ -9,6 +9,7 @@ import { decodeImapUtf7 } from "./lib/imapUtf7.js";
 import { incrementWeight, incrementQueryWeight } from "./lib/weights.js";
 import { createSearchWindow } from "./lib/searchWindow.js";
 import { createMessageActions } from "./lib/messageActions.js";
+import { createCommandDispatcher } from "./lib/commands.js";
 
 /**
  * In-memory mirror of storage.local's lastUsedFolderId, kept in sync so
@@ -48,6 +49,7 @@ const {
   copySender,
   copySubject,
   saveAttachments,
+  openAttachments,
   writeToSender,
   navigateTop,
   messageActions: MESSAGE_ACTIONS,
@@ -155,48 +157,18 @@ async function actOnLastFolder(mode, tabId) {
   await recordUsage(folderId);
 }
 
-/**
- * Run one of the add-on's commands. Shared by the two ways a command can be
- * triggered from the keyboard: Thunderbird's own `commands` API, and the
- * single-key bindings from experiments/keys. Both hand us the mail tab up
- * front rather than making us query for it — see the callers.
- * @param {number|undefined} tabId
- */
-function dispatchCommand(command, tabId) {
-  switch (command) {
-    case "move-search":
-      return openSearchWindow("move", tabId);
-    case "jump-search":
-      return openSearchWindow("jump", tabId);
-    // No default key (see manifest.json) — the user assigns one on the options
-    // page. Opens the same popup, already in /filter mode; move/jump stay
-    // reachable from it by clearing the input.
-    case "filter-search":
-      return openSearchWindow("move", tabId, "/filter ");
-    case "move-last":
-      return actOnLastFolder("move", tabId);
-    case "jump-last":
-      return actOnLastFolder("jump", tabId);
-    // Act on the displayed message rather than on folders; no default keys.
-    case "copy-sender-name":
-      return copySender(tabId, "name");
-    case "copy-sender-email":
-      return copySender(tabId, "email");
-    case "copy-subject":
-      return copySubject(tabId);
-    case "save-attachments":
-      return saveAttachments(tabId);
-    case "write-to-sender":
-      return writeToSender(tabId);
-    case "open-link":
-      return openSearchWindow("move", tabId, "/links ");
-    // Works in a compose window too: commands.onCommand hands us its tab.
-    case "navigate-top":
-      return navigateTop(tabId);
-    default:
-      return undefined;
-  }
-}
+const dispatchCommand = createCommandDispatcher({
+  openSearchWindow,
+  actOnLastFolder,
+  messageActions: {
+    copySender,
+    copySubject,
+    saveAttachments,
+    openAttachments,
+    writeToSender,
+    navigateTop,
+  },
+});
 
 // commands.onCommand hands us the active tab directly as its second
 // argument (Thunderbird 106+) — use that, same as action.onClicked
