@@ -25,6 +25,7 @@ another command.
 | `/copy-email`     | Copy the displayed message's sender email                    |
 | `/copy-subject`   | Copy the displayed message's subject                         |
 | `/save-attachments` | Save the displayed message's attachments to Downloads      |
+| `/open-attachments [text]` | Open an attachment of the displayed message with its default program |
 | `/write`          | New message to the displayed message's sender                |
 | `/reply`          | Reply to the displayed message's sender                      |
 | `/reply-all`      | Reply to all on the displayed message                        |
@@ -153,6 +154,22 @@ Links come from `messages.listInlineTextParts()` (decoded body parts): HTML
 parts go through `DOMParser` and yield `a[href]`, plain parts go through
 `extractUrls()`; `dedupeLinks()` drops non-http(s) and repeats. Both helpers are
 in `lib/links.js`, tested in `test/links.test.js`.
+
+## Opening attachments with `/open-attachments`
+
+Two levels deep like `/links`. With one attachment, Enter opens it directly.
+With several, the completed `/open-attachments ` lists each file with its size;
+type any number of terms to filter the file names (every term must match), then
+use the arrow keys and Enter to open the selected file. Escape closes the popup.
+Opening uses Thunderbird's `messages.openAttachment()`, so Thunderbird handles
+the file with its default program and any attachment preferences you have set.
+
+With no attachments, the command row is disabled and says
+`Attachments — no displayed message with attachments`. The
+`open-attachments` keyboard command opens a single attachment directly, or opens
+the popup in `/open-attachments` mode when there are several; with none it does
+nothing. The branching, size formatting, and file-name filtering are in
+`lib/attachments.js`.
 
 ## Changing the sender with `/from`
 
@@ -306,6 +323,7 @@ the leading slash still finds it. No folders become unreachable.
 - `lib/folders.js` — `filterByAccount`, `inboxFolders`, `orderUnified` (the
   `/go` lookups)
 - `lib/identities.js` — `filterIdentities` for `/from`
+- `lib/attachments.js` — attachment action choice, size formatting, and list filtering
 - `lib/options.js` — shared `clampZoom`
 - `popup/commandRows.js` — `renderCommands` and `commandEntry`
 - `popup/subLists.js` — `goEntries` and `renderAccounts`

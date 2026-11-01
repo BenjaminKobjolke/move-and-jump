@@ -8,6 +8,9 @@ follow [semantic versioning](https://semver.org/) — see
 
 ### Added
 
+- New `open-attachments` keyboard command and `/open-attachments` palette
+  command: open a lone attachment directly, or filter and choose one from a
+  keyboard-operated list when the message has several.
 - New `/from [text]` slash command in compose windows: list sender identities,
   filter by name/email/label, and switch the From identity from the keyboard.
 - Sender-aware move suggestions: remember up to three recent destinations per
