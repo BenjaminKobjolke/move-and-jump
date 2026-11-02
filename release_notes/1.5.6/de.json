@@ -1,0 +1,10 @@
+{
+  "version": "1.5.6",
+  "date": "2026-11-02",
+  "title": "Intelligentere Absenderaktionen",
+  "notes": [
+    "Neuer /from-Befehl in Verfassen-Fenstern: Filtere deine Absenderidentitäten und wechsle per Tastatur die Absenderidentität.",
+    "Vorschläge zum Verschieben merken sich jetzt die zuletzt verwendeten Ziele für jeden Absender, zeigen die zuletzt gewählte Option zuerst an und lassen sich in den Einstellungen deaktivieren.",
+    "Behoben: Thunderbird blieb im Hintergrund geöffnet, nachdem das letzte E-Mail-Fenster geschlossen wurde."
+  ]
+}

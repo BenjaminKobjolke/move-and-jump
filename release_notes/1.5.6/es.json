@@ -1,0 +1,10 @@
+{
+  "version": "1.5.6",
+  "date": "2026-11-02",
+  "title": "Acciones de remitente más inteligentes",
+  "notes": [
+    "Nuevo comando /from en las ventanas de redacción: filtra tus identidades de remitente y cambia la identidad del remitente desde el teclado.",
+    "Las sugerencias para mover ahora recuerdan los destinos recientes de cada remitente, muestran primero la opción más reciente y se pueden desactivar en las opciones.",
+    "Se corrigió un problema que hacía que Thunderbird siguiera ejecutándose en segundo plano después de cerrar la última ventana de correo."
+  ]
+}

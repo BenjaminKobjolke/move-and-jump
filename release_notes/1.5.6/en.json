@@ -1,0 +1,10 @@
+{
+  "version": "1.5.6",
+  "date": "2026-11-02",
+  "title": "Smarter sender actions",
+  "notes": [
+    "New /from command in compose windows: filter your sender identities and switch the From identity from the keyboard.",
+    "Move suggestions now remember recent destinations for each sender, put the latest choice first, and can be disabled in the options.",
+    "Fixed Thunderbird staying running in the background after the last mail window is closed."
+  ]
+}

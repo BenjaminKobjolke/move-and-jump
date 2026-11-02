@@ -1,0 +1,10 @@
+{
+  "version": "1.5.6",
+  "date": "2026-11-02",
+  "title": "Des actions d’expéditeur plus intelligentes",
+  "notes": [
+    "Nouvelle commande /from dans les fenêtres de rédaction : filtrez vos identités d’expéditeur et changez d’identité d’expéditeur au clavier.",
+    "Les suggestions de déplacement mémorisent désormais les destinations récentes pour chaque expéditeur, affichent le dernier choix en premier et peuvent être désactivées dans les options.",
+    "Correction d’un problème qui faisait que Thunderbird continuait de fonctionner en arrière-plan après la fermeture de la dernière fenêtre de courrier."
+  ]
+}
