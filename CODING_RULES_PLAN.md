@@ -2,7 +2,7 @@
 <!-- Step file for plan runs, generated from CODING_RULES.md — CODING_RULES.md stays the complete rule set -->
 
 # Version
-15
+17
 
 Increase this version number whenever this rule file changes.
 
@@ -263,6 +263,7 @@ The logger's name is fixed per language so it is the same known type in every pr
 | Unity C#      | `GameLog` (static) | `GameLog.cs`        |
 | Svelte/JS/TS  | `logger` (export)  | `logger.ts`         |
 | Arduino       | `Log`              | `Log.h` / `Log.cpp` |
+| Rust          | `log` / `tracing` facade, `app_logger::init()` | `app_logger.rs` |
 
 ---
 
@@ -334,6 +335,53 @@ third-party APIs.
   last line of defence, not as permission to skip the order.
 - **Setting it up** is work in each project: when one project of the system lacks the submodule
   or its test, request it there (linked todo or `/feedback:write`).
+
+---
+
+## Upstream Forks
+
+In a fork that merges changes from an upstream project, these rules apply to new and changed code
+only. Do not reformat, rename, move, or refactor upstream code that the task does not need. Prefer
+new files for features, and keep project-specific setup in new files plus the `CLAUDE.md` pointer
+so upstream merges stay clean.
+
+---
+
+## Coding-Rules Plugin Updates in Tickets Watcher Runs
+
+A todo may need a rules version that is published in the coding-rules marketplace but not
+installed on this machine yet (for example a new rule file). A Tickets Watcher run — a phase the
+watcher started for a todo, working from `tickets/<id>/` — may install it itself. Any other
+session asks the user to update the plugin instead.
+
+- **Precondition check.** Read `claude plugin list --json` and take the entry
+  `coding-rules@<marketplace>`. The check passes only when its `version` is at least the
+  required version and `<installPath>/rules/<required rule file>` exists. Use `installPath`;
+  never build the cache path by hand.
+- **Bounded update.** Only when the check fails, run exactly these two commands, then check
+  again:
+  1. `claude plugin marketplace update <marketplace>` (the marketplace of the plugin id, today
+     `claude-coding-rules`);
+  2. `claude plugin update coding-rules@<marketplace> --scope user --json`.
+  Nothing else: no `install`, `uninstall`, `enable` or `disable`, no other plugin or
+  marketplace, no `-y` and no `--accept-command`.
+- **Stop when it does not work.** When a command exits non-zero, asks to confirm a command, or
+  the second check still fails, stop with `OUTCOME: blocked` and
+  `BLOCKER: coding-rules <version> with <rule file> is not installed`, quoting the CLI output.
+- **Never edit machine-managed plugin files.** No agent copies files into, or edits anything
+  under, `~/.claude/plugins/` (cache, `installed_plugins.json`, marketplaces) — not in a watcher
+  run either.
+- **Published first.** The update installs only what the marketplace source holds. The rules
+  todo that adds the version must be done (its `plugin.json` version bumped, and pushed when the
+  source is a git remote). When the source lacks the version, the update cannot help: wait for
+  that todo instead.
+- **Next process.** The run that updated keeps the plugin it started with. Read the new rule
+  files from `installPath`, or let the dependent work continue in a later watcher run.
+- **Planning.** A plan run checks the installed version read-only with
+  `claude plugin list --json` and records it in the plan's context. When it is too old, the
+  plan's first ordered step is "check, update if needed, check again" as above, before any work
+  that needs the rules. It is an ordered step the implement run does, not a by-hand step.
+  Dependent work resumes only after that check passes.
 
 ---
 
@@ -480,357 +528,6 @@ the wrong side of **No God Classes**.
   `getSendFailureRedirect()`, and a dozen more one-line getters, each naming one constant.
 - **Correct pattern**: The subclass builds one `SendConfig` value object once; the base reads its
   fields.
-
-# Version
-2
-
-Increase this version number whenever this rule file changes.
-
-# JavaScript Rules (Bun / Node, ESM)
-
-See `COMMON_RULES.md` for rules that apply to all languages.
-See `TYPESCRIPT_RULES.md` for the TypeScript type layer on top of these conventions.
-
-## Runtime & Module System
-
-Use Bun as the runtime. ESM is mandatory — no CommonJS in new code.
-
-`package.json` must declare:
-
-```json
-{
-  "type": "module",
-  "bin": { "<appname>": "src/main.js" },
-  "scripts": {
-    "start": "bun run src/main.js",
-    "build": "bun build --compile --outfile <appname>.exe src/main.js",
-    "test": "bun test"
-  },
-  "engines": { "bun": ">=1.0.0" }
-}
-```
-
-The entry point starts with a shebang so it is directly executable:
-
-```js
-#!/usr/bin/env bun
-```
-
----
-
-## Project Structure
-
-CLI application layout (generalizes to libraries and servers — keep the
-`core/` shared-module split either way):
-
-```
-project/
-├── src/
-│   ├── main.js          # Entry point (shebang, dispatches to cli.js, process.exit)
-│   ├── cli.js           # Command router + dispatch, central try/catch → exit codes
-│   ├── cli_args.js      # Hand-rolled arg parsers, one parseXxxArgs() per command
-│   ├── commands/        # One file per command, each exports runXxx(input)
-│   │   └── <cmd>.js
-│   └── core/            # Shared modules: errors.js, settings.js, logger.js, …
-├── tests/               # bun test files: *.test.js
-├── tools/               # build.bat, run_tests.bat, run_integration_tests.bat
-└── docs/
-    └── commands/        # One md per command
-```
-
-`cli_args.js` is split from `cli.js` deliberately — router and parsers together
-exceed the 300-line file rule.
-
----
-
-## CLI Argument Parsing
-
-Hand-roll the parser — no yargs/commander for small CLIs (KISS; zero runtime
-deps). One `parseXxxArgs(args)` per command in `cli_args.js`, a plain `for`
-loop over tokens, and a shared `requireValue()` helper. Invalid input throws
-`AppError` with `INPUT_INVALID` (see Error Handling):
-
-```js
-export function parseAskArgs(args) {
-  const positional = [];
-  let timeoutSeconds = 120;
-
-  for (let i = 0; i < args.length; i += 1) {
-    const token = args[i];
-
-    if (!token.startsWith('-')) {
-      positional.push(token);
-      continue;
-    }
-
-    if (token === '--timeout') {
-      const value = Number(requireValue(args, i, '--timeout'));
-      if (!Number.isFinite(value) || value <= 0) {
-        throw new AppError(ERROR_CODE.INPUT_INVALID, 'Invalid --timeout value', {
-          hint: 'Use a positive number of seconds.'
-        });
-      }
-      timeoutSeconds = Math.floor(value);
-      i += 1;
-      continue;
-    }
-
-    throw new AppError(ERROR_CODE.INPUT_INVALID, `Unknown option: ${token}`);
-  }
-
-  return { prompt: positional.join(' '), timeoutSeconds };
-}
-
-function requireValue(args, index, flag) {
-  const value = args[index + 1];
-  if (!value || value.startsWith('-')) {
-    throw new AppError(ERROR_CODE.INPUT_INVALID, `Missing value for ${flag}`, {
-      hint: `Provide a value after ${flag}.`
-    });
-  }
-  return value;
-}
-```
-
----
-
-## Error Handling
-
-One `AppError` class for the whole app, plus const-object enums for error and
-exit codes, all in `src/core/errors.js`. Freeze the enum objects
-(`Object.freeze`) in new code. No scattered ad-hoc `throw new Error(...)` at
-boundaries — normalize everything through `toAppError()` and map to process
-exit codes in exactly one place:
-
-```js
-export const ERROR_CODE = Object.freeze({
-  INPUT_INVALID: 'INPUT_INVALID',
-  NETWORK_ERROR: 'NETWORK_ERROR',
-  CONFIG_INVALID: 'CONFIG_INVALID',
-  UNKNOWN: 'UNKNOWN'
-});
-
-export const EXIT_CODE = Object.freeze({
-  SUCCESS: 0,
-  GENERIC: 1,
-  INPUT_INVALID: 2,
-  NETWORK: 4,
-  CONFIG: 6
-});
-
-export class AppError extends Error {
-  constructor(code, message, extra = {}) {
-    super(message);
-    this.name = 'AppError';
-    this.code = code;
-    this.hint = extra.hint;
-    this.details = extra.details;
-    this.cause = extra.cause;
-  }
-}
-
-// Every caught error becomes an AppError before it reaches the top-level handler.
-export function toAppError(err) {
-  if (err instanceof AppError) return err;
-  const message = err instanceof Error ? err.message : String(err);
-  return new AppError(ERROR_CODE.UNKNOWN, message || 'Unknown error');
-}
-
-export function exitCodeForError(err) {
-  switch (err.code) {
-    case ERROR_CODE.INPUT_INVALID: return EXIT_CODE.INPUT_INVALID;
-    case ERROR_CODE.NETWORK_ERROR: return EXIT_CODE.NETWORK;
-    case ERROR_CODE.CONFIG_INVALID: return EXIT_CODE.CONFIG;
-    default: return EXIT_CODE.GENERIC;
-  }
-}
-```
-
-The router (`cli.js`) has the single top-level `try/catch`: it calls
-`toAppError(err)`, writes `CODE: message` (+ optional `Hint: …`) to stderr,
-and returns `exitCodeForError(err)`.
-
----
-
-## Boundary Normalizers
-
-Plain JS has no compile-time DTOs — enforce shapes at module boundaries with
-`normalizeXxx()` functions that coerce loose external data (JSON, page
-scraping, API responses) into a known object shape. Every field gets an
-explicit type coercion and default; unknown input degrades to safe defaults
-instead of `undefined` leaking through:
-
-```js
-function normalizeSurfaceState(value) {
-  const object = value && typeof value === 'object' ? value : {};
-  return {
-    url: typeof object.url === 'string' ? object.url : '',
-    editorReady: Boolean(object.editorFound),
-    loginLike: Boolean(object.loginLike)
-  };
-}
-```
-
-This is the JS counterpart of COMMON_RULES "No Bag-of-Keys Returns at Module
-Boundaries" — the normalizer's return shape IS the contract. In TypeScript
-projects, typed DTOs replace these (see `TYPESCRIPT_RULES.md`).
-
----
-
-## Settings / Config
-
-Persist user settings as JSON at `~/.<appname>/settings.json`, owned by one
-module `src/core/settings.js` with merge-write semantics. No hardcoded
-environment values elsewhere (see COMMON_RULES):
-
-```js
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { dirname, join } from 'node:path';
-
-export function settingsPath() {
-  return join(homedir(), '.<appname>', 'settings.json');
-}
-
-export function loadSettings() {
-  const path = settingsPath();
-  if (!existsSync(path)) return {};
-  const parsed = JSON.parse(readFileSync(path, 'utf8'));
-  return parsed && typeof parsed === 'object' ? parsed : {};
-}
-
-export function saveSettings(partial) {
-  const path = settingsPath();
-  const merged = { ...loadSettings(), ...partial };
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, `${JSON.stringify(merged, null, 2)}\n`, 'utf8');
-  return merged;
-}
-```
-
-Wrap parse/read failures in `AppError` with `CONFIG_INVALID` and a hint how
-to fix or reset the file.
-
----
-
-## Output & Logging
-
-CLIs separate machine output from diagnostics strictly:
-
-- **stdout** is for machine-readable results only: `JSON.stringify(result, null, 2)`.
-- **stderr** carries errors as `CODE: message` plus optional `Hint: …` line.
-- `console.*` is allowed only in interactive, human-facing commands (setup
-  wizards, doctor checks) — never in machine-output paths.
-
-For diagnostic logging use the central logger per the COMMON_RULES logger
-table: a `logger` export in `src/core/logger.js` (`logger.ts` in TS) wrapping
-the sink, with one config-driven level/off switch. Feature code never calls
-`console.log` for logging.
-
----
-
-## Linting
-
-eslint with flat config (`eslint.config.js` at project root):
-
-```js
-export default [
-  {
-    files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
-    languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module'
-    },
-    rules: {
-      'no-unused-vars': 'warn'
-    }
-  },
-  {
-    ignores: ['node_modules/**', 'coverage/**']
-  }
-];
-```
-
----
-
-## Build & Distribution
-
-Ship CLIs as a single self-contained executable:
-
-```bash
-bun build --compile --outfile <appname>.exe src/main.js
-```
-
-When behavior must differ between compiled exe and source run, detect it once
-in a core module and export the flag:
-
-```js
-export const IS_COMPILED =
-  typeof Bun !== 'undefined' && (Bun.main.includes('~BUN') || Bun.main.includes('$bunfs'));
-```
-
-Dynamic imports that must land in the bundle need a literal specifier —
-`bun build --compile` cannot follow computed paths.
-
----
-
-## Testing
-
-`bun test`, files under `tests/*.test.js`, importing from `bun:test`
-(`describe`/`test`/`expect`/`beforeEach`/`afterEach`).
-
-- **End-to-end CLI tests are the backbone**: drive `runCli([...argv])` and
-  assert exit codes plus stdout/stderr substrings. This covers routing,
-  parsing, and error mapping in one pass.
-- **DI seams for side effects.** Modules with external effects (network,
-  browser, sleep) export test-only setters so tests swap implementations
-  without mocking frameworks:
-
-```js
-export function __setAskDepsForTest(deps) {
-  if (deps.browserAskRunner) browserAskRunner = deps.browserAskRunner;
-  if (deps.sleep) sleepImpl = deps.sleep;
-}
-
-export function __resetAskDepsForTest() {
-  browserAskRunner = runBrowserAsk;
-  sleepImpl = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-}
-```
-
-  Always reset in `afterEach` via the `__resetXxxDepsForTest()` counterpart.
-- **Private functions** worth testing are exposed through one grouped export
-  at the bottom of the module:
-
-```js
-export const __test__ = { normalizeSurfaceState, shouldRetry };
-```
-
----
-
-## 5 Essential Additional Rules (must-have)
-
-1. **Required batch files** — `tools/build.bat` (runs the Bun compile build),
-   `tools/run_tests.bat` and `tools/run_integration_tests.bat` (per
-   COMMON_RULES Test Runner Scripts; they wrap `bun test`).
-2. **Naming** — lowercase/snake file names (`cli_args.js`, `settings.js`),
-   `camelCase` functions/variables, `PascalCase` classes, `UPPER_SNAKE`
-   module-level constants.
-3. **Constants placement** — const-object enums (`Object.freeze`) live in the
-   module that owns the domain (`ERROR_CODE` in `errors.js`); per-feature
-   string constants at the top of the owning command file. No stringly-typed
-   values scattered through logic.
-4. **Command docs** — one markdown per command under `docs/commands/<cmd>.md`
-   (opens with `# <cmd>` + one-line purpose); topic docs at `docs/` root.
-5. **Zero runtime dependencies by default** — Bun + `node:` builtins cover
-   fs/path/os/fetch. Every new package needs the COMMON_RULES version
-   confirmation, and a few lines of stdlib beat a dependency.
-6. **Code analysis scripts** — when a project uses cli-code-analyzer, copy
-   `javascript_setup_files/tools/analyze_code_config.example.bat`,
-   `analyze_code.bat`, and `analyze_changed_and_new_files.bat` into its
-   `tools/` folder. Set the analyzer path and `LANGUAGE=javascript` in the
-   local config, keep that config gitignored, and set `fail_on` to `warning`
-   in `code_analysis_rules.json`.
 
 # Version
 3
@@ -1135,3 +832,132 @@ Fix once per project:
 4. Verify: grep the vendored library's distinctive class name in the new `graph.json` — it
    should return only first-party code that *uses* the library (e.g. your own `FacebookManager`),
    never the library's own classes.
+
+# Version
+1
+
+Increase this version number whenever this rule file changes.
+
+# JavaScript Rules (Thunderbird WebExtension)
+
+These rules cover Thunderbird MailExtensions. See `COMMON_RULES.md` for rules that apply to
+every language.
+
+## Scope and pairing
+
+Apply this file instead of `JAVASCRIPT_RULES.md` to Thunderbird add-ons. TypeScript add-ons also
+use `TYPESCRIPT_RULES.md`. Add `DESIGN_RULES.md` when the add-on has popup or options UI.
+
+## Runtime and module system
+
+The extension runs in Thunderbird's WebExtension engine. Node.js is for tests and development
+tools only. Use ESM in extension code, set `"type": "module"` in `package.json`, and set
+`background.type` to `"module"` in the manifest. `web-ext-config.cjs` is the allowed CommonJS
+exception for build configuration. Extension code has no Bun, shebang, `bin`, `process`, or
+`node:` imports.
+
+## Manifest and permissions
+
+Use Manifest V3 for new add-ons. Existing add-ons may remain on MV2 until migrated. Set
+`browser_specific_settings.gecko.id` once and keep it fixed across releases. Set
+`strict_min_version` to the oldest supported Thunderbird ESR. Put user-visible manifest strings
+in `_locales` and refer to them with `__MSG_*__`. The `manifest.json` version is the release
+version; keep `package.json` in sync.
+
+Request the least privilege needed. Justify each permission and `host_permissions` entry with the
+feature that needs it. Prefer optional permissions for infrequently used features. Do not request
+`<all_urls>`.
+
+## Thunderbird APIs
+
+Use the `messenger.*` namespace. Take the tab or window from the event argument; never assume one
+is current. Obtain folder, account, and message IDs from the API instead of constructing them
+from strings. Read paged results from `messages.list` and `messages.continueList` one page at a
+time, following `COMMON_RULES.md` -> “API Clients”.
+
+## Background event page
+
+Thunderbird may suspend a Manifest V3 background when it is idle. Register every event listener
+synchronously at the top level of the background module. Do not keep required persistent state
+only in memory; store it with the WebExtension storage API. Put a top-level `try`/`catch` at each
+listener entry point so an error does not escape the event handler.
+
+## Experiments
+
+Use an experiment only when no WebExtension API provides the needed capability. Keep each
+experiment under `experiments/<api>/` with `schema.json` and `implementation.js`. Privileged code
+stays minimal and does not call business logic. Remove every window listener and observer in
+`onShutdown`. Read the experiment namespace once inside `try`/`catch`, so an unavailable or broken
+experiment cannot take down the add-on. Re-test experiments against every new Thunderbird ESR;
+they extend add-on review and maintenance work.
+
+## Extension pages and content security
+
+Popup and options pages are extension pages. Do not use inline scripts, `eval`, or remote code.
+Build DOM with elements and `textContent`; do not put data into `innerHTML`.
+
+## Settings
+
+Own `storage.local` settings under one key in one options module. Define frozen `DEFAULT_OPTIONS`.
+Implement `getOptions(storageArea)` to merge stored values over defaults, and inject the storage
+area so the logic can be tested without the global API.
+
+## Messaging
+
+Define message types as frozen constants. Normalize message payloads at the receiving boundary
+before business logic uses them.
+
+## Errors and logging
+
+Keep frozen `ERROR_CODE` values and one `AppError` / `toAppError()` module for application errors.
+Do not leave catches empty. Each event or UI entry point must leave the user interface in a
+defined state after an error.
+
+Use boundary functions such as `normalizeOptions()`, `normalizeMessage()` and
+`normalizeXxx()` for storage values, API results, and runtime messages. Treat external values as
+untrusted and return a documented shape with safe defaults.
+
+Export the shared `logger` from one module as specified by the COMMON_RULES logger table. Route
+all logging through it, with one level or off switch; do not leave stray `console.log` calls.
+
+## Localization
+
+Store every user-visible string in `_locales/<language>/messages.json` and read it with
+`messenger.i18n.getMessage`. English is the source locale. Keep locale key sets equal with a test.
+
+## Project structure
+
+Use a structure suited to the add-on's features:
+
+```text
+background.js
+lib/                 # Pure logic with injected dependencies
+popup/
+options/
+experiments/<api>/
+_locales/
+icons/
+test/
+tools/
+docs/
+```
+
+## Linting
+
+Use ESLint flat config. Lint extension modules with browser globals and readonly `messenger` and
+`browser` globals. Lint `experiments/**` as `sourceType: "script"` with `ChromeUtils`,
+`ExtensionCommon`, `Services`, and `Ci` globals. Configure tools and tests with Node globals.
+
+Run `web-ext lint`. It validates against Firefox and reports `MANIFEST_FIELD_PRIVILEGED` for
+Thunderbird's `experiment_apis`; filter exactly that error and no others.
+
+## Naming
+
+Use camelCase module file names and functions, PascalCase classes, and UPPER_SNAKE_CASE
+constants.
+
+# Project Exceptions
+
+- `npm run lint` pipes `web-ext lint` JSON through `tools/check_web_ext_lint.js`; the shared rule already specifies the sole filtered error.
+- Tests run with `npm test` (`node --test "test/*.test.js"`); this project does not yet have `tools/run_tests.bat`.
+- Build, release, and version batch files live in `tools/windows/`, including `build_xpi.bat` and `build_release.bat`.
