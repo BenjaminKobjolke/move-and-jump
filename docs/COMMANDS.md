@@ -6,6 +6,11 @@ without leaving the keyboard-driven popup. Selecting a command applies it,
 **clears the input, and keeps the popup open** so you can keep searching or run
 another command.
 
+Commands match by prefix first (`/re` lists `/recipients`, `/reply`,
+`/reply-all`). When no command starts with what you typed, the list falls back to
+commands containing its letters in order, so `/top` finds `/navigate-top` and
+`/attach` finds both attachment commands.
+
 ## Available commands
 
 | Command           | Effect                                                       |

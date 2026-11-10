@@ -22,6 +22,8 @@ follow [semantic versioning](https://semver.org/) — see
   options page can turn the feature off. See
   [docs/settings/SENDER_SUGGESTIONS.md](docs/settings/SENDER_SUGGESTIONS.md).
 - Sender move history is forgotten after a year without a move from that sender.
+- Slash commands match fuzzily when no name starts with what you typed: `/top`
+  finds `/navigate-top`. See [docs/COMMANDS.md](docs/COMMANDS.md).
 
 ### Fixed
 

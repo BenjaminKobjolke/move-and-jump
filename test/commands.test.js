@@ -32,6 +32,16 @@ test("matchCommands prefix-matches by command name", () => {
   assert.deepEqual(matchCommands("col").map((c) => c.name), ["columns"]);
 });
 
+test("with no prefix match, matchCommands falls back to letters in order", () => {
+  assert.deepEqual(matchCommands("top").map((c) => c.name), ["navigate-top"]);
+  assert.deepEqual(matchCommands("ntp").map((c) => c.name), ["navigate-top"]);
+  assert.deepEqual(matchCommands("attach").map((c) => c.name), [
+    "save-attachments",
+    "open-attachments",
+  ]);
+  assert.deepEqual(matchCommands("xyz"), []);
+});
+
 test("an ambiguous prefix matches every command sharing it", () => {
   assert.deepEqual(matchCommands("f").map((c) => c.name), ["filter", "fuzzy", "from"]);
 });
