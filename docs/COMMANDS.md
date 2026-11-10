@@ -48,7 +48,9 @@ type, via Thunderbird's own Quick Filter. Enter hides the popup and leaves the
 filter applied; a bare `/filter` clears it. Terms are ANDed and each matches
 sender or subject (plus recipients/body when toggled on), so `inn lehrich@theim`
 finds a message whose subject contains "Inn" and whose sender contains
-"lehrich@theim", and `tom` finds one from `Thomas Lehrich`.
+"lehrich@theim", and `tom` finds one from `Thomas Lehrich`. A `tag:<name>` term
+keeps only messages with that tag; while it is typed the popup lists the matching
+tags (see [FILTER_EMAILS.md](FILTER_EMAILS.md#tags-tag)).
 
 While typing a query, **Ctrl+B** and **Ctrl+R** flip the body and recipient
 fields without losing what you typed — the fix for a query that matches nothing.

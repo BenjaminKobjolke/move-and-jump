@@ -9,6 +9,7 @@ the popup shows no message results of its own.
 ```
 /filter tom
 /filter inn lehrich@theim
+/filter tag:todo invoice    ← tagged "To Do" and mentioning "invoice"
 /filter                     ← no query: clears the filter
 ```
 
@@ -37,7 +38,7 @@ fields are searched and how to change them:
 
 ```
 Filter messages: automatisch
-Sender + subject — Ctrl+B body: OFF, Ctrl+R recipients: OFF
+Sender + subject — Ctrl+B body: OFF, Ctrl+R recipients: OFF — tag:name for tags
 ```
 
 ## A shortcut straight into filter mode
@@ -78,6 +79,29 @@ the fields above (e.g. `19.08.2026` written in the subject).
 [`/fuzzy`](settings/FUZZY_SEARCH.md) and `/sensitive` apply to **folder** search only; the message filter is
 always case-insensitive substring matching.
 
+## Tags (`tag:`)
+
+A `tag:<name>` term keeps only messages carrying that tag. It can sit anywhere in
+the query, next to ordinary terms:
+
+```
+/filter tag:important
+/filter tag:todo tag:work rechnung
+```
+
+- The name is the tag's label, **case-insensitive and without spaces** — the tag
+  "To Do" is `tag:todo`.
+- Several tag terms are **ANDed** (the message needs every tag), like the text
+  terms. The remaining terms are the text query, matched as described above.
+- A tag term that matches no tag exactly — e.g. still half typed — is left out
+  of the filter, so the list doesn't empty while you type.
+
+**Suggestions.** While the last term starts with `tag:` (no space after it yet),
+the popup lists the profile's tags whose name starts with what you typed —
+`tag:` alone lists them all. **Enter** or **Tab** on one completes the term to
+`tag:<name> ` and keeps the popup open for the next term. With no tags defined
+the list reads *No tags defined*.
+
 ## Toggles
 
 Two ways to flip the optional fields — both do exactly the same thing:
@@ -104,8 +128,16 @@ no options-page checkbox: these are the only UI.
 `applyFilter(query)` in `popup/filter.js` calls
 
 ```js
-messenger.mailTabs.setQuickFilter(tabId, { text: { text, author, subject, recipients, body } })
+messenger.mailTabs.setQuickFilter(tabId, {
+  text: { text, author, subject, recipients, body },
+  tags: { tags: { [tagKey]: true }, mode: "all" },  // or false without tag: terms
+})
 ```
+
+`parseFilterQuery()` in `lib/filterQuery.js` splits the query into the text and
+the tag keys first; tags come from `messenger.messages.tags.list()`, read once
+when the popup loads. That call needs the `messagesTagsList` permission; if it
+fails, the popup still works and `tag:` just has no tags to offer.
 
 which is Thunderbird's **own Quick Filter** — the same engine as the bar, so the
 bar visibly reflects what the popup applied and can clear it. All matching
@@ -133,6 +165,9 @@ close while the popup is open.
 - `popup/search.js` — `initialPrefill` and the live-filter + Ctrl+B/Ctrl+R hooks in its
   `input`/`keydown` listeners
 - `popup/filter.js` — `applyFilter`, `toggleFilterField`, and `isFilterMode`
+- `lib/filterQuery.js` — `parseFilterQuery`, `partialTag`, `completeTag`, `normalizeTag`
+- `popup/subLists.js` — `renderTags`, the `tag:` suggestion rows
+- `popup/rows.js` — `renderFilterHint`, the field-hint row shared by both views
 - `popup/window.js` — `updatePlacement`/`requestResize` (the corner move), the
   popup's corner placement and sizing
 - `popup/commandRows.js` — the `filter`/`body`/`recipients` command rows and the

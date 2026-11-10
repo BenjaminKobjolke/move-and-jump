@@ -8,6 +8,10 @@ follow [semantic versioning](https://semver.org/) — see
 
 ### Added
 
+- `/filter` understands `tag:<name>` terms (e.g. `/filter tag:todo invoice`) and
+  suggests the profile's tags while one is typed. Adds the `messagesTagsList`
+  permission. See
+  [docs/FILTER_EMAILS.md](docs/FILTER_EMAILS.md#tags-tag).
 - New `open-attachments` keyboard command and `/open-attachments` palette
   command: open a lone attachment directly, or filter and choose one from a
   keyboard-operated list when the message has several.
