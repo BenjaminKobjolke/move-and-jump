@@ -1,0 +1,10 @@
+{
+  "version": "1.5.7",
+  "date": "2026-11-10",
+  "title": "Des commandes et des filtres plus puissants",
+  "notes": [
+    "La nouvelle commande /delete-empty-todos demande à Manage ToDo Folders de supprimer les dossiers ToDo numérotés vides.",
+    "Filtrez les messages par tag avec /filter tag:<name> ; les tags correspondants sont suggérés au fur et à mesure de la saisie.",
+    "Les commandes slash utilisent désormais une recherche approximative lorsqu’aucune commande ne commence par le texte saisi. Ainsi, des raccourcis comme /top peuvent trouver /navigate-top."
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "version": "1.5.7",
+  "date": "2026-11-10",
+  "title": "More powerful commands and filtering",
+  "notes": [
+    "New /delete-empty-todos command asks Manage ToDo Folders to remove empty numbered ToDo folders.",
+    "Filter messages by tag with /filter tag:<name>, with matching tags suggested as you type.",
+    "Slash commands now use a fuzzy match when no command starts with what you typed, so shortcuts like /top can find /navigate-top."
+  ]
+}

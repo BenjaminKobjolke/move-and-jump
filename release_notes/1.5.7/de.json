@@ -1,0 +1,10 @@
+{
+  "version": "1.5.7",
+  "date": "2026-11-10",
+  "title": "Leistungsfähigere Befehle und Filter",
+  "notes": [
+    "Der neue Befehl /delete-empty-todos fordert „ToDo-Ordner verwalten“ auf, leere nummerierte ToDo-Ordner zu entfernen.",
+    "Filtere Nachrichten nach Tag mit /filter tag:<name>. Beim Tippen werden passende Tags vorgeschlagen.",
+    "Slash-Befehle verwenden jetzt eine unscharfe Suche, wenn kein Befehl mit deiner Eingabe beginnt. So findet beispielsweise die Kurzform /top den Befehl /navigate-top."
+  ]
+}

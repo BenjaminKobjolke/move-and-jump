@@ -1,0 +1,10 @@
+{
+  "version": "1.5.7",
+  "date": "2026-11-10",
+  "title": "Comandos más potentes y filtrado",
+  "notes": [
+    "El nuevo comando /delete-empty-todos pide a Manage ToDo Folders que elimine las carpetas numeradas de tareas pendientes que estén vacías.",
+    "Filtra mensajes por etiqueta con /filter tag:<name>; las etiquetas coincidentes se sugieren mientras escribes.",
+    "Ahora los comandos de barra diagonal usan coincidencia aproximada si ningún comando empieza con lo que escribiste, así que atajos como /top pueden encontrar /navigate-top."
+  ]
+}
