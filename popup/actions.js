@@ -1,8 +1,9 @@
 // Handles popup selection, command activation, and folder actions.
-import { error, input, state } from "./state.js";
+import { commandResult, error, input, state } from "./state.js";
 import { clampZoom } from "../lib/options.js";
 import { ATTACHMENT_ACTION, attachmentAction } from "../lib/attachments.js";
 import { parseCommand } from "../lib/commands.js";
+import { deleteEmptyTodoFolders } from "../lib/todoFolders.js";
 import { completeTag } from "../lib/filterQuery.js";
 import { render } from "./render.js";
 import { applyFilter, toggleFilterField } from "./filter.js";
@@ -167,6 +168,17 @@ export async function activate(entry) {
       case "from":
         showInput("/from ");
         return;
+      case "delete-empty-todos": {
+        const result = await deleteEmptyTodoFolders(messenger.runtime);
+        input.value = "";
+        render("");
+        commandResult.textContent = messenger.i18n.getMessage(
+          result.messageKey,
+          result.substitutions,
+        );
+        commandResult.hidden = false;
+        return;
+      }
     }
     await messenger.storage.local.set({ options: state.options });
     showInput("");

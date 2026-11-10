@@ -68,7 +68,12 @@ test("bare slash (empty token) matches every command", () => {
     "reply",
     "reply-all",
     "navigate-top",
+    "delete-empty-todos",
   ]);
+});
+
+test('matchCommands("del") matches delete-empty-todos', () => {
+  assert.deepEqual(matchCommands("del").map((c) => c.name), ["delete-empty-todos"]);
 });
 
 test("parseCommand keeps a column name as the argument", () => {
@@ -117,6 +122,7 @@ test("command dispatcher routes the message commands and search commands", async
   dispatch("write-to-sender", 3);
   dispatch("open-link", 3);
   dispatch("navigate-top", 3);
+  dispatch("delete-empty-todos", 3);
   assert.equal(dispatch("unknown", 3), undefined);
 
   assert.deepEqual(calls.map(([name, ...args]) => [
@@ -136,5 +142,6 @@ test("command dispatcher routes the message commands and search commands", async
     ["writeToSender", 3],
     ["search", "move", 3, "/links "],
     ["navigateTop", 3],
+    ["search", "move", 3, "/delete-empty-todos"],
   ]);
 });

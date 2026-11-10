@@ -3,6 +3,7 @@ export const heading = document.getElementById("heading");
 export const input = document.getElementById("query");
 export const list = document.getElementById("results");
 export const empty = document.getElementById("empty");
+export const commandResult = document.getElementById("commandResult");
 export const error = document.getElementById("error");
 export const moveButton = document.getElementById("moveButton");
 export const jumpButton = document.getElementById("jumpButton");

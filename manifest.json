@@ -101,6 +101,9 @@
     },
     "navigate-top": {
       "description": "__MSG_commandNavigateTopDescription__"
+    },
+    "delete-empty-todos": {
+      "description": "__MSG_commandDeleteEmptyTodosDescription__"
     }
   },
   "options_ui": {

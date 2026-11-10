@@ -39,6 +39,10 @@
     "message": "Go to the top of the message list, or of the compose body",
     "description": "manifest.json commands.navigate-top description; no default key"
   },
+  "commandDeleteEmptyTodosDescription": {
+    "message": "Delete empty numbered ToDo folders",
+    "description": "manifest.json commands.delete-empty-todos description; no default key"
+  },
   "commandSaveAttachmentsDescription": {
     "message": "Save the displayed message's attachments to the Downloads folder",
     "description": "manifest.json commands.save-attachments description; no default key"
@@ -233,6 +237,32 @@
   "commandNavigateTop": {
     "message": "Go to top — message list, or compose body",
     "description": "Popup slash-command row: /navigate-top"
+  },
+  "commandDeleteEmptyTodos": {
+    "message": "Delete empty ToDo folders",
+    "description": "Popup slash-command row: /delete-empty-todos"
+  },
+  "commandDeleteEmptyTodosUnavailable": {
+    "message": "Manage ToDo Folders is not installed or is disabled.",
+    "description": "Result shown after /delete-empty-todos when Manage ToDo Folders cannot be reached"
+  },
+  "commandDeleteEmptyTodosNone": {
+    "message": "No empty todo folders.",
+    "description": "Result shown after /delete-empty-todos when there were no empty folders to delete"
+  },
+  "commandDeleteEmptyTodosDeleted": {
+    "message": "Deleted $COUNT$ empty todo folder(s).",
+    "description": "Result shown after /delete-empty-todos; $COUNT$ is the number of folders deleted",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "commandDeleteEmptyTodosError": {
+    "message": "Could not delete empty todo folders: $ERROR$",
+    "description": "Result shown after /delete-empty-todos when Manage ToDo Folders reports an error",
+    "placeholders": {
+      "error": { "content": "$1", "example": "Sync is still running" }
+    }
   },
   "commandMessageUnavailable": {
     "message": "Message actions — no single displayed message",

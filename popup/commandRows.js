@@ -90,6 +90,9 @@ function commandEntry(command, arg) {
       enabled = state.tabId !== undefined;
       label = messenger.i18n.getMessage("commandNavigateTop");
       break;
+    case "delete-empty-todos":
+      label = messenger.i18n.getMessage("commandDeleteEmptyTodos");
+      break;
     default:
       if (command.messageAction) {
         enabled = state.hasDisplayedMessage;

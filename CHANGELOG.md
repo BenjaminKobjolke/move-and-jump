@@ -8,6 +8,10 @@ follow [semantic versioning](https://semver.org/) — see
 
 ### Added
 
+- `/delete-empty-todos` asks Manage ToDo Folders to remove empty numbered ToDo
+  folders and reports the result in the popup. A keyboard shortcut with no
+  default key opens the command ready to run. See
+  [docs/COMMANDS.md](docs/COMMANDS.md#deleting-empty-todo-folders).
 - `/filter` understands `tag:<name>` terms (e.g. `/filter tag:todo invoice`) and
   suggests the profile's tags while one is typed. Adds the `messagesTagsList`
   permission. See

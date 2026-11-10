@@ -1,5 +1,5 @@
 // Filters folders and renders the popup's main search results.
-import { empty, jumpButton, list, moveButton, state } from "./state.js";
+import { commandResult, empty, jumpButton, list, moveButton, state } from "./state.js";
 import { filterFolders } from "../lib/match.js";
 import { prioritize } from "../lib/recent.js";
 import { sortByQueryWeight } from "../lib/weights.js";
@@ -53,6 +53,8 @@ function appendHighlighted(item, label, query) {
 }
 
 export function render(query) {
+  commandResult.hidden = true;
+
   // A leading "/" switches the list to slash-command mode (see
   // lib/commands.js). Folder paths that start with "/" are still
   // reachable by typing without the slash — filterFolders matches any

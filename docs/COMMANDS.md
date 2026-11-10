@@ -35,6 +35,7 @@ commands containing its letters in order, so `/top` finds `/navigate-top` and
 | `/reply`          | Reply to the displayed message's sender                      |
 | `/reply-all`      | Reply to all on the displayed message                        |
 | `/navigate-top`   | Go to the top of the message list, or of the compose body    |
+| `/delete-empty-todos` | Delete empty numbered ToDo folders through Manage ToDo Folders |
 
 `/columns` is the odd one out: its state belongs to Thunderbird, not to this
 add-on (see [Toggling columns](#toggling-columns)).
@@ -44,6 +45,19 @@ options page — a command just changes them in place. `/body` and `/recipients`
 have no options-page checkbox; the slash commands are their only UI. All changes
 persist to the shared `options` object in `messenger.storage.local`, so they
 stick across popups and match the options page exactly.
+
+## Deleting empty ToDo folders
+
+`/delete-empty-todos` asks the Manage ToDo Folders add-on to remove empty
+numbered ToDo folders. It checks that the add-on is installed and enabled each
+time the command runs, so enabling it later does not require restarting Move
+and Jump. The popup stays open and reports how many folders were deleted, when
+none were empty, or why the deletion could not be completed. The receiver only
+deletes folders with no messages or child folders.
+
+The `delete empty todo folders` keyboard command is also available in
+Thunderbird's **Manage Extension Shortcuts** settings. It has no default key;
+assign one there to open the popup with `/delete-empty-todos` ready to run.
 
 ## Filtering messages
 
