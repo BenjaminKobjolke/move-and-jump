@@ -28,3 +28,18 @@ export function moveActive(delta) {
 }
 
 export const onOff = (value) => messenger.i18n.getMessage(value ? "onState" : "offState");
+
+/**
+ * Which fields /filter searches, and the shortcuts that flip the optional two —
+ * shown right where a query is being typed, so a query that matches nothing has
+ * its fix on screen. Not a selectable result entry.
+ */
+export function renderFilterHint() {
+  const hint = document.createElement("li");
+  hint.textContent = messenger.i18n.getMessage("commandFilterFields", [
+    onOff(state.options.filterBody),
+    onOff(state.options.filterRecipients),
+  ]);
+  hint.classList.add("disabled", "filter-hint");
+  list.appendChild(hint);
+}

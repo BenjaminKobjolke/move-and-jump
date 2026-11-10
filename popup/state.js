@@ -39,6 +39,8 @@ export const state = {
   attachmentState: { messageId: undefined, attachments: [] },
   // Compose identities are loaded once each time the popup opens.
   identityState: { currentId: undefined, identities: [] },
+  // Message tags ({key, tag, color}) for /filter tag: terms and suggestions.
+  tagState: [],
   hasDisplayedMessage: false,
   activeIndex: 0,
   // The last query sent to the mail tab's quick filter.

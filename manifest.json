@@ -12,7 +12,7 @@
       "strict_min_version": "128.0"
     }
   },
-  "permissions": ["accountsRead", "messagesRead", "messagesMove", "storage", "compose", "clipboardWrite", "downloads"],
+  "permissions": ["accountsRead", "messagesRead", "messagesTagsList", "messagesMove", "storage", "compose", "clipboardWrite", "downloads"],
   "experiment_apis": {
     "columns": {
       "schema": "experiments/columns/schema.json",

@@ -3,7 +3,8 @@ import { empty, jumpButton, moveButton, state } from "./state.js";
 import { filterIdentities } from "../lib/identities.js";
 import { filterAttachments, formatSize } from "../lib/attachments.js";
 import { inboxFolders, orderUnified } from "../lib/folders.js";
-import { highlight, onOff, renderRows } from "./rows.js";
+import { normalizeTag } from "../lib/filterQuery.js";
+import { highlight, onOff, renderFilterHint, renderRows } from "./rows.js";
 
 /**
  * One row per message-list column, prefix-filtered by `arg`. Selecting a row
@@ -79,6 +80,23 @@ export function goEntries() {
     });
   }
   return entries;
+}
+
+/** `/filter … tag:<prefix>` suggestions: one row per tag whose name starts with `prefix`. */
+export function renderTags(prefix) {
+  renderRows(
+    state.tagState
+      .filter(({ tag }) => normalizeTag(tag).startsWith(prefix))
+      .map(({ tag }) => ({ type: "tag", label: tag })),
+  );
+  renderFilterHint();
+  highlight();
+
+  empty.textContent = messenger.i18n.getMessage(
+    state.tagState.length === 0 ? "commandFilterTagsUnavailable" : "popupNoCommands",
+  );
+  empty.hidden = state.visible.length !== 0;
+  moveButton.disabled = jumpButton.disabled = true;
 }
 
 /** The `/go` rows, prefix-filtered by `arg` on each row's `key`. */

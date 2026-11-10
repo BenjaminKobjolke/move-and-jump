@@ -1,9 +1,9 @@
 // Builds slash-command rows and their localized labels.
-import { empty, jumpButton, list, moveButton, state } from "./state.js";
+import { empty, jumpButton, moveButton, state } from "./state.js";
 import { clampZoom } from "../lib/options.js";
 import { matchCommands } from "../lib/commands.js";
 import { goEntries } from "./subLists.js";
-import { highlight, onOff, renderRows } from "./rows.js";
+import { highlight, onOff, renderFilterHint, renderRows } from "./rows.js";
 
 // i18n keys can't hold the commands' hyphens, hence a map.
 const MESSAGE_ACTION_LABELS = {
@@ -104,18 +104,7 @@ function commandEntry(command, arg) {
 
 export function renderCommands({ token, arg }) {
   renderRows(matchCommands(token).map((command) => commandEntry(command, arg)));
-  // Which fields the filter searches, and the shortcuts that flip the optional
-  // two — shown right where a query is being typed, so a query that matches
-  // nothing has its fix on screen. This hint is not a selectable result entry.
-  if (token === "filter") {
-    const hint = document.createElement("li");
-    hint.textContent = messenger.i18n.getMessage("commandFilterFields", [
-      onOff(state.options.filterBody),
-      onOff(state.options.filterRecipients),
-    ]);
-    hint.classList.add("disabled", "filter-hint");
-    list.appendChild(hint);
-  }
+  if (token === "filter") renderFilterHint();
   highlight();
 
   empty.textContent = messenger.i18n.getMessage("popupNoCommands");

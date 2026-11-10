@@ -104,8 +104,12 @@
     "description": "Popup slash-command row: /filter with no query"
   },
   "commandFilterFields": {
-    "message": "Sender + subject — Ctrl+B body: $1, Ctrl+R recipients: $2",
-    "description": "Second /filter row: which fields are searched and how to toggle the two optional ones. $1/$2 are ON or OFF"
+    "message": "Sender + subject — Ctrl+B body: $1, Ctrl+R recipients: $2 — tag:name for tags",
+    "description": "Second /filter row: which fields are searched, how to toggle the two optional ones, and the tag: syntax. $1/$2 are ON or OFF"
+  },
+  "commandFilterTagsUnavailable": {
+    "message": "No tags defined",
+    "description": "Shown instead of tag suggestions while typing /filter tag: when the profile has no message tags"
   },
   "commandToggleBody": {
     "message": "Toggle: Filter searches message body — Current: $1",

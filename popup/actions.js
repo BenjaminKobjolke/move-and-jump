@@ -2,6 +2,8 @@
 import { error, input, state } from "./state.js";
 import { clampZoom } from "../lib/options.js";
 import { ATTACHMENT_ACTION, attachmentAction } from "../lib/attachments.js";
+import { parseCommand } from "../lib/commands.js";
+import { completeTag } from "../lib/filterQuery.js";
 import { render } from "./render.js";
 import { applyFilter, toggleFilterField } from "./filter.js";
 import { applyScope } from "./load.js";
@@ -28,6 +30,10 @@ export async function activate(entry) {
     highlight();
     updatePlacement();
     input.focus();
+    return;
+  }
+  if (entry.type === "tag") {
+    completeTagEntry(entry);
     return;
   }
   if (entry.type === "link") {
@@ -112,10 +118,7 @@ export async function activate(entry) {
           // complete the input so the next keystroke starts the query.
           // Hiding here would dismiss the popup mid-word.
           applyFilter("");
-          input.value = "/filter ";
-          render(input.value);
-          updatePlacement();
-          input.focus();
+          showInput("/filter ");
           return;
         }
         // Already applied live while typing; re-apply for the click path, then
@@ -142,23 +145,14 @@ export async function activate(entry) {
         break;
       case "columns":
         // Complete the name; render() then lists the columns themselves.
-        input.value = "/columns ";
-        render(input.value);
-        updatePlacement();
-        input.focus();
+        showInput("/columns ");
         return;
       case "go":
         // Complete the name; render() then lists the accounts themselves.
-        input.value = "/go ";
-        render(input.value);
-        updatePlacement();
-        input.focus();
+        showInput("/go ");
         return;
       case "links":
-        input.value = "/links ";
-        render(input.value);
-        updatePlacement();
-        input.focus();
+        showInput("/links ");
         return;
       case "open-attachments":
         if (attachmentAction(state.attachmentState.attachments.length) === ATTACHMENT_ACTION.OPEN) {
@@ -168,23 +162,14 @@ export async function activate(entry) {
           });
           return;
         }
-        input.value = "/open-attachments ";
-        render(input.value);
-        updatePlacement();
-        input.focus();
+        showInput("/open-attachments ");
         return;
       case "from":
-        input.value = "/from ";
-        render(input.value);
-        updatePlacement();
-        input.focus();
+        showInput("/from ");
         return;
     }
     await messenger.storage.local.set({ options: state.options });
-    input.value = "";
-    render("");
-    updatePlacement();
-    input.focus();
+    showInput("");
     return;
   }
   select(state.mode, entry.folder);
@@ -200,6 +185,10 @@ export async function activate(entry) {
 export function completeActive() {
   const entry = state.visible[state.activeIndex];
   if (!entry) return;
+  if (entry.type === "tag") {
+    completeTagEntry(entry);
+    return;
+  }
   // Column, account and link rows have nothing useful to complete to — the input
   // already reads "/columns …" / "/go …" and completing to a name would just
   // re-filter the same list.
@@ -214,10 +203,24 @@ export function completeActive() {
     entry.type === "command"
       ? `/${entry.command.name}${entry.command.takesArg ? " " : ""}`
       : entry.folder.path.replace(/^\/+/, "");
+  showInput(text);
+}
+
+/** Put `text` in the input, re-render the list for it, and keep typing there. */
+function showInput(text) {
   input.value = text;
   render(text);
   updatePlacement();
   input.focus();
+}
+
+/**
+ * Enter and Tab on a tag suggestion both finish the `tag:` term and keep the
+ * popup open, so more terms can follow; the live filter picks the tag up.
+ */
+function completeTagEntry(entry) {
+  showInput(completeTag(input.value, entry.label));
+  applyFilter(parseCommand(input.value).arg);
 }
 
 /**

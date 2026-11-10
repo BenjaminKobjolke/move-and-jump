@@ -1,6 +1,7 @@
 // Applies command field toggles and quick filters to the active mail tab.
 import { input, state } from "./state.js";
 import { parseCommand } from "../lib/commands.js";
+import { parseFilterQuery } from "../lib/filterQuery.js";
 
 /**
  * Flip one of the optional filter fields, persist it, and re-apply the active
@@ -28,20 +29,25 @@ export async function toggleFilterField(key) {
 export function applyFilter(query) {
   state.lastFilterQuery = query;
   if (state.tabId === undefined) return;
-  const text = query
+  const { text: textQuery, tagKeys } = parseFilterQuery(query, state.tagState);
+  const text = textQuery
     ? {
-        text: query,
+        text: textQuery,
         author: true,
         subject: true,
         recipients: state.options.filterRecipients,
         body: state.options.filterBody,
       }
     : null;
+  // "all": several tag: terms AND, like the text terms do.
+  const tags = tagKeys.length
+    ? { tags: Object.fromEntries(tagKeys.map((key) => [key, true])), mode: "all" }
+    : false;
   // Clearing: put the Quick Filter bar away too, otherwise an emptied bar keeps
   // occupying a row of the mail tab until Ctrl+Shift+K. Only on the clearing
   // call — while a query is active the bar is the visible sign a filter is on,
   // and the way to drop it without the popup.
-  const properties = text ? { text } : { text: null, show: false };
+  const properties = text || tags ? { text, tags } : { text: null, tags: false, show: false };
   // The tab can be gone (same race as the mailTabs.get() in init()); a failed
   // filter is not worth surfacing an error row for.
   // ponytail: no debounce; add one if typing stutters on very large folders.

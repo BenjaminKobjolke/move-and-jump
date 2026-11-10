@@ -11,7 +11,9 @@ import {
   renderColumns,
   renderIdentities,
   renderLinks,
+  renderTags,
 } from "./subLists.js";
+import { partialTag } from "../lib/filterQuery.js";
 import { renderCommands } from "./commandRows.js";
 import { highlight } from "./rows.js";
 
@@ -57,6 +59,7 @@ export function render(query) {
   // substring — so no folders become unreachable.
   const parsed = parseCommand(query);
   if (parsed) {
+    const tagPrefix = parsed.token === "filter" ? partialTag(query) : null;
     // "/columns" (the complete name) lists the columns themselves; anything
     // shorter is still an ordinary command row.
     if (parsed.token === "columns") renderColumns(parsed.arg);
@@ -64,6 +67,7 @@ export function render(query) {
     else if (parsed.token === "links") renderLinks(parsed.arg);
     else if (parsed.token === "open-attachments") renderAttachments(parsed.arg);
     else if (parsed.token === "from") renderIdentities(parsed.arg);
+    else if (tagPrefix !== null) renderTags(tagPrefix);
     else renderCommands(parsed);
     return;
   }

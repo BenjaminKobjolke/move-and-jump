@@ -20,6 +20,7 @@ export async function init() {
     unified,
     displayed,
     identities,
+    tags,
   ] = await Promise.all([
     messenger.folders.query({}),
     messenger.accounts.list(),
@@ -45,6 +46,7 @@ export async function init() {
       };
     }),
     loadIdentities().catch(() => ({ currentId: undefined, identities: [] })),
+    loadTags(),
   ]);
   state.rawFolders = folders;
   state.unifiedFolders = unified;
@@ -58,6 +60,7 @@ export async function init() {
   state.linkState = displayed.links;
   state.attachmentState = displayed.attachments;
   state.identityState = identities;
+  state.tagState = tags;
   state.hasDisplayedMessage = displayed.single;
 
   state.senderIds =
@@ -190,6 +193,20 @@ async function loadDisplayed() {
     links: dedupeLinks(links),
     attachments: { messageId: message.id, attachments },
   };
+}
+
+/**
+ * Message tags for /filter tag: terms; [] when unavailable. Async so a missing
+ * `messages.tags` namespace (permission or Thunderbird version) rejects instead
+ * of throwing synchronously out of init()'s Promise.all and blanking the popup.
+ */
+async function loadTags() {
+  try {
+    return (await messenger.messages.tags.list()) ?? [];
+  } catch (tagsError) {
+    console.error("Move and Jump: reading message tags failed", tagsError);
+    return [];
+  }
 }
 
 /** Read the active compose identity and the identities available in this profile. */
