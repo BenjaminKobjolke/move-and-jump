@@ -106,5 +106,14 @@
     "placeholders": {
       "folder": { "content": "$1", "example": "收件箱/存档" }
     }
-  }
+  },
+  "commandPaneGrowDescription": { "message": "将邮件列表加宽 10%" },
+  "commandPaneShrinkDescription": { "message": "将邮件列表缩窄 10%" },
+  "commandPaneSet": {
+    "message": "邮件列表：$VALUE$%",
+    "description": "弹出窗口行：请求的邮件列表宽度",
+    "placeholders": { "value": { "content": "$1", "example": "+10" } }
+  },
+  "commandPaneHint": { "message": "输入百分比、+N 或 -N", "description": "弹出窗口行：/pane 参数无效" },
+  "commandPaneUnavailable": { "message": "仅当邮件列表与邮件并排显示时才能调整宽度", "description": "当前布局无法调整宽度时的弹出窗口结果" }
 }

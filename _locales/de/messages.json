@@ -150,5 +150,14 @@
     "placeholders": {
       "folder": { "content": "$1", "example": "Posteingang/Archiv" }
     }
-  }
+  },
+  "commandPaneGrowDescription": { "message": "Nachrichtenliste um 10 Prozent verbreitern" },
+  "commandPaneShrinkDescription": { "message": "Nachrichtenliste um 10 Prozent verkleinern" },
+  "commandPaneSet": {
+    "message": "Nachrichtenliste: $VALUE$ %",
+    "description": "Popup-Zeile: gewünschte Breite der Nachrichtenliste",
+    "placeholders": { "value": { "content": "$1", "example": "+10" } }
+  },
+  "commandPaneHint": { "message": "Prozent, +N oder -N eingeben", "description": "Popup-Zeile bei ungültigem /pane-Argument" },
+  "commandPaneUnavailable": { "message": "Die Breite lässt sich nur ändern, wenn Nachrichtenliste und Nachricht nebeneinander stehen", "description": "Popup-Ergebnis, wenn die Breite im aktuellen Layout nicht geändert werden kann" }
 }

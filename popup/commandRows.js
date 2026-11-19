@@ -1,6 +1,7 @@
 // Builds slash-command rows and their localized labels.
 import { empty, jumpButton, moveButton, state } from "./state.js";
 import { clampZoom } from "../lib/options.js";
+import { nextListPercent } from "../lib/pane.js";
 import { matchCommands } from "../lib/commands.js";
 import { goEntries } from "./subLists.js";
 import { highlight, onOff, renderFilterHint, renderRows } from "./rows.js";
@@ -62,6 +63,17 @@ function commandEntry(command, arg) {
         enabled ? "commandColumnsHint" : "commandColumnsUnavailable",
       );
       break;
+    case "pane": {
+      const nextPercent = nextListPercent(50, arg);
+      const valid = nextPercent !== null;
+      const displayPercent = arg.startsWith("+") || arg.startsWith("-") ? arg : String(nextPercent);
+      enabled = valid && state.tabId !== undefined;
+      label = messenger.i18n.getMessage(
+        valid ? "commandPaneSet" : "commandPaneHint",
+        valid ? [displayPercent] : undefined,
+      );
+      break;
+    }
     case "go":
       // Like /columns, only ever a "press Enter" row: completing the name
       // switches the list to the accounts themselves (see renderAccounts).

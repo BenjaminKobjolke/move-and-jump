@@ -106,5 +106,14 @@
     "placeholders": {
       "folder": { "content": "$1", "example": "Boîte de réception/Archive" }
     }
-  }
+  },
+  "commandPaneGrowDescription": { "message": "Élargir la liste des messages de 10 %" },
+  "commandPaneShrinkDescription": { "message": "Réduire la liste des messages de 10 %" },
+  "commandPaneSet": {
+    "message": "Liste des messages : $VALUE$ %",
+    "description": "Ligne du popup : largeur demandée pour la liste des messages",
+    "placeholders": { "value": { "content": "$1", "example": "+10" } }
+  },
+  "commandPaneHint": { "message": "Saisir un pourcentage, +N ou -N", "description": "Ligne du popup pour un argument /pane invalide" },
+  "commandPaneUnavailable": { "message": "La largeur ne peut être modifiée que lorsque la liste des messages et le message sont côte à côte", "description": "Résultat du popup lorsque la largeur ne peut pas être modifiée dans cette disposition" }
 }

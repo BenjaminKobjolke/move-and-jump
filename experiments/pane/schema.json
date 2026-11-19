@@ -1,0 +1,44 @@
+[
+  {
+    "namespace": "pane",
+    "functions": [
+      {
+        "name": "getListPercent",
+        "type": "function",
+        "description": "Get the message-list width percentage for a mail tab in vertical layout, or null when unavailable.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "tabId",
+            "type": "integer",
+            "description": "Mail tab to inspect; -1 means the front mail window."
+          }
+        ],
+        "returns": {
+          "type": ["integer", "null"]
+        }
+      },
+      {
+        "name": "setListPercent",
+        "type": "function",
+        "description": "Set the message-list width percentage for a mail tab in vertical layout.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "tabId",
+            "type": "integer",
+            "description": "Mail tab to resize; -1 means the front mail window."
+          },
+          {
+            "name": "percent",
+            "type": "integer",
+            "description": "Desired message-list width from 10 through 90 percent."
+          }
+        ],
+        "returns": {
+          "type": "boolean"
+        }
+      }
+    ]
+  }
+]

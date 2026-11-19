@@ -10,6 +10,16 @@ import { incrementWeight, incrementQueryWeight } from "./lib/weights.js";
 import { createSearchWindow } from "./lib/searchWindow.js";
 import { createMessageActions } from "./lib/messageActions.js";
 import { createCommandDispatcher } from "./lib/commands.js";
+import { resizePane } from "./lib/pane.js";
+
+const paneApi = (() => {
+  try {
+    return messenger.pane ?? null;
+  } catch (error) {
+    console.error("Move and Jump: pane experiment unavailable", error);
+    return null;
+  }
+})();
 
 /**
  * In-memory mirror of storage.local's lastUsedFolderId, kept in sync so
@@ -160,6 +170,7 @@ async function actOnLastFolder(mode, tabId) {
 const dispatchCommand = createCommandDispatcher({
   openSearchWindow,
   actOnLastFolder,
+  resizePane: (tabId, arg) => resizePane(paneApi, tabId ?? -1, arg),
   messageActions: {
     copySender,
     copySubject,

@@ -59,6 +59,8 @@
     "message": "Open a link from the displayed message in the browser",
     "description": "manifest.json commands.open-link description; no default key; opens the popup in /links mode"
   },
+  "commandPaneGrowDescription": { "message": "Grow the message list by 10 percent" },
+  "commandPaneShrinkDescription": { "message": "Shrink the message list by 10 percent" },
   "actionTitle": {
     "message": "Move and Jump",
     "description": "Toolbar button tooltip / title"
@@ -284,6 +286,13 @@
     "message": "Toggle column: $1 — Current: $2",
     "description": "Popup row for one message-list column. $1 is the column name, $2 is ON or OFF"
   },
+  "commandPaneSet": {
+    "message": "Message list: $VALUE$%",
+    "description": "Popup slash-command row: requested message-list width",
+    "placeholders": { "value": { "content": "$1", "example": "+10" } }
+  },
+  "commandPaneHint": { "message": "Type a percent, +N or -N", "description": "Popup slash-command row: invalid /pane argument" },
+  "commandPaneUnavailable": { "message": "Pane width works only when the message list and the message are side by side", "description": "Popup result when pane width cannot be changed in the current layout" },
   "onState": {
     "message": "ON",
     "description": "Toggle state shown in slash-command rows"

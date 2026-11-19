@@ -37,6 +37,14 @@
         "paths": [["navigate"]],
         "script": "experiments/navigate/implementation.js"
       }
+    },
+    "pane": {
+      "schema": "experiments/pane/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "paths": [["pane"]],
+        "script": "experiments/pane/implementation.js"
+      }
     }
   },
   "background": {
@@ -104,6 +112,12 @@
     },
     "delete-empty-todos": {
       "description": "__MSG_commandDeleteEmptyTodosDescription__"
+    },
+    "pane-grow": {
+      "description": "__MSG_commandPaneGrowDescription__"
+    },
+    "pane-shrink": {
+      "description": "__MSG_commandPaneShrinkDescription__"
     }
   },
   "options_ui": {

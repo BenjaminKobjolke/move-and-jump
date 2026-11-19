@@ -106,5 +106,14 @@
     "placeholders": {
       "folder": { "content": "$1", "example": "Bandeja de entrada/Archivo" }
     }
-  }
+  },
+  "commandPaneGrowDescription": { "message": "Ampliar la lista de mensajes un 10 %" },
+  "commandPaneShrinkDescription": { "message": "Reducir la lista de mensajes un 10 %" },
+  "commandPaneSet": {
+    "message": "Lista de mensajes: $VALUE$ %",
+    "description": "Fila del popup: ancho solicitado para la lista de mensajes",
+    "placeholders": { "value": { "content": "$1", "example": "+10" } }
+  },
+  "commandPaneHint": { "message": "Escriba un porcentaje, +N o -N", "description": "Fila del popup ante un argumento /pane no válido" },
+  "commandPaneUnavailable": { "message": "El ancho solo se puede cambiar cuando la lista y el mensaje están uno al lado del otro", "description": "Resultado del popup cuando no se puede cambiar el ancho en este diseño" }
 }

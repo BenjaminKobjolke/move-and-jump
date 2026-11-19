@@ -12,7 +12,8 @@ import {
   params,
   state,
 } from "./state.js";
-import { activate, completeActive, select } from "./actions.js";
+import { activate, select } from "./actions.js";
+import { completeActive } from "./completion.js";
 import { applyFilter, isFilterMode, toggleFilterField } from "./filter.js";
 import { init } from "./load.js";
 import { moveActive } from "./rows.js";

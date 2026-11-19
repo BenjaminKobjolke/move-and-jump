@@ -30,6 +30,7 @@ test("matchCommands prefix-matches by command name", () => {
   assert.deepEqual(matchCommands("b").map((c) => c.name), ["body"]);
   assert.deepEqual(matchCommands("rec").map((c) => c.name), ["recipients"]);
   assert.deepEqual(matchCommands("col").map((c) => c.name), ["columns"]);
+  assert.deepEqual(matchCommands("pane").map((c) => c.name), ["pane"]);
 });
 
 test("with no prefix match, matchCommands falls back to letters in order", () => {
@@ -56,6 +57,7 @@ test("bare slash (empty token) matches every command", () => {
     "all",
     "sensitive",
     "columns",
+    "pane",
     "go",
     "links",
     "from",
@@ -107,6 +109,7 @@ test("command dispatcher routes the message commands and search commands", async
       writeToSender: action("writeToSender"),
       navigateTop: action("navigateTop"),
     },
+    resizePane: action("resizePane"),
   });
 
   dispatch("move-search", 3);
@@ -123,6 +126,8 @@ test("command dispatcher routes the message commands and search commands", async
   dispatch("open-link", 3);
   dispatch("navigate-top", 3);
   dispatch("delete-empty-todos", 3);
+  dispatch("pane-grow", 3);
+  dispatch("pane-shrink", 3);
   assert.equal(dispatch("unknown", 3), undefined);
 
   assert.deepEqual(calls.map(([name, ...args]) => [
@@ -143,5 +148,7 @@ test("command dispatcher routes the message commands and search commands", async
     ["search", "move", 3, "/links "],
     ["navigateTop", 3],
     ["search", "move", 3, "/delete-empty-todos"],
+    ["resizePane", 3, "+10"],
+    ["resizePane", 3, "-10"],
   ]);
 });
