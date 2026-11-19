@@ -8,6 +8,9 @@ follow [semantic versioning](https://semver.org/) — see
 
 ### Added
 
+- `/pane` sets or adjusts the message-list width in Thunderbird's vertical
+  layout. The `pane-grow` and `pane-shrink` keyboard commands step by 10% and
+  have no default key. See [docs/COMMANDS.md](docs/COMMANDS.md#setting-the-message-list-width-with-pane).
 - `/delete-empty-todos` asks Manage ToDo Folders to remove empty numbered ToDo
   folders and reports the result in the popup. A keyboard shortcut with no
   default key opens the command ready to run. See

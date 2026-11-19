@@ -1,6 +1,6 @@
 # Keyboard shortcuts
 
-Move and Jump ships five keyboard commands, and each one can carry **two
+Move and Jump ships keyboard commands, and each one can carry **two
 independent bindings**:
 
 | Kind | Example | Backed by |
@@ -29,6 +29,8 @@ replace each other.
 | `write-to-sender` | *(none)* | New message to the displayed message's sender |
 | `open-link` | *(none)* | Open the popup in [`/links`](../COMMANDS.md#opening-links-with-links) mode |
 | `navigate-top` | *(none)* | Go to the top of the message list, or of the compose body in a compose window |
+| `pane-grow` | *(none)* | Grow the message list by 10 percentage points |
+| `pane-shrink` | *(none)* | Shrink the message list by 10 percentage points |
 
 The message commands act on the **displayed** message — the preview pane,
 or a message opened in its own tab/window. With no message or several selected

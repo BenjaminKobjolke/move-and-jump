@@ -2,9 +2,9 @@
 
 The search popup normally filters folders. Typing a leading `/` switches it into
 **command mode**: instead of folders, the list shows settings you can flip
-without leaving the keyboard-driven popup. Selecting a command applies it,
-**clears the input, and keeps the popup open** so you can keep searching or run
-another command.
+without leaving the keyboard-driven popup. Most commands apply, **clear the
+input, and keep the popup open** so you can keep searching or run another
+command; commands that close it are described below.
 
 Commands match by prefix first (`/re` lists `/recipients`, `/reply`,
 `/reply-all`). When no command starts with what you typed, the list falls back to
@@ -23,6 +23,7 @@ commands containing its letters in order, so `/top` finds `/navigate-top` and
 | `/all`            | Toggle search in all accounts                                |
 | `/sensitive`      | Toggle case-sensitive search                                 |
 | `/columns [name]` | Show/hide message-list columns (Date, From, …)               |
+| `/pane <percent>` | Set the message-list width, or change it by a relative amount |
 | `/go [name]`      | Jump to an inbox, a unified folder, or all unread             |
 | `/links [text]`   | Open a link from the displayed message in the browser        |
 | `/from [text]`    | Change the compose window's sender identity                  |
@@ -39,6 +40,18 @@ commands containing its letters in order, so `/top` finds `/navigate-top` and
 
 `/columns` is the odd one out: its state belongs to Thunderbird, not to this
 add-on (see [Toggling columns](#toggling-columns)).
+
+## Setting the message-list width with `/pane`
+
+In Thunderbird's vertical layout, `/pane 50` makes the message list and open
+message the same width. `/pane 30` gives the list 30% of the available width;
+`/pane +10` and `/pane -20` change its current width by that many percentage
+points. Widths are limited to 10–90%. The popup closes after a successful change
+and explains when the current layout does not support a side-by-side split.
+
+The `pane-grow` and `pane-shrink` keyboard commands change the list width by 10
+percentage points. They have no default key; assign shortcuts in Thunderbird's
+Manage Extension Shortcuts settings.
 
 `/zoom`, `/fuzzy`, `/all` and `/sensitive` are the same four settings as the
 options page — a command just changes them in place. `/body` and `/recipients`
@@ -340,6 +353,7 @@ the leading slash still finds it. No folders become unreachable.
 
 - `experiments/columns/` — the `/columns` Experiment API (schema + implementation)
 - `experiments/navigate/` — the `/navigate-top` Experiment API
+- `experiments/pane/` — the `/pane` width-control Experiment API
 - `lib/commands.js` — `parseCommand`, `matchCommands`, the `COMMANDS` list
 - `lib/folders.js` — `filterByAccount`, `inboxFolders`, `orderUnified` (the
   `/go` lookups)
