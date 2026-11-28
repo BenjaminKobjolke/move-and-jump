@@ -3,6 +3,7 @@ import { empty, jumpButton, moveButton, state } from "./state.js";
 import { clampZoom } from "../lib/options.js";
 import { nextListPercent } from "../lib/pane.js";
 import { matchCommands } from "../lib/commands.js";
+import { renamableFolder } from "../lib/renameFolder.js";
 import { goEntries } from "./subLists.js";
 import { highlight, onOff, renderFilterHint, renderRows } from "./rows.js";
 
@@ -105,6 +106,17 @@ function commandEntry(command, arg) {
     case "delete-empty-todos":
       label = messenger.i18n.getMessage("commandDeleteEmptyTodos");
       break;
+    case "rename-folder": {
+      const folder = renamableFolder(state.activeTab);
+      const named = arg !== "" && arg !== folder?.name;
+      // Without a name the row is still selectable: activate() prefills the
+      // current name for editing. An unchanged name has nothing to do.
+      enabled = folder !== null && (arg === "" || named);
+      if (!folder) label = messenger.i18n.getMessage("commandRenameFolderUnavailable");
+      else if (named) label = messenger.i18n.getMessage("commandRenameFolderSet", [arg]);
+      else label = messenger.i18n.getMessage("commandRenameFolderHint", [folder.name]);
+      break;
+    }
     default:
       if (command.messageAction) {
         enabled = state.hasDisplayedMessage;

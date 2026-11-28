@@ -71,7 +71,12 @@ test("bare slash (empty token) matches every command", () => {
     "reply-all",
     "navigate-top",
     "delete-empty-todos",
+    "rename-folder",
   ]);
+});
+
+test('matchCommands("ren") matches rename-folder; "rec" stays recipients', () => {
+  assert.deepEqual(matchCommands("ren").map((c) => c.name), ["rename-folder"]);
 });
 
 test('matchCommands("del") matches delete-empty-todos', () => {

@@ -7,7 +7,7 @@ input, and keep the popup open** so you can keep searching or run another
 command; commands that close it are described below.
 
 Commands match by prefix first (`/re` lists `/recipients`, `/reply`,
-`/reply-all`). When no command starts with what you typed, the list falls back to
+`/reply-all`, `/rename-folder`). When no command starts with what you typed, the list falls back to
 commands containing its letters in order, so `/top` finds `/navigate-top` and
 `/attach` finds both attachment commands.
 
@@ -37,6 +37,7 @@ commands containing its letters in order, so `/top` finds `/navigate-top` and
 | `/reply-all`      | Reply to all on the displayed message                        |
 | `/navigate-top`   | Go to the top of the message list, or of the compose body    |
 | `/delete-empty-todos` | Delete empty numbered ToDo folders through Manage ToDo Folders |
+| `/rename-folder <name>` | Rename the folder displayed in the mail tab                |
 
 `/columns` is the odd one out: its state belongs to Thunderbird, not to this
 add-on (see [Toggling columns](#toggling-columns)).
@@ -71,6 +72,22 @@ deletes folders with no messages or child folders.
 The `delete empty todo folders` keyboard command is also available in
 Thunderbird's **Manage Extension Shortcuts** settings. It has no default key;
 assign one there to open the popup with `/delete-empty-todos` ready to run.
+
+## Renaming the current folder
+
+`/rename-folder New Name` renames the folder displayed in the mail tab and
+closes the popup. Without a name, Enter prefills the input with the current
+name, selected, so you can overtype it. The row is disabled when the tab shows
+no folder (compose window, message tab) or a unified folder.
+
+Thunderbird decides what is allowed: special folders such as Inbox, duplicate
+names and invalid characters are refused, and the popup stays open with the
+reason. Needs the `accountsFolders` permission.
+
+A rename changes the id of the folder and of its subfolders. `lib/renameFolder.js`
+rewrites those ids in the recents, usage weights, last-used folder and sender
+suggestions, so the folder keeps its ranking. Folders renamed in Thunderbird's
+own UI are not tracked and lose it.
 
 ## Filtering messages
 

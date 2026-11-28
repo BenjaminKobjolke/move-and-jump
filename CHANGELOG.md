@@ -8,6 +8,9 @@ follow [semantic versioning](https://semver.org/) — see
 
 ### Added
 
+- `/rename-folder <name>` renames the folder displayed in the mail tab and keeps
+  its recents and ranking. Adds the `accountsFolders` permission. See
+  [docs/COMMANDS.md](docs/COMMANDS.md#renaming-the-current-folder).
 - `/pane` sets or adjusts the message-list width in Thunderbird's vertical
   layout. The `pane-grow` and `pane-shrink` keyboard commands step by 10% and
   have no default key. See [docs/COMMANDS.md](docs/COMMANDS.md#setting-the-message-list-width-with-pane).

@@ -4,6 +4,7 @@ import { clampZoom } from "../lib/options.js";
 import { resizePane } from "../lib/pane.js";
 import { ATTACHMENT_ACTION, attachmentAction } from "../lib/attachments.js";
 import { deleteEmptyTodoFolders } from "../lib/todoFolders.js";
+import { renamableFolder } from "../lib/renameFolder.js";
 import { completeTagEntry, showInput } from "./completion.js";
 import { render } from "./render.js";
 import { applyFilter, toggleFilterField } from "./filter.js";
@@ -103,10 +104,7 @@ export async function activate(entry) {
         if (!valid) {
           // No value yet: prefill "/zoom <current>" and preselect the number
           // so the user can overtype and Enter through the valid path below.
-          input.value = `/zoom ${state.options.zoom || 100}`;
-          render(input.value);
-          input.setSelectionRange(input.value.indexOf(" ") + 1, input.value.length);
-          input.focus();
+          prefillArg("zoom", state.options.zoom || 100);
           return;
         }
         state.options.zoom = clampZoom(entry.arg);
@@ -196,12 +194,48 @@ export async function activate(entry) {
         }
         return;
       }
+      case "rename-folder": {
+        const folder = renamableFolder(state.activeTab);
+        if (!folder) return;
+        if (!entry.arg) {
+          prefillArg("rename-folder", folder.name);
+          return;
+        }
+        let failure = null;
+        try {
+          const response = await messenger.runtime.sendMessage({
+            type: "rename-folder",
+            folderId: folder.id,
+            name: entry.arg,
+          });
+          if (response?.ok !== true) failure = response?.error ?? "";
+        } catch (renameError) {
+          console.error("Move and Jump: renaming folder failed", renameError);
+          failure = String(renameError);
+        }
+        if (failure === null) {
+          hide();
+        } else {
+          input.value = "";
+          commandResult.textContent = messenger.i18n.getMessage("commandRenameFolderError", [failure]);
+          commandResult.hidden = false;
+        }
+        return;
+      }
     }
     await messenger.storage.local.set({ options: state.options });
     showInput("");
     return;
   }
   select(state.mode, entry.folder);
+}
+
+/** Put "/<name> <value>" in the input with the value selected, ready to overtype. */
+function prefillArg(name, value) {
+  input.value = `/${name} ${value}`;
+  render(input.value);
+  input.setSelectionRange(name.length + 2, input.value.length);
+  input.focus();
 }
 
 /**

@@ -1,0 +1,10 @@
+{
+  "version": "1.5.8",
+  "date": "2026-11-28",
+  "title": "Plus de contrôle sur les dossiers et les messages",
+  "notes": [
+    "Renommez le dossier affiché dans l’onglet Courrier avec /rename-folder, tout en conservant son historique récent et son classement.",
+    "Ajustez la largeur de la liste des messages avec /pane et ses raccourcis clavier, ouvrez directement les pièces jointes et changez l’identité d’expéditeur au clavier.",
+    "Les suggestions de déplacement mémorisent désormais les destinations récentes pour chaque expéditeur, ce qui accélère le classement des messages."
+  ]
+}

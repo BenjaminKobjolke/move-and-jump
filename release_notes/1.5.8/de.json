@@ -1,0 +1,10 @@
+{
+  "version": "1.5.8",
+  "date": "2026-11-28",
+  "title": "Mehr Kontrolle über Ordner und Nachrichten",
+  "notes": [
+    "Benenne den im Mail-Tab angezeigten Ordner mit /rename-folder um, ohne seinen bisherigen Verlauf und seine Rangfolge zu verlieren.",
+    "Passe die Breite der Nachrichtenliste mit /pane und den zugehörigen Tastenkürzeln an, öffne Anhänge direkt und wechsle die „Von“-Identität über die Tastatur.",
+    "Vorschläge zum Verschieben merken sich jetzt die zuletzt verwendeten Ziele für jeden Absender. So lassen sich häufige Ablageentscheidungen schneller treffen."
+  ]
+}

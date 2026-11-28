@@ -1,0 +1,10 @@
+{
+  "version": "1.5.8",
+  "date": "2026-11-28",
+  "title": "Más control sobre las carpetas y los mensajes",
+  "notes": [
+    "Cambia el nombre de la carpeta que aparece en la pestaña de correo con /rename-folder, conservando su historial reciente y su posición.",
+    "Ajusta el ancho de la lista de mensajes con /pane y sus atajos de teclado, abre archivos adjuntos directamente y cambia la identidad del remitente desde el teclado.",
+    "Las sugerencias para mover mensajes ahora recuerdan los destinos recientes de cada remitente, lo que agiliza las opciones de archivo más frecuentes."
+  ]
+}

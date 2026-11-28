@@ -266,6 +266,25 @@
       "error": { "content": "$1", "example": "Sync is still running" }
     }
   },
+  "commandRenameFolderHint": {
+    "message": "Rename folder — press Enter to edit (current: $NAME$)",
+    "description": "Popup slash-command row: /rename-folder with no new name; selecting it prefills the current name for editing",
+    "placeholders": { "name": { "content": "$1", "example": "Invoices" } }
+  },
+  "commandRenameFolderSet": {
+    "message": "Rename folder to $NAME$",
+    "description": "Popup slash-command row: /rename-folder with a new name",
+    "placeholders": { "name": { "content": "$1", "example": "Invoices 2026" } }
+  },
+  "commandRenameFolderUnavailable": {
+    "message": "Rename folder — no folder displayed here",
+    "description": "Popup slash-command row: /rename-folder when the tab shows no renamable folder"
+  },
+  "commandRenameFolderError": {
+    "message": "Could not rename the folder: $ERROR$",
+    "description": "Result shown after /rename-folder when Thunderbird refuses the rename",
+    "placeholders": { "error": { "content": "$1", "example": "A folder with that name already exists" } }
+  },
   "commandMessageUnavailable": {
     "message": "Message actions — no single displayed message",
     "description": "Popup slash-command row for /copy-name, /copy-email, /copy-subject, /save-attachments, /write, /reply, /reply-all when not exactly one message is displayed"

@@ -11,6 +11,7 @@ import { createSearchWindow } from "./lib/searchWindow.js";
 import { createMessageActions } from "./lib/messageActions.js";
 import { createCommandDispatcher } from "./lib/commands.js";
 import { resizePane } from "./lib/pane.js";
+import { handleRenameFolder } from "./lib/renameFolder.js";
 
 const paneApi = (() => {
   try {
@@ -272,6 +273,12 @@ messenger.runtime.onMessage.addListener((message) => {
         return { ok: false, error: String(error) };
       },
     );
+  }
+  if (message?.type === "rename-folder") {
+    return handleRenameFolder(messenger, message).then((result) => {
+      if (result.ok) cachedLastUsedFolderId = result.lastUsedFolderId;
+      return result;
+    });
   }
   if (message?.type === "resize") {
     return resizeSearchWindow(message.height, message.zoom, message.place);

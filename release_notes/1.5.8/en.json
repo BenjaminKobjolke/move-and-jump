@@ -1,0 +1,10 @@
+{
+  "version": "1.5.8",
+  "date": "2026-11-28",
+  "title": "More control over folders and messages",
+  "notes": [
+    "Rename the folder shown in the mail tab with /rename-folder, while keeping its recent history and ranking.",
+    "Adjust the message-list width with /pane and its keyboard shortcuts, open attachments directly, and switch the From identity from the keyboard.",
+    "Move suggestions now remember recent destinations per sender, making frequent filing choices faster."
+  ]
+}
