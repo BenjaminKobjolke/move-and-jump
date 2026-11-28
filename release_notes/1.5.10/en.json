@@ -1,0 +1,10 @@
+{
+  "version": "1.5.10",
+  "date": "2026-11-28",
+  "title": "Smarter folder search",
+  "notes": [
+    "Search for folders with multiple words to narrow results more precisely.",
+    "Folder rankings now fade over time, and you can reset a folder's ranking when it is no longer useful.",
+    "The toolbar restores your last-used folder after Thunderbird starts or the add-on is updated."
+  ]
+}

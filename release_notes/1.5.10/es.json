@@ -1,0 +1,10 @@
+{
+  "version": "1.5.10",
+  "date": "2026-11-28",
+  "title": "Búsqueda de carpetas más inteligente",
+  "notes": [
+    "Busca carpetas con varias palabras para acotar los resultados con mayor precisión.",
+    "La clasificación de las carpetas pierde relevancia con el tiempo, y puedes restablecer la clasificación de una carpeta cuando deje de ser útil.",
+    "La barra de herramientas restaura la última carpeta utilizada después de iniciar Thunderbird o actualizar el complemento."
+  ]
+}

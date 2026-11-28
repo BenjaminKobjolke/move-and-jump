@@ -1,0 +1,10 @@
+{
+  "version": "1.5.10",
+  "date": "2026-11-28",
+  "title": "Intelligentere Ordnersuche",
+  "notes": [
+    "Suche mit mehreren Wörtern nach Ordnern, um die Ergebnisse genauer einzugrenzen.",
+    "Die Bewertungen von Ordnern nehmen jetzt mit der Zeit ab. Du kannst die Bewertung eines Ordners zurücksetzen, wenn er nicht mehr nützlich ist.",
+    "Die Symbolleiste stellt den zuletzt verwendeten Ordner wieder her, nachdem Thunderbird gestartet oder das Add-on aktualisiert wurde."
+  ]
+}

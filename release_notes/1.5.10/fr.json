@@ -1,0 +1,10 @@
+{
+  "version": "1.5.10",
+  "date": "2026-11-28",
+  "title": "Recherche de dossiers plus intelligente",
+  "notes": [
+    "Recherchez des dossiers avec plusieurs mots pour affiner les résultats.",
+    "Le classement des dossiers s'estompe désormais avec le temps. Vous pouvez aussi réinitialiser le classement d'un dossier lorsqu'il ne vous est plus utile.",
+    "La barre d'outils restaure le dernier dossier utilisé au démarrage de Thunderbird ou après la mise à jour du module complémentaire."
+  ]
+}
