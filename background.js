@@ -6,7 +6,13 @@ import {
 import { DEFAULT_OPTIONS, getOptions } from "./lib/options.js";
 import { COMMAND_NAMES } from "./lib/keys.js";
 import { decodeImapUtf7 } from "./lib/imapUtf7.js";
-import { incrementWeight, incrementQueryWeight } from "./lib/weights.js";
+import { elidePath } from "./lib/elide.js";
+import {
+  incrementWeight,
+  incrementQueryWeight,
+  forgetFolderWeights,
+  usageIncrement,
+} from "./lib/weights.js";
 import { createSearchWindow } from "./lib/searchWindow.js";
 import { createMessageActions } from "./lib/messageActions.js";
 import { createCommandDispatcher } from "./lib/commands.js";
@@ -24,13 +30,23 @@ const paneApi = (() => {
 
 /**
  * In-memory mirror of storage.local's lastUsedFolderId, kept in sync so
- * the move-last/jump-last commands can act without waiting on a
- * storage round-trip first.
+ * the move-last/jump-last commands don't need a storage round-trip on
+ * every use.
+ *
+ * This background script is an MV3 event page: Thunderbird starts it
+ * only when one of its listeners fires, and unloads it again when idle.
+ * So the event that woke it (e.g. the move-last command) is usually
+ * dispatched before this load has finished — anything reading the
+ * cache must await lastUsedFolderIdLoaded first.
  */
 let cachedLastUsedFolderId = null;
-messenger.storage.local.get("lastUsedFolderId").then(({ lastUsedFolderId }) => {
-  cachedLastUsedFolderId = lastUsedFolderId ?? null;
-});
+const lastUsedFolderIdLoaded = messenger.storage.local
+  .get("lastUsedFolderId")
+  .then(({ lastUsedFolderId }) => {
+    // ??= so a recordUsage() that ran in the meantime isn't overwritten
+    // with the older stored value.
+    cachedLastUsedFolderId ??= lastUsedFolderId ?? null;
+  });
 
 /**
  * Look up a single folder by id. Thunderbird's folders API has no
@@ -65,6 +81,31 @@ const {
   navigateTop,
   messageActions: MESSAGE_ACTIONS,
 } = createMessageActions(messenger, getActiveTab);
+
+/** Show the last-used folder on the toolbar button (label and tooltip). */
+function showLastFolder(folder) {
+  return messenger.action.setTitle({
+    title: messenger.i18n.getMessage("tooltipLastFolder", [elidePath(decodeImapUtf7(folder.path))]),
+  });
+}
+
+/**
+ * action.setTitle() doesn't survive a Thunderbird restart or an add-on
+ * update, so put the stored last-used folder back on the toolbar
+ * button. Skipped if a move/jump happened in the meantime (it set the
+ * title itself) or if the folder no longer exists.
+ */
+async function restoreLastFolderTitle() {
+  await lastUsedFolderIdLoaded;
+  const folderId = cachedLastUsedFolderId;
+  if (!folderId) return;
+  const folder = await getFolderById(folderId);
+  if (!folder) {
+    console.warn("Move and Jump: last-used folder not found, not restoring button label", folderId);
+    return;
+  }
+  if (cachedLastUsedFolderId === folderId) await showLastFolder(folder);
+}
 
 async function performMove(folderId, tabId) {
   if (tabId === undefined) {
@@ -132,17 +173,14 @@ async function recordUsage(folderId, query = "") {
       messenger.storage.local.get("queryWeights"),
       getFolderById(folderId),
     ]);
+  const amount = usageIncrement(Date.now());
   await messenger.storage.local.set({
     recentFolders: pushRecent(recentFolders, folderId),
-    folderWeights: incrementWeight(folderWeights, folderId),
-    queryWeights: incrementQueryWeight(queryWeights, query, folderId),
+    folderWeights: incrementWeight(folderWeights, folderId, amount),
+    queryWeights: incrementQueryWeight(queryWeights, query, folderId, amount),
     lastUsedFolderId: folderId,
   });
-  if (folder) {
-    await messenger.action.setTitle({
-      title: messenger.i18n.getMessage("tooltipLastFolder", [decodeImapUtf7(folder.path)]),
-    });
-  }
+  if (folder) await showLastFolder(folder);
 }
 
 async function handleSelection(mode, folderId, tabId, query) {
@@ -157,7 +195,27 @@ async function handleSelection(mode, folderId, tabId, query) {
   }
 }
 
+/**
+ * Reset a folder's ranking by forgetting all of its recorded usage
+ * (see forgetFolderWeights). The recent-folders list and the last-used
+ * folder are left alone — those are about recency, not ranking.
+ */
+async function handleDemote(folderId) {
+  try {
+    const [{ folderWeights = {} }, { queryWeights = {} }] = await Promise.all([
+      messenger.storage.local.get("folderWeights"),
+      messenger.storage.local.get("queryWeights"),
+    ]);
+    await messenger.storage.local.set(forgetFolderWeights(folderWeights, queryWeights, folderId));
+    return { ok: true };
+  } catch (error) {
+    console.error("Move and Jump: handleDemote failed", error);
+    return { ok: false, error: String(error) };
+  }
+}
+
 async function actOnLastFolder(mode, tabId) {
+  await lastUsedFolderIdLoaded;
   if (!cachedLastUsedFolderId) {
     await openSearchWindow(mode, tabId);
     return;
@@ -280,6 +338,9 @@ messenger.runtime.onMessage.addListener((message) => {
       return result;
     });
   }
+  if (message?.type === "demote") {
+    return handleDemote(message.folderId);
+  }
   if (message?.type === "resize") {
     return resizeSearchWindow(message.height, message.zoom, message.place);
   }
@@ -291,4 +352,10 @@ messenger.runtime.onInstalled.addListener(async () => {
   if (!options) {
     await messenger.storage.local.set({ options: DEFAULT_OPTIONS });
   }
+  await restoreLastFolderTitle();
 });
+
+// Registering this listener is also what makes Thunderbird start the
+// event page at all on startup — without it, the toolbar button keeps
+// its default label until the first command or click.
+messenger.runtime.onStartup.addListener(restoreLastFolderTitle);

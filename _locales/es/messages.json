@@ -90,7 +90,7 @@
     "message": "Thunderbird rechazó «$1» — puede que ya esté en uso o no sea compatible."
   },
   "optionsRankingInfo": {
-    "message": "Los resultados se ordenan según sus elecciones anteriores: las carpetas que ha elegido tras escribir un texto similar aparecen primero, luego sus carpetas más usadas en general, y por último por orden alfabético."
+    "message": "Los resultados se ordenan según sus elecciones anteriores: las carpetas que ha elegido tras escribir un texto similar aparecen primero, luego sus carpetas más usadas en general (el uso reciente cuenta más que el antiguo), y por último por orden alfabético. Puede escribir varias palabras, en cualquier orden, para acotar la lista; las carpetas cuyo nombre contiene todas ellas aparecen primero. Para restablecer la clasificación de una carpeta, resáltela en los resultados y haga clic en el icono ⤓ o pulse Mayús+Supr."
   },
   "buttonMove": {
     "message": "Mover"
@@ -101,8 +101,11 @@
   "buttonCancel": {
     "message": "Cancelar"
   },
+  "buttonDemote": {
+    "message": "Restablecer la clasificación: olvidar con qué frecuencia se ha usado esta carpeta (Mayús+Supr)"
+  },
   "tooltipLastFolder": {
-    "message": "Move and Jump — Última: $FOLDER$",
+    "message": "Move and Jump ($FOLDER$)",
     "placeholders": {
       "folder": { "content": "$1", "example": "Bandeja de entrada/Archivo" }
     }

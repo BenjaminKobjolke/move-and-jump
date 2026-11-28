@@ -1,6 +1,6 @@
 // Filters folders and renders the popup's main search results.
 import { commandResult, empty, jumpButton, list, moveButton, state } from "./state.js";
-import { filterFolders } from "../lib/match.js";
+import { filterFolders, matchBand } from "../lib/match.js";
 import { prioritize } from "../lib/recent.js";
 import { sortByQueryWeight } from "../lib/weights.js";
 import { findMatchRanges } from "../lib/highlight.js";
@@ -15,24 +15,32 @@ import {
 } from "./subLists.js";
 import { partialTag } from "../lib/filterQuery.js";
 import { renderCommands } from "./commandRows.js";
-import { highlight } from "./rows.js";
+import { createLabel, highlight } from "./rows.js";
+import { canDemote, createDemoteButton } from "./demote.js";
 
 function folderLabel(folder) {
   return state.showAccountPrefix ? `${folder.accountName}: ${folder.path}` : folder.path;
 }
 
+/** The options lib/match.js and lib/highlight.js share. */
+function matchOptions() {
+  return {
+    caseSensitive: state.options.caseSensitiveSearch,
+    fuzzy: state.options.fuzzySearch,
+  };
+}
+
 /**
- * Fill `item` with `label`, wrapping the portion matching `query` (if
- * any) in a <mark> element. Built from real DOM nodes rather than
- * innerHTML, consistent with the rest of the popup.
+ * Fill `item` with `folder`'s label, wrapping the portions matching the
+ * words of `query` (if any) in <mark> elements. Built from real DOM
+ * nodes rather than innerHTML, consistent with the rest of the popup.
  */
-function appendHighlighted(item, label, query) {
-  const ranges = query
-    ? findMatchRanges(label, query, {
-        caseSensitive: state.options.caseSensitiveSearch,
-        fuzzy: state.options.fuzzySearch,
-      })
-    : [];
+function appendHighlighted(item, folder, query) {
+  const label = folderLabel(folder);
+  // The label ends with the folder's own name; prefer highlighting
+  // words there over an earlier occurrence in a parent folder's name.
+  const preferFrom = label.endsWith(folder.name) ? label.length - folder.name.length : 0;
+  const ranges = query ? findMatchRanges(label, query, { ...matchOptions(), preferFrom }) : [];
   if (ranges.length === 0) {
     item.textContent = label;
     return;
@@ -78,13 +86,11 @@ export function render(query) {
   const folders = trimmed
     ? prioritize(
         sortByQueryWeight(
-          filterFolders(state.allFolders, trimmed, {
-            caseSensitive: state.options.caseSensitiveSearch,
-            fuzzy: state.options.fuzzySearch,
-          }),
+          filterFolders(state.allFolders, trimmed, matchOptions()),
           state.queryWeights,
           state.folderWeights,
           trimmed,
+          (folder) => matchBand(folder, trimmed, matchOptions()),
         ),
         state.senderIds,
       )
@@ -99,7 +105,9 @@ export function render(query) {
     if (senderIdSet.has(entry.folder.id)) {
       item.classList.add("sender");
     }
-    appendHighlighted(item, folderLabel(entry.folder), trimmed);
+    const label = createLabel();
+    appendHighlighted(label, entry.folder, trimmed);
+    item.append(label);
     if (senderIdSet.has(entry.folder.id)) {
       const tag = document.createElement("span");
       tag.className = "sender-tag";
@@ -107,6 +115,7 @@ export function render(query) {
       tag.title = messenger.i18n.getMessage("popupSenderTagTitle");
       item.append(tag);
     }
+    if (canDemote(entry, trimmed)) item.append(createDemoteButton());
     list.appendChild(item);
   }
   highlight();

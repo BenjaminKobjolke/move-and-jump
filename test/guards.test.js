@@ -44,6 +44,7 @@ function installMessengerStub(keys) {
     runtime: {
       onMessage: noopEvent(),
       onInstalled: noopEvent(),
+      onStartup: noopEvent(),
       sendMessage: async () => {},
       getPlatformInfo: async () => ({ os: "win" }),
     },

@@ -14,6 +14,7 @@ import {
 } from "./state.js";
 import { activate, select } from "./actions.js";
 import { completeActive } from "./completion.js";
+import { canDemote, demote } from "./demote.js";
 import { applyFilter, isFilterMode, toggleFilterField } from "./filter.js";
 import { init } from "./load.js";
 import { moveActive } from "./rows.js";
@@ -59,8 +60,18 @@ list.addEventListener("mousedown", (event) => {
   const entry = state.visible[index];
   if (!entry) return;
   event.preventDefault();
+  // The reset-ranking button sits inside the row: it must not select the folder.
+  if (event.target.closest("button.demote")) {
+    demoteEntry(entry);
+    return;
+  }
   activate(entry);
 });
+
+/** Reset the folder's ranking, then show the new order. */
+async function demoteEntry(entry) {
+  if (await demote(entry.folder)) render(input.value);
+}
 
 input.addEventListener("input", () => {
   render(input.value);
@@ -100,6 +111,15 @@ input.addEventListener("keydown", (event) => {
     case "Enter":
       event.preventDefault();
       activate(state.visible[state.activeIndex]);
+      break;
+    case "Delete":
+      // Shift+Delete, as in Firefox's address bar for removing a
+      // suggestion. Anything else (including Shift+Delete on a row
+      // with nothing to reset) keeps the input's default behavior.
+      if (event.shiftKey && canDemote(state.visible[state.activeIndex], input.value)) {
+        event.preventDefault();
+        demoteEntry(state.visible[state.activeIndex]);
+      }
       break;
     case "Escape":
       event.preventDefault();

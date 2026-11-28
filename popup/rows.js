@@ -1,6 +1,17 @@
 // Owns shared popup row rendering, highlighting, and selection helpers.
 import { list, state } from "./state.js";
 
+/**
+ * The row's text. Rows are flex containers (search.css), so the text needs
+ * its own element to keep the one-line ellipsis.
+ */
+export function createLabel(text = "") {
+  const label = document.createElement("span");
+  label.className = "label";
+  label.textContent = text;
+  return label;
+}
+
 /** Fill the result list with one plain-text row per entry. */
 export function renderRows(entries) {
   state.visible = entries;
@@ -8,7 +19,7 @@ export function renderRows(entries) {
   list.innerHTML = "";
   for (const entry of state.visible) {
     const item = document.createElement("li");
-    item.textContent = entry.label;
+    item.append(createLabel(entry.label));
     if (entry.enabled === false) item.classList.add("disabled");
     list.appendChild(item);
   }
