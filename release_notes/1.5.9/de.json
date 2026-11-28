@@ -1,0 +1,8 @@
+{
+  "version": "1.5.9",
+  "date": "2026-11-28",
+  "title": "Ordner lassen sich jetzt reibungsloser umbenennen",
+  "notes": [
+    "Beim Umbenennen des aktuellen Ordners bleibt der E-Mail-Tab jetzt bei diesem Ordner, statt zu einem benachbarten zu wechseln."
+  ]
+}

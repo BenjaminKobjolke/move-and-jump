@@ -207,6 +207,7 @@ export async function activate(entry) {
             type: "rename-folder",
             folderId: folder.id,
             name: entry.arg,
+            tabId: state.tabId,
           });
           if (response?.ok !== true) failure = response?.error ?? "";
         } catch (renameError) {

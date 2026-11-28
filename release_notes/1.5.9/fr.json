@@ -1,0 +1,8 @@
+{
+  "version": "1.5.9",
+  "date": "2026-11-28",
+  "title": "Un renommage de dossier plus fluide",
+  "notes": [
+    "Le renommage du dossier actuel conserve désormais l’onglet de courrier sur ce dossier au lieu de le faire basculer vers un dossier voisin."
+  ]
+}

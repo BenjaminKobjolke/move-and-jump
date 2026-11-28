@@ -8,12 +8,18 @@ const NEW = "account1://Job";
 function setup({ stored = {}, renamed = { id: NEW }, renameError } = {}) {
   const calls = [];
   const writes = [];
+  const shown = [];
   const messenger = {
     folders: {
       async rename(folderId, name) {
         calls.push([folderId, name]);
         if (renameError) throw renameError;
         return renamed;
+      },
+    },
+    mailTabs: {
+      async update(tabId, properties) {
+        shown.push([tabId, properties]);
       },
     },
     storage: {
@@ -27,8 +33,26 @@ function setup({ stored = {}, renamed = { id: NEW }, renameError } = {}) {
       },
     },
   };
-  return { messenger, calls, writes };
+  return { messenger, calls, writes, shown };
 }
+
+test("handleRenameFolder keeps the tab on the renamed folder", async () => {
+  const { messenger, shown } = setup();
+
+  await handleRenameFolder(messenger, { folderId: OLD, name: "Job", tabId: 7 });
+
+  assert.deepEqual(shown, [[7, { displayedFolderId: NEW }]]);
+});
+
+test("handleRenameFolder does not touch a tab when the rename fails or no tab is given", async () => {
+  const failed = setup({ renameError: new Error("nope") });
+  await handleRenameFolder(failed.messenger, { folderId: OLD, name: "Job", tabId: 7 });
+  const tabless = setup();
+  await handleRenameFolder(tabless.messenger, { folderId: OLD, name: "Job" });
+
+  assert.deepEqual(failed.shown, []);
+  assert.deepEqual(tabless.shown, []);
+});
 
 test("migrateFolderIds rewrites the folder and its subfolders in every store", () => {
   const migrated = migrateFolderIds(

@@ -1,0 +1,8 @@
+{
+  "version": "1.5.9",
+  "date": "2026-11-28",
+  "title": "A smoother folder rename",
+  "notes": [
+    "Renaming the current folder now keeps the mail tab on that folder instead of switching to a neighbouring one."
+  ]
+}
