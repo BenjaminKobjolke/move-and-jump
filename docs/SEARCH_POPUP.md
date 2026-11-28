@@ -84,9 +84,20 @@ Plain Tab only. Shift+Tab keeps its default behavior (reverse focus).
   "Inbox".
 - **Ranking:** matches are ordered by `sortByQueryWeight` (`lib/weights.js`),
   which learns from past picks (`queryWeights` / `folderWeights`), so
-  frequently chosen folders for a query float up.
+  frequently chosen folders for a query float up. Recent picks count more than
+  old ones: a pick loses half its weight every 30 days (`usageIncrement`).
+  With several words (fuzzy search on), folders whose own name contains every
+  word come first (`matchBand`).
+- **Reset ranking:** a typed-search row whose folder has usage history shows a
+  ⤓ button while highlighted or hovered; the button or
+  <kbd>Shift</kbd><kbd>Delete</kbd> forgets that folder's weights
+  (`popup/demote.js` sends `{type: "demote", folderId}` to `background.js`).
+  Not offered in the recent-folders view or on command rows.
 - **Matching:** `filterFolders` (`lib/match.js`) does substring matching over
-  name/path, honoring `caseSensitiveSearch` and the opt-in `fuzzySearch`.
+  name/path/account, honoring `caseSensitiveSearch` and the opt-in
+  `fuzzySearch` (see [settings/FUZZY_SEARCH.md](settings/FUZZY_SEARCH.md)).
+- **Row markup:** rows are flex containers; the text sits in a `span.label`
+  (`createLabel` in `popup/rows.js`), which carries the one-line ellipsis.
 - **IMAP names:** folder names/paths come back as raw modified UTF-7 (RFC 3501);
   `decodeImapUtf7` decodes them for display and matching. Ids are left untouched.
 
@@ -121,14 +132,15 @@ tab's **message** list instead of the folder list.
 - `popup/state.js` — shared popup elements and mutable state
 - `popup/load.js` — `init`, `applyScope`, and Thunderbird data loading
 - `popup/render.js` — folder filtering, highlighting, and `render`
+- `popup/demote.js` — reset-ranking button, `canDemote`, and `demote`
 - `popup/commandRows.js` — slash-command row construction and rendering
 - `popup/actions.js` — `activate`, `completeActive` (Tab), and `select`
 - `popup/window.js` — sizing, placement, `hide`, and `applyZoom`
 - `popup/filter.js` — `applyFilter` and filter-field toggles
 - `popup/rows.js` / `popup/subLists.js` — shared rows and command sublists
 - `popup/search.css` — layout, active/disabled rows, light/dark theming
-- `lib/match.js` — `filterFolders` (substring matching)
-- `lib/weights.js` — `sortByQueryWeight` (learned ranking)
+- `lib/match.js` — `filterFolders` (word matching), `matchBand`
+- `lib/weights.js` — `sortByQueryWeight` (learned ranking), `forgetFolderWeights`
 - `lib/folders.js` — `filterByAccount` (scope)
 - `lib/imapUtf7.js` — `decodeImapUtf7` (IMAP name decoding)
 - `lib/commands.js` — slash-command parsing (see COMMANDS.md)

@@ -42,23 +42,29 @@ simply not highlighted — it still counts toward the match.
   `messenger.storage.local`. Default lives in `DEFAULT_OPTIONS`
   (`lib/options.js`); `getOptions()` merges it over stored values, so no
   migration was needed.
-- **Matching:** `filterFolders` (`lib/match.js`) takes a `fuzzy` option. When
-  set, it splits the trimmed query on `\s+` into terms and keeps a folder only
-  if `terms.every(t => [name, path, account].some(f => f.includes(t)))`. The
-  rank tier is still driven by the first term, so with a single term (or fuzzy
-  off) the behavior is identical to the original substring match.
+- **Matching:** the word logic is upstream's multi-word search (merged from
+  upstream 1.3.0; see "Multi-word queries" in `ARCHITECTURE.md`). Upstream
+  always splits the query; this fork keeps the setting as a switch on top:
+  `queryWords(query, fuzzy)` (`lib/match.js`) splits the trimmed query on
+  `\s+` when `fuzzy` is on, and returns it as one literal word (spaces
+  included) when off. `filterFolders`, `matchBand` and `findMatchRanges` all
+  take the same `fuzzy` option and default to **on**; the popup passes
+  `options.fuzzySearch`.
+- **Match tier:** a folder's tier is that of its *worst*-matching word (name
+  starts with it, name contains it, path, account), not the first word's.
 - **Highlighting:** `findMatchRanges` (`lib/highlight.js`) returns a sorted,
-  merged list of match ranges instead of a single one; `appendHighlighted`
-  (`popup/search.js`) emits a `<mark>` per range.
-- **Weighting:** frequency/query weighting still applies on top — fuzzy only
-  changes which folders are *included* and how they're *highlighted*, not the
-  usage-based ordering.
+  merged list of ranges, one per word; `appendHighlighted` (`popup/render.js`)
+  emits a `<mark>` per range. A word found in both a parent folder and the
+  folder's own name is marked in the name (`preferFrom`).
+- **Ordering:** with two or more words, folders whose own name contains every
+  word are listed before the rest (`matchBand`), ahead of usage weight. With
+  one word, or with fuzzy off, usage weight decides as before.
 
 ## Relevant files
 
 - `lib/options.js` — `fuzzySearch` default in `DEFAULT_OPTIONS`
-- `lib/match.js` — `filterFolders` `fuzzy` term-splitting / AND matching
-- `lib/highlight.js` — `findMatchRanges` (multi-term, merged ranges)
-- `popup/search.js` — passes `fuzzy` flag; renders multiple `<mark>`s
+- `lib/match.js` — `queryWords` (the `fuzzy` switch), `filterFolders`, `matchBand`
+- `lib/highlight.js` — `findMatchRanges` (one range per word, merged)
+- `popup/render.js` — passes the `fuzzy` flag; renders the `<mark>`s
 - `options/options.html` / `options/options.js` — the checkbox, load/save
 - `_locales/*/messages.json` — the `optionsFuzzySearch` label

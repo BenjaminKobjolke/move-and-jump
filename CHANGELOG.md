@@ -8,6 +8,11 @@ follow [semantic versioning](https://semver.org/) — see
 
 ### Added
 
+- Merged upstream 1.3.0 and 1.3.1 (see those entries below): fading usage
+  weights, per-folder ranking reset (⤓ button or Shift+Delete), and the
+  toolbar button label `Move and Jump (folder)`, shortened in the middle and
+  restored at startup. Multi-word search stays behind the *Fuzzy search*
+  option.
 - `/rename-folder <name>` renames the folder displayed in the mail tab and keeps
   its recents and ranking. Adds the `accountsFolders` permission. See
   [docs/COMMANDS.md](docs/COMMANDS.md#renaming-the-current-folder).
@@ -141,6 +146,53 @@ follow [semantic versioning](https://semver.org/) — see
   wiping that state while the window stayed open — the next shortcut
   then created a duplicate. The background now recovers the open window
   by scanning live windows for it before deciding to create a new one.
+
+## [1.3.1] - 2026-11-05
+
+### Changed
+
+- The toolbar button now reads "Move and Jump (folder)" instead of
+  "Move and Jump — Last: folder", and long folder paths are shortened
+  in the middle (e.g. `science/…/2026/2026-10 DGfN Leipzig`) so that
+  the folder's own name stays visible instead of being cut off at the
+  end of the button.
+
+### Fixed
+
+- The toolbar button shows the last-used folder again right after
+  Thunderbird starts or the add-on is updated, instead of only after
+  the first move or jump.
+
+- The "move to last folder" and "jump to last folder" shortcuts
+  (<kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>N</kbd> /
+  <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>H</kbd>) could open the search box
+  instead of acting on the last folder when the add-on's background
+  script had been idle and was just being woken up.
+
+## [1.3.0] - 2026-10-20
+
+### Added
+
+- Search queries can have several words, separated by spaces, in any
+  order: a folder matches only if every word matches it, so each word
+  narrows the list (e.g. `f lei` finds "2026-10 DGfN Leipzig" but not
+  "2026-12 DTG Leipzig"). Words can also match a parent folder or the
+  account name; folders whose own name contains all the words are
+  listed first. Every word is highlighted in the results.
+
+- A folder's search ranking can now be reset: highlight it in the
+  search results and click the ⤓ icon at the end of the row, or press
+  Shift+Delete. This forgets how often the folder has been used, so a
+  once-busy folder (e.g. a past event's) stops outranking a newer one
+  that matches the same search text.
+
+### Changed
+
+- Usage history now fades over time: a use counts half as much
+  after 30 days, a quarter after 60, and so on, so folders you no
+  longer use gradually stop outranking the ones you use now. Existing
+  history is kept and treated as dating from when it was first
+  recorded (1.1.0, August 2026).
 
 ## [1.2.0] - 2026-08-06
 
